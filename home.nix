@@ -1,0 +1,766 @@
+{ config, pkgs, nixpkgs, tbsm, ... }:
+
+{
+  home.username = "andrew";
+  home.homeDirectory = "/home/andrew";
+
+  home.packages = with pkgs; [
+    neofetch
+    #hyprland # We already have it in system packages...
+    hyprpaper
+    firefox
+    brave
+    vscode
+    waybar
+    wlsunset
+    fzf
+    lazygit
+    pwvucontrol
+    keepassxc
+    xorg.xeyes
+    libnotify
+    hack-font
+    signal-desktop
+    rclone
+    hdrop # Script for guake/tilde like behavior for my floating terminal.
+    slurp
+    wl-clipboard
+    grim
+    sxiv
+    gimp
+  ];
+
+  home.stateVersion = "24.11";
+
+  programs.alacritty = {
+    enable = true;
+    settings = {
+      colors = {
+        bright = {
+          black = "#686868";
+          blue = "#57c7ff";
+          cyan = "#9aedfe";
+          green = "#5af78e";
+          magenta = "#ff6ac1";
+          red = "#ff5c57";
+          white = "#f1f1f0";
+          yellow = "#f3f99d";
+        };
+        normal = {
+          black = "#282a36";
+          blue = "#57c7ff";
+          cyan = "#9aedfe";
+          green = "#5af78e";
+          magenta = "#ff6ac1";
+          red = "#ff5c57";
+          white = "#f1f1f0";
+          yellow = "#f3f99d";
+        };
+        primary = {
+          background = "#282a36";
+          foreground = "#eff0eb";
+        };
+      };
+      font = {
+        size = 12;
+        bold = {
+          family = "Hack";
+          style = "Bold";
+        };
+        bold_italic = {
+          family = "Hack";
+          style = "Bold Italic";
+        };
+        italic = {
+          family = "Hack";
+          style = "Italic";
+        };
+        normal = {
+          family = "Hack";
+          style = "Regular";
+        };
+      };
+      scrolling = {
+        history = 10000;
+      };
+    };
+  };
+
+  # Let home Manager install and manage itself.
+  programs.home-manager.enable = true;
+
+  programs = {
+    zsh = {
+      enable = true;
+      enableCompletion = true;
+      autosuggestion = {
+        enable = false;
+      };
+      oh-my-zsh = {
+        enable = true;
+        plugins = [ "kubectl" ];
+        theme = "robbyrussell";
+      };
+    };
+  };
+
+  # Wayland notification daemon.
+  services.mako = {
+    enable = true;
+  };
+
+  # Helper for discovering nix packages.
+  # NOTE: Does NOT seem to work...
+  #programs.command-not-found.enable = true;
+
+  programs.waybar = {
+    enable = true;
+    settings = {
+      mainBar = {
+        layer = "top";
+        position = "top";
+        height = 30;
+        modules-left = [
+          "hyprland/workspaces"
+          "hyprland/submap"
+        ];
+        modules-center = [
+          "hyprland/window"
+        ];
+        modules-right = [
+          "pulseaudio"
+          "network"
+          "cpu"
+          "memory"
+          "clock"
+          "tray"
+        ];
+        "hyprland/workspaces" = {
+          all-outputs = true;
+          format = "{name}: {icon}";
+	        format-icons = {
+            "1" = "";
+            "2" = "";
+            "3" = "";
+            "4" = "";
+            "5" = "";
+            active = "";
+            default = "";
+          };
+        };
+        "hyprland/mode" = {
+          format = "<span style=\"italic\">{}</span>";
+        };
+        tray = {
+          #spacing = 10;
+        };
+        clock = {
+          format = "{:%d-%m-%Y  %H:%M}";
+          tooltip = false;
+        };
+        cpu = {
+          format = "{usage}% ";
+          tooltip = false;
+        };
+        memory = {
+          format = "{}% ";
+          tooltip = false;
+        };
+        network = {
+          "format-wifi" = "{essid} ({signalStrength}%) ";
+          "format-ethernet" = "{ifname}: {ipaddr}/{cidr} ";
+          "format-linked" = "{ifname} (No IP) ";
+          "format-disconnected" = "Disconnected ⚠";
+          tooltip = false;
+        };
+        pulseaudio = {
+          "scroll-step" = 0.0; # Disable scroll.
+          format = "{volume}% {icon} {format_source}";
+          "format-bluetooth" = "{volume}% {icon} {format_source}";
+          "format-muted" = " {format_source}";
+          "format-source" = "{volume}% ";
+          "format-source-muted" = "";
+          "format-icons" = {
+            headphones = "";
+            handsfree = "";
+            headset = "";
+            phone = "";
+            portable = "";
+            car = "";
+            default = [ "" "" "" ];
+          };
+          "on-click" = "pwvucontrol";
+          tooltip = false;
+        };
+      };
+    };
+    style = ''
+      * {
+        /* `otf-font-awesome` is required to be installed for icons */
+        font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+        font-size: 13px;
+      }
+      window#waybar {
+        background-color: rgba(43, 48, 59, 0.5);
+        border-bottom: 3px solid rgba(100, 114, 125, 0.5);
+        color: #ffffff;
+        transition-property: background-color;
+        transition-duration: .5s;
+      }
+      window#waybar.hidden {
+        opacity: 0.2;
+      }
+      /*
+      window#waybar.empty {
+        background-color: transparent;
+      }
+      window#waybar.solo {
+        background-color: #FFFFFF;
+      }
+      */
+      window#waybar.termite {
+        background-color: #3F3F3F;
+      }
+      window#waybar.chromium {
+        background-color: #000000;
+        border: none;
+      }
+      button {
+        /* Use box-shadow instead of border so the text isn't offset */
+        box-shadow: inset 0 -3px transparent;
+        /* Avoid rounded borders under each button name */
+        border: none;
+        border-radius: 0;
+      }
+      /* https://github.com/Alexays/Waybar/wiki/FAQ#the-workspace-buttons-have-a-strange-hover-effect */
+      button:hover {
+        background: inherit;
+        box-shadow: inset 0 -3px #ffffff;
+      }
+      /* you can set a style on hover for any module like this */
+      #pulseaudio:hover {
+        background-color: #a37800;
+      }
+      #workspaces button {
+        padding: 0 5px;
+        background-color: transparent;
+        color: #ffffff;
+      }
+      #workspaces button:hover {
+        background: rgba(0, 0, 0, 0.2);
+      }
+      #workspaces button.focused,
+      #workspaces button.active /* See https://github.com/Alexays/Waybar/issues/2151. */
+      {
+        background-color: #64727D;
+        box-shadow: inset 0 -3px #ffffff;
+      }
+      #workspaces button.active {
+        background-color: #64727D;
+        box-shadow: inset 0 -3px #ffffff;
+      }
+      #workspaces button.urgent {
+        background-color: #eb4d4b;
+      }
+      #mode {
+        background-color: #64727D;
+        box-shadow: inset 0 -3px #ffffff;
+      }
+      #clock,
+      #battery,
+      #cpu,
+      #memory,
+      #disk,
+      #temperature,
+      #backlight,
+      #network,
+      #pulseaudio,
+      #wireplumber,
+      #custom-media,
+      #tray,
+      #mode,
+      #idle_inhibitor,
+      #scratchpad,
+      #power-profiles-daemon,
+      #mpd {
+        padding: 0 10px;
+        margin: 0 4px; /* AB: I want to separate each module. */
+        color: #ffffff;
+      }
+      #window,
+      #workspaces {
+        margin: 0 4px;
+      }
+      /* If workspaces is the leftmost module, omit left margin */
+      .modules-left > widget:first-child > #workspaces {
+        margin-left: 0;
+      }
+      /* If workspaces is the rightmost module, omit right margin */
+      .modules-right > widget:last-child > #workspaces {
+        margin-right: 0;
+      }
+      #clock {
+        background-color: #64727D;
+      }
+      #battery {
+        background-color: #ffffff;
+        color: #000000;
+      }
+      #battery.charging, #battery.plugged {
+        color: #ffffff;
+        background-color: #26A65B;
+      }
+      @keyframes blink {
+        to {
+          background-color: #ffffff;
+          color: #000000;
+        }
+      }
+      /* Using steps() instead of linear as a timing function to limit cpu usage */
+      #battery.critical:not(.charging) {
+        background-color: #f53c3c;
+        color: #ffffff;
+        animation-name: blink;
+        animation-duration: 0.5s;
+        animation-timing-function: steps(12);
+        animation-iteration-count: infinite;
+        animation-direction: alternate;
+      }
+      #power-profiles-daemon {
+        padding-right: 15px;
+      }
+      #power-profiles-daemon.performance {
+        background-color: #f53c3c;
+        color: #ffffff;
+      }
+      #power-profiles-daemon.balanced {
+        background-color: #2980b9;
+        color: #ffffff;
+      }
+      #power-profiles-daemon.power-saver {
+        background-color: #2ecc71;
+        color: #000000;
+      }
+      label:focus {
+        background-color: #000000;
+      }
+      #cpu {
+        background-color: #2ecc71;
+        color: #000000;
+      }
+      #memory {
+        background-color: #9b59b6;
+      }
+      #disk {
+        background-color: #964B00;
+      }
+      #backlight {
+        background-color: #90b1b1;
+      }
+      #network {
+        background-color: #2980b9;
+      }
+      #network.disconnected {
+        background-color: #f53c3c;
+      }
+      #pulseaudio {
+        background-color: #f1c40f;
+        color: #000000;
+      }
+      #pulseaudio.muted {
+        background-color: #90b1b1;
+        color: #2a5c45;
+      }
+      #wireplumber {
+        background-color: #fff0f5;
+        color: #000000;
+      }
+      #wireplumber.muted {
+        background-color: #f53c3c;
+      }
+      #custom-media {
+        background-color: #66cc99;
+        color: #2a5c45;
+        min-width: 100px;
+      }
+      #custom-media.custom-spotify {
+        background-color: #66cc99;
+      }
+      #custom-media.custom-vlc {
+        background-color: #ffa000;
+      }
+      #temperature {
+        background-color: #f0932b;
+      }
+      #temperature.critical {
+        background-color: #eb4d4b;
+      }
+      #tray {
+        background-color: #2980b9;
+      }
+      #tray > .passive {
+        -gtk-icon-effect: dim;
+      }
+      #tray > .needs-attention {
+        -gtk-icon-effect: highlight;
+        background-color: #eb4d4b;
+      }
+      #idle_inhibitor {
+        background-color: #2d3436;
+      }
+      #idle_inhibitor.activated {
+        background-color: #ecf0f1;
+        color: #2d3436;
+      }
+      #mpd {
+        background-color: #66cc99;
+        color: #2a5c45;
+      }
+      #mpd.disconnected {
+        background-color: #f53c3c;
+      }
+      #mpd.stopped {
+        background-color: #90b1b1;
+      }
+      #mpd.paused {
+        background-color: #51a37a;
+      }
+      #language {
+        background: #00b093;
+        color: #740864;
+        padding: 0 5px;
+        margin: 0 5px;
+        min-width: 16px;
+      }
+      #keyboard-state {
+        background: #97e1ad;
+        color: #000000;
+        padding: 0 0px;
+        margin: 0 5px;
+        min-width: 16px;
+      }
+      #keyboard-state > label {
+        padding: 0 5px;
+      }
+      #keyboard-state > label.locked {
+        background: rgba(0, 0, 0, 0.2);
+      }
+      #scratchpad {
+        background: rgba(0, 0, 0, 0.2);
+      }
+      #scratchpad.empty {
+        background-color: transparent;
+      }
+      #privacy {
+        padding: 0;
+      }
+      #privacy-item {
+        padding: 0 5px;
+        color: white;
+      }
+      #privacy-item.screenshare {
+        background-color: #cf5700;
+      }
+      #privacy-item.audio-in {
+        background-color: #1ca000;
+      }
+      #privacy-item.audio-out {
+        background-color: #0069d4;
+      }
+    '';
+  };
+
+  wayland.windowManager.hyprland = {
+    enable = true;
+    settings = {
+      #################
+      ### VARIABLES ###
+      #################
+
+      # Keycodes (unviresal for all layouts)
+      # Note: they were obtained with *xmodmap*, you might add
+      # more if something is not listed here.
+      "$keycode_Escape" = 9;
+      "$keycode_1" = 10;
+      "$keycode_2" = 11;
+      "$keycode_3" = 12;
+      "$keycode_4" = 13;
+      "$keycode_5" = 14;
+      "$keycode_6" = 15;
+      "$keycode_7" = 16;
+      "$keycode_8" = 17;
+      "$keycode_9" = 18;
+      "$keycode_0" = 19;
+      "$keycode_minus" = 20;
+      "$keycode_plus" = 21;
+      "$keycode_BackSpace" = 22;
+      "$keycode_q" = 24;
+      "$keycode_w" = 25;
+      "$keycode_e" = 26;
+      "$keycode_r" = 27;
+      "$keycode_t" = 28;
+      "$keycode_y" = 29;
+      "$keycode_u" = 30;
+      "$keycode_i" = 31;
+      "$keycode_o" = 32;
+      "$keycode_p" = 33;
+      "$keycode_Return" = 36;
+      "$keycode_Control_L" = 37;
+      "$keycode_a" = 38;
+      "$keycode_s" = 39;
+      "$keycode_d" = 40;
+      "$keycode_f" = 41;
+      "$keycode_g" = 42;
+      "$keycode_h" = 43;
+      "$keycode_j" = 44;
+      "$keycode_k" = 45;
+      "$keycode_l" = 46;
+      "$keycode_grave" = 49;
+      "$keycode_z" = 52;
+      "$keycode_x" = 53;
+      "$keycode_c" = 54;
+      "$keycode_v" = 55;
+      "$keycode_b" = 56;
+      "$keycode_n" = 57;
+      "$keycode_m" = 58;
+      "$keycode_Space" = 65;
+      "$keycode_Print" = 107;
+      "$keycode_Home" = 110;
+      "$keycode_Up" = 111;
+      "$keycode_Prior" = 112;
+      "$keycode_Left" = 113;
+      "$keycode_Right" = 114;
+      "$keycode_End" = 115;
+      "$keycode_Down" = 116;
+      "$keycode_Next" = 117;
+
+      ###################
+      ### MY PROGRAMS ###
+      ###################
+
+      # See https://wiki.hyprland.org/Configuring/Keywords/
+
+      # Preferred terminal emulator
+      "$terminal" = "${pkgs.alacritty}/bin/alacritty";
+
+      # Application launcher
+      "$launcher" = ''
+        alacritty --title="Application launcher - System" -e "bash" "-c" "compgen -c | sort -u | fzf | xargs hyprctl dispatch exec --"
+      '';
+
+      #################
+      ### AUTOSTART ###
+      #################
+
+      exec-once = [
+        # Launch Wayland bar.
+        "waybar"
+        # Launch night-light filter.
+        "wlsunset -l 55.7:12.6 -t 5600:3600 -g 0.8"
+        # Launch wallpaper.
+        "hyprpaper"
+      ];
+
+      #####################
+      ### LOOK AND FEEL ###
+      #####################
+
+      # https://wiki.hyprland.org/Configuring/Variables/#general
+      general = {
+        #gaps_in = 5;
+        #gaps_out = 20;
+
+        # Make window border bolder.
+        border_size = 2;
+
+        # Green-orange border for active window.
+        "col.active_border" = "rgba(33fe9cee) rgba(fe8d33ee) 45deg";
+      };
+
+      # https://wiki.hyprland.org/Configuring/Variables/#misc
+      misc = {
+        # Disable fucking anime mascot.
+        force_default_wallpaper = 0;
+
+        # No weird slogans on desktop.
+        disable_splash_rendering = true;
+      };
+
+      # https://wiki.hyprland.org/Configuring/Variables/#decoration
+      decoration = {
+        # Minor rounding around windows.
+        rounding = 4;
+      };
+
+      # https://wiki.hyprland.org/Configuring/Variables/#animations
+      animations = {
+        enabled = false; # All animations are just an unnecessary slowdown.
+        first_launch_animation = false;
+        animation = [
+          # Disable all workspaces animations.
+          "workspaces, 0"
+        ];
+      };
+
+      cursor = {
+        enable_hyprcursor = false;
+        no_warps = true; # Prevent jumping to the focused window e.g. floating terminal.
+      };
+
+      #############
+      ### INPUT ###
+      #############
+
+      # https://wiki.hyprland.org/Configuring/Variables/#input
+      input = {
+        # Layout:
+        # - PL, Dvorak programmer (dvp)
+        # NOTE: For traditional PL qwerty, use 'legacy' variant.
+        kb_layout = "pl";
+        kb_variant = "dvp";
+        kb_options = [
+          "caps:shiflock" # I want CapsLock to affect numbers row.
+        ];
+
+        # Cursor focus detatched from keyboard focus.
+        follow_mouse = 2;
+
+        # Prevent automatic focus switch when hovering a window under the floating one.
+        float_switch_override_focus = false;
+      };
+
+      ###################
+      ### KEYBINDINGS ###
+      ###################
+
+      # See https://wiki.hyprland.org/Configuring/Keywords/
+      "$mainMod" = "ALT"; # Sets "ALT" key as main modifier
+
+      # https://wiki.hyprland.org/Configuring/Binds/
+
+      bind = [
+        # Exit compositor on mainMod + SHIFT + e.
+        "$mainMod SHIFT, $keycode_e, exit"
+
+        # Open launcher with mainMod + d.
+        "$mainMod, $keycode_d, exec, $launcher"
+
+        # Toggle floating terminal with $.
+        ", $keycode_grave, exec, hdrop alacritty --class floating_terminal_1" # Unable to provide `--title "Floating terminal - System"`...
+
+        # Make the current focus fullscreen with mainMod + f.
+        "$mainMod, $keycode_f, fullscreen"
+
+        # Kill focused window with mainMod + SHIFT + q.
+        "$mainMod SHIFT, $keycode_q, killactive"
+
+        # Move focus with mainMod + arrow keys.
+        "$mainMod, $keycode_h, movefocus, l"
+        "$mainMod, $keycode_j, movefocus, r"
+        "$mainMod, $keycode_k, movefocus, u"
+        "$mainMod, $keycode_l, movefocus, d"
+
+        # Move window mainMod + SHIFT + h/j/k/l.
+        "$mainMod SHIFT, $keycode_h, movewindow, l"
+        "$mainMod SHIFT, $keycode_j, movewindow, d"
+        "$mainMod SHIFT, $keycode_k, movewindow, u"
+        "$mainMod SHIFT, $keycode_l, movewindow, r"
+
+        # Switch workspaces with mainMod + [0-9].
+        "$mainMod, $keycode_1, workspace, 1"
+        "$mainMod, $keycode_2, workspace, 2"
+        "$mainMod, $keycode_3, workspace, 3"
+        "$mainMod, $keycode_4, workspace, 4"
+        "$mainMod, $keycode_5, workspace, 5"
+        "$mainMod, $keycode_6, workspace, 6"
+        "$mainMod, $keycode_7, workspace, 7"
+        "$mainMod, $keycode_8, workspace, 8"
+        "$mainMod, $keycode_9, workspace, 9"
+        "$mainMod, $keycode_0, workspace, 10"
+
+        # Move active window to a workspace with mainMod + SHIFT + [0-9].
+        "$mainMod SHIFT, $keycode_1, movetoworkspacesilent, 1"
+        "$mainMod SHIFT, $keycode_2, movetoworkspacesilent, 2"
+        "$mainMod SHIFT, $keycode_3, movetoworkspacesilent, 3"
+        "$mainMod SHIFT, $keycode_4, movetoworkspacesilent, 4"
+        "$mainMod SHIFT, $keycode_5, movetoworkspacesilent, 5"
+        "$mainMod SHIFT, $keycode_6, movetoworkspacesilent, 6"
+        "$mainMod SHIFT, $keycode_7, movetoworkspacesilent, 7"
+        "$mainMod SHIFT, $keycode_8, movetoworkspacesilent, 8"
+        "$mainMod SHIFT, $keycode_9, movetoworkspacesilent, 9"
+        "$mainMod SHIFT, $keycode_0, movetoworkspacesilent, 10"
+
+        # Start terminal with mainMod + Enter.
+        "$mainMod, code:$keycode_Return, exec, $terminal"
+
+        # Partial screenshot to clipboard with Left Alt + Print Screen.
+        "ALT_L, code:$keycode_Print, exec, grim -g \"$(slurp)\" - | wl-copy"
+
+        # Full screenshot to files with Print Screen.
+        ", code:$keycode_Print, exec, grim -c ~/screenshot_$(date +'%Y-%m-%d_%H-%M-%S').png"
+      ];
+
+      # Allowed to work when screen is locked.
+      bindel = [
+        # Volume bindings.
+        "SHIFT, $keycode_Next, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+        "SHIFT, $keycode_Prior, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+        "SHIFT, $keycode_Home, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        "SHIFT, $keycode_End, exec, wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+      ];
+
+      # Mouse bindings.
+      bindm = [
+        # Move window with mainMod + LBM.
+        "$mainMod, mouse:272, movewindow"
+        # Move window with mainMod + RBM.
+        "$mainMod, mouse:273, resizewindow"
+      ];
+
+      ##############################
+      ### WINDOWS AND WORKSPACES ###
+      ##############################
+
+      # See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
+      # See https://wiki.hyprland.org/Configuring/Workspace-Rules/ for workspace rules
+
+      windowrulev2 = [
+        # Floating launcher.
+        "float, title:^Application launcher - System$"
+
+        # Floating terminal.
+        "float, class:^floating_terminal_1$"
+        "move 15% 60%, class:^floating_terminal_1$"
+        "size 70% 35%, class:^floating_terminal_1$"
+      ];
+    };
+    systemd = {
+      enable = true;
+    };
+  };
+
+  imports = [ tbsm.homeManagerModules.tbsm ];
+  tbsm = {
+    enable = true;
+    defaultSession = "Hyprland";
+    sessions = [
+      {
+        Name = "Hyprland";
+        Comment = "Start the Hyprland Wayland Compositor";
+        Exec = "${pkgs.hyprland}/bin/Hyprland";
+        Type = "Application";
+        DesktopNames = "Hyprland";
+        Keywords = "wayland;compositor;hyprland;";
+      }
+    ];
+  };
+
+  #fonts.fontconfig.enable = true;
+
+  home.file.".config/hypr/hyprpaper.conf".text = ''
+    preload = ~/Downloads/wallpaper.jpg
+    wallpaper = ,~/Downloads/wallpaper.jpg
+    splash = false
+    ipc = on
+  '';
+}
