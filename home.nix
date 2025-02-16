@@ -31,6 +31,7 @@
     fzf
     ripgrep
     obs-studio
+    hyprlock
   ];
 
   home.stateVersion = "24.11";
@@ -795,6 +796,7 @@
 
       # See https://wiki.hyprland.org/Configuring/Keywords/
       "$mainMod" = "ALT"; # Sets "ALT" key as main modifier
+      "$sup" = "SUPER";
 
       # https://wiki.hyprland.org/Configuring/Binds/
 
@@ -807,6 +809,9 @@
 
         # Toggle floating terminal with $.
         ", $keycode_grave, exec, hdrop alacritty --class floating_terminal_1" # Unable to provide `--title "Floating terminal - System"`...
+
+        # Launch lockscreen with sup + L.
+        "$sup, $keycode_l, exec, hyprlock"
 
         # Make the current focus fullscreen with mainMod + f.
         "$mainMod, $keycode_f, fullscreen"
