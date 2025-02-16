@@ -949,7 +949,7 @@
         {
           monitor = "";
           path = "/home/andrew/Downloads/wallpaper.jpg";
-          blur_passes = 1; # 0 disables blurring
+          blur_passes = 2; # 0 disables blurring
           blur_size = 7;
           noise = 1.17e-2;
         }
