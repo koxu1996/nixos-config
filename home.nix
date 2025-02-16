@@ -28,6 +28,8 @@
     grim
     sxiv
     gimp
+    fzf
+    ripgrep
   ];
 
   home.stateVersion = "24.11";
@@ -247,12 +249,13 @@
       };
       oh-my-zsh = {
         enable = true;
-        plugins = [ "tmux" "kubectl" ];
+        plugins = [ "tmux" "kubectl" "fzf" ];
         theme = "robbyrussell";
       };
       sessionVariables = {
         ZSH_TMUX_AUTOSTART = "true";
         ZSH_TMUX_AUTOCONNECT = "false";
+        FZF_DEFAULT_COMMAND = "rg";
       };
       shellAliases = {
         lg = "lazygit";
