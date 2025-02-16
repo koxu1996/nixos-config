@@ -254,6 +254,9 @@
         ZSH_TMUX_AUTOSTART = "true";
         ZSH_TMUX_AUTOCONNECT = "false";
       };
+      shellAliases = {
+        lg = "lazygit";
+      };
     };
   };
 
