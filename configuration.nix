@@ -165,6 +165,7 @@
     util-linux # dmesg
     openssl
     pkg-config
+    clang
   ];
 
   # Add OpenSSL path to additional pkgconfig paths.
