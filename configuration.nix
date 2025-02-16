@@ -82,6 +82,7 @@
     initialPassword = "pass";
     extraGroups = [
       "wheel" # Enable ‘sudo’ for the user.
+      "docker"
       #"video"
       #"audio"
     ];
@@ -203,4 +204,7 @@
   fonts.packages = with pkgs; [
     font-awesome
   ];
+
+  # Enable Docker.
+  virtualisation.docker.enable = true;
 }
