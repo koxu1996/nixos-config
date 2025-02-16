@@ -163,7 +163,14 @@
     wget
     pciutils
     util-linux # dmesg
+    openssl
+    pkg-config
   ];
+
+  # Add OpenSSL path to additional pkgconfig paths.
+  environment.variables = {
+    PKG_CONFIG_PATH="${pkgs.openssl.dev}/lib/pkgconfig";
+  };
 
   # Hyperland desktop.
   #programs.hyprland.enable = true;
