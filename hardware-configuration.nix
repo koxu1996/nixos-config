@@ -18,6 +18,9 @@
     # Disable fucking i915 GPU... it cause various CPU hangs.
     # NOTE: We cannot just blacklist the whole i915 module with modprobe, as we want audio to work (snd_hda_intel).
     "i915.modeset=0"
+    # Prevent binding audio to GPU - this makes internal sound card available.
+    # See: https://bbs.archlinux.org/viewtopic.php?pid=2148028#p2148028.
+    "snd_hda_core.gpu_bind=0"
   ];
 
   boot.extraModprobeConfig = ''
