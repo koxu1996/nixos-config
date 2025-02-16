@@ -810,6 +810,9 @@
         # Make the current focus fullscreen with mainMod + f.
         "$mainMod, $keycode_f, fullscreen"
 
+        # Toggle floating mode of focused window with mainMod + SHIFT + Space.
+        "$mainMod SHIFT, $keycode_Space, togglefloating"
+
         # Kill focused window with mainMod + SHIFT + q.
         "$mainMod SHIFT, $keycode_q, killactive"
 
