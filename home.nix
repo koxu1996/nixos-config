@@ -32,6 +32,7 @@
     ripgrep
     obs-studio
     kubectl
+    rustup
   ];
 
   home.stateVersion = "24.11";
