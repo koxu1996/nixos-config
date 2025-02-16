@@ -30,6 +30,7 @@
     gimp
     fzf
     ripgrep
+    obs-studio
   ];
 
   home.stateVersion = "24.11";
