@@ -89,6 +89,155 @@
   # Let home Manager install and manage itself.
   programs.home-manager.enable = true;
 
+  programs.tmux = {
+    enable = true;
+    extraConfig = ''
+      # https://github.com/seebi/tmux-colors-solarized/blob/master/tmuxcolors-256.conf
+      set-option -g status-style fg=colour136,bg=colour235,default
+
+      # set window split
+      bind-key v split-window -h
+      bind-key b split-window
+
+      # The statusbar {
+
+      set -g status-position bottom
+      #bg=colour234
+      set -g status-style fg=colour137,dim
+
+      set -g status-left ""
+      set -g status-right ""
+      #set -g status-right 'avivace@e560 #[fg=colour233,bg=colour241,bold] %d/%m #[fg=colour233,bg=colour245,bold] %H:%M '
+      set -g status-right-length 50
+      set -g status-left-length 20
+
+      setw -g window-status-current-style fg=colour81,bg=colour238,bold
+
+      setw -g window-status-current-format ' #I#[fg=colour250]:#[fg=colour255]#W#[fg=colour50]#F '
+
+      setw -g window-status-style fg=colour138,bg=colour235,none
+
+      setw -g window-status-format ' #I#[fg=colour237]:#[fg=colour250]#W#[fg=colour244]#F '
+
+      setw -g window-status-bell-style fg=colour255,bg=colour1,bold
+
+      # pane border
+      set -g pane-border-style fg=colour238,bg=colour235
+      set -g pane-active-border-style fg=colour51,bg=colour236
+
+      # The messages {
+
+      set -g message-style fg=colour232,bg=colour166,bold
+      set -g message-command-style fg=blue,bg=black
+
+      # }
+
+      # window mode
+      setw -g mode-style fg=colour0,bg=colour6
+
+      # pane number display
+      set-option -g display-panes-active-colour colour33 #blue
+      set-option -g display-panes-colour colour166 #orange
+
+      # The modes {
+      setw -g clock-mode-colour colour135
+      setw -g mode-style fg=colour196,bg=colour238,bold
+      # }
+
+      # Old statusbar
+      #set -g status-justify centre # center align window list
+      #set -g status-left-length 20
+      #set -g status-right-length 140
+      #set -g status-left '#[fg=green]#H #[fg=black]• #[fg=green,bright]#(uname -r | cut -c 1-6)#[default]'
+      #set -g status-right '#[fg=green,bg=default,bright]#(tmux-mem-cpu-load) #[fg=red,dim,bg=default]#(uptime | #cut -f 4-5 -d " " | cut -f 1 -d ",") #[fg=white,bg=default]%a%l:%M:%S %p#[default] #[fg=blue]%Y-%m-%d'
+
+      # C-b is not acceptable -- Vim uses it
+      unbind C-b
+      set-option -g prefix C-a # ctrl+a for root session
+      bind-key C-s send-prefix # ctrl+s for nested session
+
+      # Remap some default keys
+      unbind '"'
+      bind 1 split-window -h -c "#{pane_current_path}"
+      unbind %
+      bind _ split-window -v -c "#{pane_current_path}"
+      unbind c
+      bind j new-window
+
+      # Start numbering at 1
+      set -g base-index 1
+
+      # Allows for faster key repetition
+      set -s escape-time 0
+
+      # Rather than constraining window size to the maximum size of any client
+      # connected to the *session*, constrain window size to the maximum size of any
+      # client connected to *that window*. Much more reasonable.
+      setw -g aggressive-resize on
+
+      # Allows us to use C-a a <command> to send commands to a TMUX session inside
+      # another TMUX session
+      bind-key a send-prefix
+
+      # Activity monitoring
+      set-option -g visual-activity off
+      set-option -g visual-bell off
+      set-option -g visual-silence off
+      set-w -g monitor-activity off
+      set-option -g bell-action none
+
+      # hjkl pane traversal
+      bind h select-pane -L
+      bind j select-pane -D
+      bind k select-pane -U
+      bind l select-pane -R
+
+      # set to main-horizontal, 60% height for main pane
+      bind m set-window-option main-pane-height 60\; select-layout main-horizontal
+
+      bind-key J command-prompt -p "Name of new window: " "new-window -n '%%'"
+
+      # reload config
+      bind r source-file ~/.tmux.conf \; display-message "Config reloaded..."
+
+      # auto window rename
+      set-window-option -g automatic-rename
+
+      # color
+      set -g default-terminal "screen-256color"
+
+      # https://github.com/edkolev/dots/blob/master/tmux.conf
+      # Updates for tmux 1.9's current pane splitting paths.
+
+      # from powerline
+      run-shell "tmux set-environment -g TMUX_VERSION_MAJOR $(tmux -V | cut -d' ' -f2 | cut -d'.' -f1 | sed 's/[^0-9]*//g')"
+      run-shell "tmux set-environment -g TMUX_VERSION_MINOR $(tmux -V | cut -d' ' -f2 | cut -d'.' -f2 | sed 's/[^0-9]*//g')"
+
+      # Vi copypaste mode
+      set-window-option -g mode-keys vi
+      if-shell "test '\( #{$TMUX_VERSION_MAJOR} -eq 2 -a #{$TMUX_VERSION_MINOR} -ge 4 \)'" 'bind-key -Tcopy-mode-vi v send -X begin-selection; bind-key -Tcopy-mode-vi y send -X copy-selection-and-cancel'
+      if-shell '\( #{$TMUX_VERSION_MAJOR} -eq 2 -a #{$TMUX_VERSION_MINOR} -lt 4\) -o #{$TMUX_VERSION_MAJOR} -le 1' 'bind-key -t vi-copy v begin-selection; bind-key -t vi-copy y copy-selection'
+
+      # status bar
+      if-shell '\( #{$TMUX_VERSION_MAJOR} -eq 2 -a #{$TMUX_VERSION_MINOR} -lt 2\) -o #{$TMUX_VERSION_MAJOR} -le 1' 'set-option -g status-utf8 on'
+
+      # rm mouse mode fail
+      if-shell '\( #{$TMUX_VERSION_MAJOR} -eq 2 -a #{$TMUX_VERSION_MINOR} -ge 1\)' 'set -g mouse off'
+      if-shell '\( #{$TMUX_VERSION_MAJOR} -eq 2 -a #{$TMUX_VERSION_MINOR} -lt 1\) -o #{$TMUX_VERSION_MAJOR} -le 1' 'set -g mode-mouse off'
+
+      # fix pane_current_path on new window and splits
+      if-shell "test '#{$TMUX_VERSION_MAJOR} -gt 1 -o \( #{$TMUX_VERSION_MAJOR} -eq 1 -a #{$TMUX_VERSION_MINOR} -ge 8 \)'" 'unbind c; bind c new-window -c "#{pane_current_path}"'
+      if-shell "test '#{$TMUX_VERSION_MAJOR} -gt 1 -o \( #{$TMUX_VERSION_MAJOR} -eq 1 -a #{$TMUX_VERSION_MINOR} -ge 8 \)'" "unbind '\"'; bind '\"' split-window -v -c '#{pane_current_path}'"
+      if-shell "test '#{$TMUX_VERSION_MAJOR} -gt 1 -o \( #{$TMUX_VERSION_MAJOR} -eq 1 -a #{$TMUX_VERSION_MINOR} -ge 8 \)'" 'unbind v; bind v split-window -h -c "#{pane_current_path}"'
+      if-shell "test '#{$TMUX_VERSION_MAJOR} -gt 1 -o \( #{$TMUX_VERSION_MAJOR} -eq 1 -a #{$TMUX_VERSION_MINOR} -ge 8 \)'" 'unbind \%; bind \% split-window -h -c "#{pane_current_path}"'
+
+      # Lower repeat timeout
+      set-option -g repeat-time 250
+
+      #set-option -g default-shell "/bin/zsh"
+    '';
+  };
+
   programs = {
     zsh = {
       enable = true;
@@ -98,8 +247,12 @@
       };
       oh-my-zsh = {
         enable = true;
-        plugins = [ "kubectl" ];
+        plugins = [ "tmux" "kubectl" ];
         theme = "robbyrussell";
+      };
+      sessionVariables = {
+        ZSH_TMUX_AUTOSTART = "true";
+        ZSH_TMUX_AUTOCONNECT = "false";
       };
     };
   };
