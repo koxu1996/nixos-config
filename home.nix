@@ -138,7 +138,7 @@
         "hyprland/workspaces" = {
           all-outputs = true;
           format = "{name}: {icon}";
-	        format-icons = {
+          format-icons = {
             "1" = "";
             "2" = "";
             "3" = "";

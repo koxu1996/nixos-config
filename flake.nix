@@ -23,7 +23,8 @@
       modules = [
         impermanence.nixosModules.impermanence
         ./configuration.nix
-        tbsm.nixosModules.tbsm {
+        tbsm.nixosModules.tbsm
+        {
           tbsm = {
             enable = true;
             autoStart = {
@@ -56,4 +57,3 @@
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixpkgs-fmt;
   };
 }
-

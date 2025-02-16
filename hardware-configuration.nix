@@ -5,7 +5,8 @@
 
 {
   imports =
-    [ (modulesPath + "/installer/scan/not-detected.nix")
+    [
+      (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "usbhid" "usb_storage" "uas" "sd_mod" ];
@@ -25,30 +26,35 @@
   '';
 
   fileSystems."/" =
-    { device = "rpool/local/root";
+    {
+      device = "rpool/local/root";
       fsType = "zfs";
     };
 
   fileSystems."/boot" =
-    { device = "/dev/disk/by-uuid/7112-3230";
+    {
+      device = "/dev/disk/by-uuid/7112-3230";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];
     };
 
   fileSystems."/nix" =
-    { device = "rpool/local/nix";
+    {
+      device = "rpool/local/nix";
       fsType = "zfs";
     };
 
   fileSystems."/persist" =
-    { device = "rpool/safe/persist";
+    {
+      device = "rpool/safe/persist";
       fsType = "zfs";
       neededForBoot = true;
     };
 
   # Manage NixOS config directly from the user directory.
   fileSystems."/etc/nixos" =
-    { device = "/home/andrew/nixos";
+    {
+      device = "/home/andrew/nixos";
       fsType = "none";
       options = [ "bind" ];
     };
