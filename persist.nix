@@ -1,6 +1,6 @@
 # https://github.com/nix-community/impermanence#module-usage
 {
-  environment.persistence."/persistence" = {
+  environment.persistence."/persist" = {
     hideMounts = true;
     directories = [
       "/var/log"

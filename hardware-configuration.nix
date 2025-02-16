@@ -9,7 +9,7 @@
     ];
 
   boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "usbhid" "usb_storage" "uas" "sd_mod" ];
-  boot.initrd.kernelModules = [ ];
+  boot.initrd.kernelModules = [ "dm-snapshot" ];
   boot.kernelModules = [ "kvm-intel" "snd_hda_intel" ];
   boot.extraModulePackages = [ ];
 
@@ -25,9 +25,8 @@
   '';
 
   fileSystems."/" =
-    { device = "none";
-      fsType = "tmpfs";
-      options = [ "defaults" "size=4G" "mode=755" ];
+    { device = "rpool/local/root";
+      fsType = "zfs";
     };
 
   fileSystems."/boot" =
@@ -37,21 +36,25 @@
     };
 
   fileSystems."/nix" =
-    { device = "/dev/disk/by-uuid/d23c510e-f789-427b-8b4d-c09500ca897a";
-      neededForBoot = true;
-      fsType = "ext4";
+    { device = "rpool/local/nix";
+      fsType = "zfs";
     };
 
-  fileSystems."/persistence" =
-    { device = "/nix/persist2";
+  # TODO: Remove persistent /home, as we have impermamence module.
+  fileSystems."/home" =
+    { device = "rpool/safe/home";
+      fsType = "zfs";
+    };
+
+  fileSystems."/persist" =
+    { device = "rpool/safe/persist";
+      fsType = "zfs";
       neededForBoot = true;
-      fsType = "none";
-      options = [ "bind" ];
     };
 
   # Manage NixOS config directly from the user directory.
   fileSystems."/etc/nixos" =
-    { device = "/nix/persist2/home/andrew/nixos";
+    { device = "/home/andrew/nixos";
       fsType = "none";
       options = [ "bind" ];
     };

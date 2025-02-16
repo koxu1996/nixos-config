@@ -12,8 +12,9 @@
       ./persist.nix
     ];
 
-  # Use latest kernel, ArchOS like experience.
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  # I would like to use the latest kernel - ArchOS like experience - but ZFS
+  # is NOT compatible...
+  boot.kernelPackages = pkgs.linuxPackages_6_12;
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
@@ -21,6 +22,7 @@
 
   # Hostname.
   networking.hostName = "nixPC";
+  networking.hostId = "666ab666"; # Required by ZFS.
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
