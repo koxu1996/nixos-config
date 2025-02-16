@@ -31,6 +31,7 @@
     fzf
     ripgrep
     obs-studio
+    kubectl
   ];
 
   home.stateVersion = "24.11";
