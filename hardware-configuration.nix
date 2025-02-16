@@ -40,12 +40,6 @@
       fsType = "zfs";
     };
 
-  # TODO: Remove persistent /home, as we have impermamence module.
-  fileSystems."/home" =
-    { device = "rpool/safe/home";
-      fsType = "zfs";
-    };
-
   fileSystems."/persist" =
     { device = "rpool/safe/persist";
       fsType = "zfs";
