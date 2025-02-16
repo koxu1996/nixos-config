@@ -51,6 +51,9 @@
         }
       ];
     };
+
+    # Include formatter, so we can run `nix fmt`.
+    formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixpkgs-fmt;
   };
 }
 
