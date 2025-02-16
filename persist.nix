@@ -31,6 +31,7 @@
         "Downloads"
         # https://discourse.nixos.org/t/slow-application-startup/29857/3
         ".cache"
+        { directory = ".ssh"; mode = "0700"; }
       ];
       files = [
         #".bash_history"
