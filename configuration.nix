@@ -67,6 +67,9 @@
     pulse.enable = true;
   };
 
+  # Enable RealtimeKit service for low-latency audio.
+  security.rtkit.enable = true;
+
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
 
