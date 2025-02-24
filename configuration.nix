@@ -24,6 +24,11 @@
   # Clear old temporary files on boot.
   boot.tmp.cleanOnBoot = true;
 
+  # Rollback root dataset on boot.
+  boot.initrd.postDeviceCommands = lib.mkAfter ''
+    zfs rollback -r rpool/local/root@blank
+  '';
+
   # Hostname.
   networking.hostName = "nixPC";
   networking.hostId = "666ab666"; # Required by ZFS.
