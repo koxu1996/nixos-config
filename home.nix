@@ -33,6 +33,8 @@
     obs-studio
     kubectl
     rustup
+    buf # Required to compile `gevulot-rs`.
+    protobuf # Required to compile `gevulot-rs`.
   ];
 
   home.stateVersion = "24.11";
