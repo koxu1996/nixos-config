@@ -174,6 +174,21 @@
     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
   };
 
+  # Configure XDG portal - it fixes screen sharing in Hyprland.
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-hyprland
+    ];
+    config = {
+      common = {
+        default = [
+          "hyprland"
+        ];
+      };
+    };
+  };
+
   # Hyperland desktop.
   #programs.hyprland.enable = true;
 
