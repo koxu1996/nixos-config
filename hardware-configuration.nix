@@ -47,6 +47,13 @@
       fsType = "zfs";
     };
 
+  # NOTE: There arguments against using `tmpfs` along with ZFS, so I am storing temporary files in ZFS.
+  fileSystems."/tmp" =
+    {
+      device = "rpool/local/tmp";
+      fsType = "zfs";
+    };
+
   fileSystems."/persist" =
     {
       device = "rpool/safe/persist";
