@@ -21,6 +21,9 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # Clear old temporary files on boot.
+  boot.tmp.cleanOnBoot = true;
+
   # Hostname.
   networking.hostName = "nixPC";
   networking.hostId = "666ab666"; # Required by ZFS.
