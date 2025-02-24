@@ -35,6 +35,7 @@
     rustup
     buf # Required to compile `gevulot-rs`.
     protobuf # Required to compile `gevulot-rs`.
+    git-revise
   ];
 
   home.stateVersion = "24.11";
