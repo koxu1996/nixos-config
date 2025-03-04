@@ -238,4 +238,11 @@
 
   # Enable Docker.
   virtualisation.docker.enable = true;
+
+  # Service required to locate printers/scanners in the network.
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
 }
