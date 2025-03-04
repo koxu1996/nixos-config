@@ -36,6 +36,7 @@
     buf # Required to compile `gevulot-rs`.
     protobuf # Required to compile `gevulot-rs`.
     git-revise
+    libreoffice
   ];
 
   home.stateVersion = "24.11";
