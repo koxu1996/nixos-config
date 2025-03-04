@@ -92,6 +92,8 @@
     extraGroups = [
       "wheel" # Enable ‘sudo’ for the user.
       "docker"
+      "scanner" # For scanning.
+      "lp" # For printing.
       #"video"
       #"audio"
     ];
