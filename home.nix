@@ -37,6 +37,7 @@
     protobuf # Required to compile `gevulot-rs`.
     git-revise
     libreoffice
+    okular
   ];
 
   home.stateVersion = "24.11";
