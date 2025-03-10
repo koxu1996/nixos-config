@@ -943,6 +943,9 @@
     userEmail = "andrzej1_1@o2.pl";
     userName = "Andrzej Broński";
     signing.key = "BF713D7A7BCEF5DC";
+
+    # We want to have `gitk` tool.
+    package = pkgs.gitFull;
   };
 
   programs.hyprlock = {
