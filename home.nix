@@ -830,9 +830,9 @@
 
         # Move focus with mainMod + arrow keys.
         "$mainMod, $keycode_h, movefocus, l"
-        "$mainMod, $keycode_j, movefocus, r"
+        "$mainMod, $keycode_j, movefocus, d"
         "$mainMod, $keycode_k, movefocus, u"
-        "$mainMod, $keycode_l, movefocus, d"
+        "$mainMod, $keycode_l, movefocus, r"
 
         # Move window mainMod + SHIFT + h/j/k/l.
         "$mainMod SHIFT, $keycode_h, movewindow, l"
