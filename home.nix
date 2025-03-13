@@ -639,6 +639,10 @@
 
   wayland.windowManager.hyprland = {
     enable = true;
+    plugins = [
+      # Proper i3-like tilling.
+      pkgs.hyprlandPlugins.hy3
+    ];
     settings = {
       #################
       ### VARIABLES ###
@@ -742,6 +746,9 @@
 
         # Green-orange border for active window.
         "col.active_border" = "rgba(33fe9cee) rgba(fe8d33ee) 45deg";
+
+        # Use hy3 plugin layout.
+        layout = "hy3";
       };
 
       # https://wiki.hyprland.org/Configuring/Variables/#misc
@@ -829,16 +836,16 @@
         "$mainMod SHIFT, $keycode_q, killactive"
 
         # Move focus with mainMod + arrow keys.
-        "$mainMod, $keycode_h, movefocus, l"
-        "$mainMod, $keycode_j, movefocus, d"
-        "$mainMod, $keycode_k, movefocus, u"
-        "$mainMod, $keycode_l, movefocus, r"
+        "$mainMod, $keycode_h, hy3:movefocus, l"
+        "$mainMod, $keycode_j, hy3:movefocus, d"
+        "$mainMod, $keycode_k, hy3:movefocus, u"
+        "$mainMod, $keycode_l, hy3:movefocus, r"
 
         # Move window mainMod + SHIFT + h/j/k/l.
-        "$mainMod SHIFT, $keycode_h, movewindow, l"
-        "$mainMod SHIFT, $keycode_j, movewindow, d"
-        "$mainMod SHIFT, $keycode_k, movewindow, u"
-        "$mainMod SHIFT, $keycode_l, movewindow, r"
+        "$mainMod SHIFT, $keycode_h, hy3:movewindow, l"
+        "$mainMod SHIFT, $keycode_j, hy3:movewindow, d"
+        "$mainMod SHIFT, $keycode_k, hy3:movewindow, u"
+        "$mainMod SHIFT, $keycode_l, hy3:movewindow, r"
 
         # Switch workspaces with mainMod + [0-9].
         "$mainMod, $keycode_1, workspace, 1"
@@ -886,7 +893,7 @@
       # Mouse bindings.
       bindm = [
         # Move window with mainMod + LBM.
-        "$mainMod, mouse:272, movewindow"
+        "$mainMod, mouse:272, movewindow" # NOTE: hy3:movewindow is broken for floating windows.
         # Move window with mainMod + RBM.
         "$mainMod, mouse:273, resizewindow"
       ];
