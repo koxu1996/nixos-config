@@ -38,6 +38,7 @@
     git-revise
     libreoffice
     okular
+    kubernetes-helm
   ];
 
   home.stateVersion = "24.11";
