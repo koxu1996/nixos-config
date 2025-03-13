@@ -130,6 +130,10 @@
   #   enableSSHSupport = true;
   # };
 
+  # Run OpenSSH agent to remember passhprases.
+  # TODO: Find a way to avoid manual adding each key with `ssh-add`.
+  programs.ssh.startAgent = true;
+
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
