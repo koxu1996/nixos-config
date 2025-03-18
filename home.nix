@@ -39,6 +39,7 @@
     libreoffice
     okular
     kubernetes-helm
+    ark
   ];
 
   home.stateVersion = "24.11";
