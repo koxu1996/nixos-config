@@ -36,6 +36,12 @@
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
 
+  # Custom `/etc/hosts`.
+  networking.hosts = {
+    # Block direct access to the official Rust crates.
+    "127.0.0.1" = ["static.crates.io" "index.crates.io"];
+  };
+
   # Timezone.
   time.timeZone = "Europe/Warsaw";
 
@@ -183,6 +189,9 @@
   # Add OpenSSL path to additional pkgconfig paths.
   environment.variables = {
     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+
+    # Use custom crates.io proxy.
+    CARGO_HTTP_PROXY = "https://crates:password@crates.devpeek.io";
   };
 
   # Configure XDG portal - it fixes screen sharing in Hyprland.
@@ -249,4 +258,32 @@
     nssmdns4 = true;
     openFirewall = true;
   };
+
+  # Additional certificates.
+  security.pki.certificates = [
+    ''
+    crates.devpeek.io - mitmproxy Root CA
+    =========
+    -----BEGIN CERTIFICATE-----
+    MIIDNTCCAh2gAwIBAgIUd0eAHB8WOZTzq6+rBhbrWpbsO+4wDQYJKoZIhvcNAQEL
+    BQAwKDESMBAGA1UEAwwJbWl0bXByb3h5MRIwEAYDVQQKDAltaXRtcHJveHkwHhcN
+    MjUwMzE5MTY1NTQ1WhcNMzUwMzE5MTY1NTQ1WjAoMRIwEAYDVQQDDAltaXRtcHJv
+    eHkxEjAQBgNVBAoMCW1pdG1wcm94eTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+    AQoCggEBAMK1NVyE2AgTNtOX2OiQ24TIZl9pIAXaN/psSX7m5PUFoca8x9lPDviT
+    T4mAg3UEtB/2rzmWGu8beUN0c6dpboVRZuPEDcqO510mEqgGScYSm02IDX3vfRZq
+    coLrdKp1aKse5F094C6b4FnZaJTa8gseQOmvWASt0ERrGKWT1AwafuoAAArzAVab
+    rU3iNvfGdE2hrJgLshvoc6ApPXdg3jD5XtWh6JUdM2mxCnlmCCmUpu9mfO1A13yK
+    ja6qiqMgzTjPMu5zupw6KGLGtVB5PFG1xPnQ4aSP1MuHONKCPlQeOVi9ukeU9lI7
+    IMLvqGrTfPr0rDxugI+dmJR7GvzNi38CAwEAAaNXMFUwDwYDVR0TAQH/BAUwAwEB
+    /zATBgNVHSUEDDAKBggrBgEFBQcDATAOBgNVHQ8BAf8EBAMCAQYwHQYDVR0OBBYE
+    FIc1HEEZfoSbmDz4hT5/Kl/6Ld+MMA0GCSqGSIb3DQEBCwUAA4IBAQCE8dBrwwbh
+    FJVL8nofP2o9TjU0ypGixSSXgB5XD5BTqQX8aOlWvbGwgJRICG+pHDwy17xiBBbg
+    U7dmgpE1riOnYvc+p44KZO+WmNU7acycqUQKZRNDYE/V+iW/F+mwUdd1dqEAoEDp
+    pknhNqQzlyssRvn4FAXm24c6/rjyLHEynn4ueUGHVE1yW4b8ol/VWBkJR90/ol2Y
+    PPXdKws17yMNFnMb+sLKnn74suNOp/OFrvWxqFHaTp/9qSASqXPGUBPmM6eUYQme
+    /F7YPESO4nE6dMwU+9RfyL1AQN4phRtwuVn7/Ljro/Uhp0rA7NUY5JAmWNWEMtsu
+    fySIPEz75+Ay
+    -----END CERTIFICATE-----
+    ''
+  ];
 }
