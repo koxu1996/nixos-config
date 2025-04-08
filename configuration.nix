@@ -184,7 +184,7 @@
     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
 
     # Use custom crates.io proxy.
-    CARGO_HTTP_PROXY = "https://crates:password@crates.devpeek.io";
+    CARGO_HTTP_PROXY = "https://crates:password@proxy.devpeek.io";
   };
 
   # Configure XDG portal - it fixes screen sharing in Hyprland.
