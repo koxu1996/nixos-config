@@ -32,7 +32,8 @@
     ripgrep
     obs-studio
     kubectl
-    rustup
+    #rustup <- It does NOT resolve system-trusted CAs - see rust-lang/cargo#15376.
+    cargo # It works with devpeek proxy!
     buf # Required to compile `gevulot-rs`.
     protobuf # Required to compile `gevulot-rs`.
     git-revise
