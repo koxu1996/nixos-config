@@ -20,7 +20,7 @@
     xorg.xeyes
     libnotify
     hack-font
-    signal-desktop
+    signal-desktop-bin
     rclone
     hdrop # Script for guake/tilde like behavior for my floating terminal.
     slurp
@@ -38,9 +38,9 @@
     protobuf # Required to compile `gevulot-rs`.
     git-revise
     libreoffice
-    okular
+    kdePackages.okular
     kubernetes-helm
-    ark
+    kdePackages.ark
   ];
 
   home.stateVersion = "24.11";
