@@ -42,6 +42,7 @@
     kubernetes-helm
     kdePackages.ark
     sshfs
+    difftastic
   ];
 
   home.stateVersion = "24.11";
