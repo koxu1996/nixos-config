@@ -41,6 +41,7 @@
     kdePackages.okular
     kubernetes-helm
     kdePackages.ark
+    sshfs
   ];
 
   home.stateVersion = "24.11";
