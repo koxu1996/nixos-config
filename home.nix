@@ -43,6 +43,7 @@
     kdePackages.ark
     sshfs
     difftastic
+    tor-browser
   ];
 
   home.stateVersion = "24.11";
