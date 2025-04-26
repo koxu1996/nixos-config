@@ -36,6 +36,7 @@
     cargo # It works with devpeek proxy!
     buf # Required to compile `gevulot-rs`.
     protobuf # Required to compile `gevulot-rs`.
+    mold # Modern linker.
     git-revise
     libreoffice
     kdePackages.okular
