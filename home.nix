@@ -45,6 +45,7 @@
     sshfs
     difftastic
     tor-browser
+    file
   ];
 
   home.stateVersion = "24.11";
