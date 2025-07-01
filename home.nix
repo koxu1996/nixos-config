@@ -10,7 +10,6 @@
     hyprpaper
     firefox
     brave
-    vscode
     waybar
     wlsunset
     fzf
@@ -47,6 +46,15 @@
     tor-browser
     file
   ];
+
+  programs.vscode = {
+    enable = true;
+    package = pkgs.vscode.fhs; # FHS required for CodeLLDB.
+    profiles.default.extensions = with pkgs.vscode-extensions; [
+      rust-lang.rust-analyzer
+      vadimcn.vscode-lldb
+    ];
+  };
 
   home.stateVersion = "24.11";
 
