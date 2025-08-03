@@ -45,6 +45,7 @@
     difftastic
     tor-browser
     file
+    deno
   ];
 
   programs.vscode = {
@@ -53,6 +54,7 @@
     profiles.default.extensions = with pkgs.vscode-extensions; [
       rust-lang.rust-analyzer
       vadimcn.vscode-lldb
+      denoland.vscode-deno
     ];
   };
 
