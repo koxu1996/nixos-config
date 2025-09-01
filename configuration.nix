@@ -100,6 +100,7 @@
       "docker"
       "scanner" # For scanning.
       "lp" # For printing.
+      "dialout" # For Dygma Defy configuration.
       #"video"
       #"audio"
     ];
