@@ -45,6 +45,7 @@
     difftastic
     tor-browser
     file
+    monero-gui
     deno
     zed-editor
   ];
