@@ -69,6 +69,12 @@
       options = [ "bind" ];
     };
 
+  fileSystems."/xmr" =
+    {
+      device = "rpool/safe/xmr";
+      fsType = "zfs";
+    };
+
   swapDevices = [ ];
 
   # Enables DHCP on each ethernet and wireless interface. In case of scripted networking
