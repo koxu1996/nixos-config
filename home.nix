@@ -46,6 +46,7 @@
     tor-browser
     file
     deno
+    zed-editor
   ];
 
   programs.vscode = {
