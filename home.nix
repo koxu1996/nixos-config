@@ -787,7 +787,6 @@
       # https://wiki.hyprland.org/Configuring/Variables/#animations
       animations = {
         enabled = false; # All animations are just an unnecessary slowdown.
-        first_launch_animation = false;
         animation = [
           # Disable all workspaces animations.
           "workspaces, 0"
