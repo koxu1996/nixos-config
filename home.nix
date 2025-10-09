@@ -932,6 +932,13 @@
         "move 15% 60%, class:^floating_terminal_1$"
         "size 70% 35%, class:^floating_terminal_1$"
       ];
+
+      #########################
+      ### HYPRLAND SPECIFIC ###
+      #########################
+      ecosystem = {
+        no_update_news = true; # Prevent popup on Hyprland update.
+      };
     };
     systemd = {
       enable = true;
