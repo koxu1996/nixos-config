@@ -178,6 +178,7 @@
     openssl
     pkg-config
     clang
+    wireguard-tools
   ];
 
   # Add OpenSSL path to additional pkgconfig paths.
