@@ -48,6 +48,7 @@
     monero-gui
     deno
     zed-editor
+    parallel
   ];
 
   programs.vscode = {
