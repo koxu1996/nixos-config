@@ -100,5 +100,12 @@
   };
 
   # Support for scanner devices.
-  hardware.sane.enable = true;
+  # NOTE: Example command `scanimage --device-name "airscan:w1:Canon G3010 series" --format=png --resolution 600 > scan.png`.
+  hardware.sane = {
+    enable = true;
+
+    extraBackends = [
+      pkgs.sane-airscan # Used for PIXMA G3411.
+    ];
+  };
 }
