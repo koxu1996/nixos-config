@@ -73,7 +73,12 @@
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
 
   # Enable CUPS to print documents.
-  services.printing.enable = true;
+  services.printing = {
+    enable = true;
+
+    # IMPORTANT: Do NOT use below driver for Canon Pixma G3411 - IPP Everywhere is better.
+    #drivers = [ pkgs.cnijfilter2 ];
+  };
 
   # Enable sound.
   services.pipewire = {

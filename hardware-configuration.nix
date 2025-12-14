@@ -87,6 +87,18 @@
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 
+  # Home printer - Canon PIXMA G3411.
+  hardware.printers = {
+    ensurePrinters = [
+      {
+        name = "Canon_G3010_series";
+        model = "everywhere";
+        location = "home";
+        deviceUri = "ipp://192.168.1.183/ipp/print";
+      }
+    ];
+  };
+
   # Support for scanner devices.
   hardware.sane.enable = true;
 }
