@@ -49,6 +49,7 @@
     deno
     zed-editor
     parallel
+    claude-code
   ];
 
   programs.vscode = {
