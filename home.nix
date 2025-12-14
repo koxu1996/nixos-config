@@ -50,6 +50,7 @@
     zed-editor
     parallel
     claude-code
+    imagemagick
   ];
 
   programs.vscode = {
