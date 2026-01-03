@@ -14,9 +14,13 @@
     impermanence.url = "github:nix-community/impermanence";
     # Dynamic cursor.
     #hypr-dynamic-cursors
+    # Custom Hy3, because pkgs.hyprlandPlugins.hy3 seems to be broken...
+    hy3 = {
+      url = "github:outfoxxed/hy3?ref=hl0.52.0";
+    };
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, ... }@inputs: {
+  outputs = { self, nixpkgs, tbsm, hy3, home-manager, impermanence, ... }@inputs: {
     # nixPC is the hostname.
     nixosConfigurations.nixPC = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
@@ -47,7 +51,7 @@
 
           # Pass extra arguments to home.nix
           home-manager.extraSpecialArgs = {
-            inherit tbsm;
+            inherit tbsm hy3;
           };
         }
       ];

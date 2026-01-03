@@ -1,4 +1,4 @@
-{ config, pkgs, nixpkgs, tbsm, ... }:
+{ config, pkgs, nixpkgs, tbsm, hy3, ... }:
 
 {
   home.username = "andrew";
@@ -664,7 +664,8 @@
     enable = true;
     plugins = [
       # Proper i3-like tilling.
-      pkgs.hyprlandPlugins.hy3
+      #pkgs.hyprlandPlugins.hy3 <- broken since 0.52 ???
+      hy3.packages.x86_64-linux.hy3
     ];
     settings = {
       #################
