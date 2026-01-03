@@ -977,8 +977,10 @@
 
   programs.git = {
     enable = true;
-    userEmail = "andrzej1_1@o2.pl";
-    userName = "Andrzej Broński";
+    settings.user = {
+      email = "andrzej1_1@o2.pl";
+      name = "Andrzej Broński";
+    };
     signing.key = "BF713D7A7BCEF5DC";
 
     # We want to have `gitk` tool.
