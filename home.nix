@@ -275,6 +275,7 @@
     zsh = {
       enable = true;
       enableCompletion = true;
+      history.path = "$HOME/.local/state/zsh/.zsh_history";
       autosuggestion = {
         enable = false;
       };

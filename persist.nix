@@ -32,11 +32,12 @@
         # https://discourse.nixos.org/t/slow-application-startup/29857/3
         ".cache"
         { directory = ".ssh"; mode = "0700"; }
+        ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
       ];
       files = [
         #".bash_history"
         #".config/systemsettingsrc"
-        ".zsh_history"
+        #".zsh_history" # Moved to .local/state/zsh directory - see above.
         #".config/tbsm/000-default-session.desktop"
         #".config/tbsm/001-last-session.desktop"
       ];
