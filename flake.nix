@@ -4,8 +4,8 @@
   inputs = {
     # NixOS official package source, using the latest versions.
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # Frytak's TBSM.
-    tbsm.url = "github:Frytak/NixFlake-TBSM";
+    # TBSM (session launcher).
+    tbsm.url = "github:koxu1996/tbsm/add-nix-flake";
     tbsm.inputs.nixpkgs.follows = "nixpkgs";
     # Home Manager.
     home-manager.url = "github:nix-community/home-manager";
