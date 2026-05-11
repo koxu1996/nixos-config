@@ -16,7 +16,7 @@
     lazygit
     pwvucontrol
     keepassxc
-    xorg.xeyes
+    xeyes
     libnotify
     hack-font
     signal-desktop-bin

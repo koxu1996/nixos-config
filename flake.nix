@@ -19,8 +19,8 @@
   outputs = { self, nixpkgs, tbsm, home-manager, impermanence, ... }@inputs: {
     # nixPC is the hostname.
     nixosConfigurations.nixPC = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
       modules = [
+        { nixpkgs.hostPlatform = "x86_64-linux"; }
         impermanence.nixosModules.impermanence
         ./configuration.nix
         tbsm.nixosModules.tbsm
