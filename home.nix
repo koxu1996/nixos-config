@@ -844,7 +844,7 @@
         "$mainMod, $keycode_d, exec, $launcher"
 
         # Toggle floating terminal with $.
-        ", $keycode_grave, exec, hdrop alacritty --class floating_terminal_1" # Unable to provide `--title "Floating terminal - System"`...
+        ", $keycode_grave, exec, hdrop alacritty --class floating_terminal_1"
 
         # Launch lockscreen with sup + L.
         "$sup, $keycode_l, exec, hyprlock"
@@ -930,12 +930,12 @@
 
       windowrule = [
         # Floating launcher.
-        "float on, match:title ^Application launcher - System$"
+        "match:title (Application launcher - System), float on"
 
         # Floating terminal.
-        "float on, match:class ^floating_terminal_1$"
-        "move 15% 60%, match:class ^floating_terminal_1$"
-        "size 70% 35%, match:class ^floating_terminal_1$"
+        "match:class floating_terminal_1, float on"
+        "match:class floating_terminal_1, size monitor_w*0.7 monitor_h*0.35"
+        "match:class floating_terminal_1, move monitor_w*0.15 monitor_h*0.6"
       ];
 
       #########################
