@@ -19,7 +19,7 @@
     xeyes
     libnotify
     hack-font
-    signal-desktop-bin
+    signal-desktop
     rclone
     hdrop # Script for guake/tilde like behavior for my floating terminal.
     slurp
