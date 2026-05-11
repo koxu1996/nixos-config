@@ -969,10 +969,13 @@
   #fonts.fontconfig.enable = true;
 
   home.file.".config/hypr/hyprpaper.conf".text = ''
-    preload = ~/Downloads/wallpaper.jpg
-    wallpaper = ,~/Downloads/wallpaper.jpg
     splash = false
     ipc = on
+
+    wallpaper {
+      monitor =
+      path = ${config.home.homeDirectory}/Downloads/wallpaper.jpg
+    }
   '';
 
   programs.git = {
