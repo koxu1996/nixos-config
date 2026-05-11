@@ -956,11 +956,11 @@
     sessions = [
       {
         Name = "Hyprland";
-        Comment = "Start the Hyprland Wayland Compositor";
-        Exec = "${pkgs.hyprland}/bin/Hyprland";
+        Comment = "An intelligent dynamic tiling Wayland compositor";
+        Exec = "${pkgs.hyprland}/bin/start-hyprland";
         Type = "Application";
         DesktopNames = "Hyprland";
-        Keywords = "wayland;compositor;hyprland;";
+        Keywords = "tiling;wayland;compositor;";
       }
     ];
   };
