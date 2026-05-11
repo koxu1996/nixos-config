@@ -1,4 +1,4 @@
-{ config, pkgs, nixpkgs, tbsm, hy3, ... }:
+{ config, pkgs, nixpkgs, tbsm, ... }:
 
 {
   home.username = "andrew";
@@ -664,8 +664,7 @@
     enable = true;
     plugins = [
       # Proper i3-like tilling.
-      #pkgs.hyprlandPlugins.hy3 <- broken since 0.52 ???
-      hy3.packages.x86_64-linux.hy3
+      pkgs.hyprlandPlugins.hy3
     ];
     settings = {
       #################
@@ -928,14 +927,14 @@
       # See https://wiki.hyprland.org/Configuring/Window-Rules/ for more
       # See https://wiki.hyprland.org/Configuring/Workspace-Rules/ for workspace rules
 
-      windowrulev2 = [
+      windowrule = [
         # Floating launcher.
-        "float, title:^Application launcher - System$"
+        "float on, match:title ^Application launcher - System$"
 
         # Floating terminal.
-        "float, class:^floating_terminal_1$"
-        "move 15% 60%, class:^floating_terminal_1$"
-        "size 70% 35%, class:^floating_terminal_1$"
+        "float on, match:class ^floating_terminal_1$"
+        "move 15% 60%, match:class ^floating_terminal_1$"
+        "size 70% 35%, match:class ^floating_terminal_1$"
       ];
 
       #########################
