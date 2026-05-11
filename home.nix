@@ -5,7 +5,7 @@
   home.homeDirectory = "/home/andrew";
 
   home.packages = with pkgs; [
-    neofetch
+    fastfetch
     #hyprland # We already have it in system packages...
     hyprpaper
     firefox
