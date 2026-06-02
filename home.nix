@@ -65,6 +65,14 @@
 
   home.stateVersion = "24.11";
 
+  home.pointerCursor = {
+    package = pkgs.phinger-cursors;
+    name = "phinger-cursors-light";
+    size = 24;
+    gtk.enable = true;
+    x11.enable = true;
+  };
+
   programs.alacritty = {
     enable = true;
     settings = {
@@ -668,6 +676,15 @@
       pkgs.hyprlandPlugins.hy3
     ];
     settings = {
+      ###################
+      ### ENVIRONMENT ###
+      ###################
+
+      env = [
+        "XCURSOR_THEME,phinger-cursors-light"
+        "XCURSOR_SIZE,24"
+      ];
+
       #################
       ### VARIABLES ###
       #################
