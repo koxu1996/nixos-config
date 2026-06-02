@@ -25,9 +25,18 @@
   boot.tmp.cleanOnBoot = true;
 
   # Rollback root dataset on boot.
-  boot.initrd.postDeviceCommands = lib.mkAfter ''
-    zfs rollback -r rpool/local/root@blank
-  '';
+  boot.initrd.systemd.services.rollback-root = {
+    description = "Rollback ZFS root dataset to blank snapshot";
+    wantedBy = [ "initrd.target" ];
+    after = [ "zfs-import-rpool.service" ];
+    before = [ "sysroot.mount" ];
+    path = [ config.boot.zfs.package ];
+    unitConfig.DefaultDependencies = "no";
+    serviceConfig.Type = "oneshot";
+    script = ''
+      zfs rollback -r rpool/local/root@blank
+    '';
+  };
 
   # Hostname.
   networking.hostName = "nixPC";
