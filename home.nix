@@ -51,6 +51,7 @@
     parallel
     claude-code
     imagemagick
+    bazecor
   ];
 
   programs.vscode = {
