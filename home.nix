@@ -968,7 +968,10 @@
     };
   };
 
-  imports = [ tbsm.homeManagerModules.tbsm ];
+  imports = [
+    tbsm.homeManagerModules.tbsm
+    ./pixma-scan.nix # `pixma-scan <format> <resolution> <output>` scan helper.
+  ];
   tbsm = {
     enable = true;
     defaultSession = "Hyprland";
