@@ -971,6 +971,7 @@
   imports = [
     tbsm.homeManagerModules.tbsm
     ./pixma-scan.nix # `pixma-scan <format> <resolution> <output>` scan helper.
+    ./thunderbird.nix # Thunderbird + pre-configured kontakt@brosoft.xyz account.
   ];
   tbsm = {
     enable = true;
