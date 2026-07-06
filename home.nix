@@ -10,7 +10,6 @@
     hyprpaper
     firefox
     brave
-    waybar
     wlsunset
     fzf
     lazygit
@@ -315,6 +314,11 @@
 
   programs.waybar = {
     enable = true;
+    # Run waybar as a systemd user service (bound to graphical-session.target)
+    # instead of a Hyprland exec-once. It then auto-restarts on crash and is
+    # restarted by `nixos-rebuild switch`, so a waybar version bump no longer
+    # leaves a dead bar. (The exec-once launch is removed below accordingly.)
+    systemd.enable = true;
     settings = {
       mainBar = {
         layer = "top";
@@ -766,8 +770,7 @@
       #################
 
       exec-once = [
-        # Launch Wayland bar.
-        "waybar"
+        # NOTE: waybar is started as a systemd user service (programs.waybar.systemd.enable), not here.
         # Launch night-light filter.
         "wlsunset -l 55.7:12.6 -t 5600:3600 -g 0.8"
         # Launch wallpaper.
