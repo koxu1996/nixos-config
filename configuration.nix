@@ -153,6 +153,11 @@
   # Enable the OpenSSH daemon.
   # services.openssh.enable = true;
 
+  # Tailscale. Installs the CLI + runs tailscaled; then `sudo tailscale up`.
+  # State (/var/lib/tailscale) is persisted in persist.nix so the node identity
+  # survives the stateless root rollback.
+  services.tailscale.enable = true;
+
   # Disable the default firewall.
   networking.firewall.enable = false;
 

@@ -4,6 +4,7 @@
     hideMounts = true;
     directories = [
       "/var/log"
+      "/var/lib/tailscale" # Tailscale node keys/state - survive root rollback.
       "/var/lib/nixos" # See: https://github.com/nbraud/nixpkgs/blob/6b6b12c27cb9e21d6530b8139591c7696b2dca2f/nixos/doc/manual/administration/nixos-state.section.md
       #"/var/lib/systemd/coredump"
       #"/etc/NetworkManager/system-connections"
