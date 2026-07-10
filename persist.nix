@@ -33,6 +33,7 @@
         # https://discourse.nixos.org/t/slow-application-startup/29857/3
         ".cache"
         { directory = ".ssh"; mode = "0700"; }
+        { directory = ".gnupg"; mode = "0700"; } # GPG keyring - signing key must survive rollback.
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
       ];
       files = [

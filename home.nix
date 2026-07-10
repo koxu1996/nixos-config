@@ -1010,9 +1010,22 @@
       name = "Andrzej Broński";
     };
     signing.key = "BF713D7A7BCEF5DC";
+    signing.signByDefault = true; # Auto-sign every commit (commit.gpgsign).
 
     # We want to have `gitk` tool.
     package = pkgs.gitFull;
+  };
+
+  # GPG + agent so the signing key's passphrase can be entered and cached.
+  # Without a pinentry, both `gpg --import` and commit signing fail with
+  # "No pinentry". pinentry-qt is a GUI popup that also works inside lazygit
+  # (Qt is already in the closure via KeePassXC).
+  programs.gpg.enable = true;
+  services.gpg-agent = {
+    enable = true;
+    pinentryPackage = pkgs.pinentry-qt;
+    defaultCacheTtl = 28800; # 8h — don't retype the passphrase every commit.
+    maxCacheTtl = 28800;
   };
 
   programs.hyprlock = {
