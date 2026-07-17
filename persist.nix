@@ -34,6 +34,7 @@
         ".cache"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; } # GPG keyring - signing key must survive rollback.
+        ".config/gh" # GitHub CLI auth token + config.
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
       ];
       files = [

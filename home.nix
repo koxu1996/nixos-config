@@ -13,6 +13,7 @@
     wlsunset
     fzf
     lazygit
+    gh # GitHub CLI.
     pwvucontrol
     keepassxc
     xeyes
