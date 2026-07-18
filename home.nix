@@ -976,6 +976,7 @@
     tbsm.homeManagerModules.tbsm
     ./pixma-scan.nix # `pixma-scan <format> <resolution> <output>` scan helper.
     ./thunderbird.nix # Thunderbird + pre-configured kontakt@brosoft.xyz account.
+    ./gpg-tools.nix # `gpg-load` + `tgpg`: KeePass-backed RAM-only GPG keyring.
   ];
   tbsm = {
     enable = true;
