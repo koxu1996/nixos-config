@@ -1011,8 +1011,21 @@
       email = "andrzej1_1@o2.pl";
       name = "Andrzej Broński";
     };
-    signing.key = "BF713D7A7BCEF5DC";
+    signing.key = "BF713D7A7BCEF5DC"; # personal default (andrzej1_1@o2.pl / koxu1996@gmail.com)
     signing.signByDefault = true; # Auto-sign every commit (commit.gpgsign).
+
+    # P11 work identity: auto-switch email + signing key for any repo whose path
+    # starts with ~/Downloads/tmp/p11 (e.g. p11-pillar-v0). Personal identity
+    # stays the default everywhere else.
+    includes = [
+      {
+        condition = "gitdir:~/Downloads/tmp/p11*/";
+        contents = {
+          user.email = "ab@projecteleven.com";
+          user.signingkey = "6550D9BB6997F292F57A861802963296A5FABF6D";
+        };
+      }
+    ];
 
     # We want to have `gitk` tool.
     package = pkgs.gitFull;
