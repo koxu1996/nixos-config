@@ -693,6 +693,8 @@
 
   wayland.windowManager.hyprland = {
     enable = true;
+    # Keep the legacy hyprlang config format (our settings are hyprlang, not lua).
+    configType = "hyprlang";
     plugins = [
       # Proper i3-like tilling.
       pkgs.hyprlandPlugins.hy3
