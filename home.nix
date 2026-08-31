@@ -333,6 +333,7 @@
           "hyprland/window"
         ];
         modules-right = [
+          "custom/voice"
           "pulseaudio"
           "network"
           "cpu"
@@ -397,6 +398,16 @@
           "on-click" = "pwvucontrol";
           tooltip = false;
         };
+        # Offline voice dictation (github local-voice). Left-click toggles
+        # recording, right-click opens settings. Needs `voice` on PATH + daemon.
+        "custom/voice" = {
+          exec = "voice status";
+          "return-type" = "json";
+          interval = 1;
+          "on-click" = "voice toggle";
+          "on-click-right" = "voice settings";
+          tooltip = true;
+        };
       };
     };
     style = ''
@@ -405,6 +416,11 @@
         font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
         font-size: 13px;
       }
+      #custom-voice { padding: 0 10px; }
+      #custom-voice.idle { color: #cdd6f4; }
+      #custom-voice.recording { color: #f38ba8; }
+      #custom-voice.processing { color: #89b4fa; }
+      #custom-voice.off { color: #6c7086; }
       window#waybar {
         background-color: rgba(43, 48, 59, 0.5);
         border-bottom: 3px solid rgba(100, 114, 125, 0.5);
