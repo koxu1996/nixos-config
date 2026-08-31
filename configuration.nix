@@ -17,6 +17,11 @@
   # is NOT compatible...
   boot.kernelPackages = pkgs.linuxPackages_6_12;
 
+  # Keep force-importing the ZFS root (current behavior) and silence the 26.11
+  # default-change warning. Safe on a single-machine local pool; set to false
+  # only if this pool could ever be imported by another running system.
+  boot.zfs.forceImportRoot = true;
+
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
