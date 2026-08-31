@@ -1056,7 +1056,7 @@
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
-    pinentryPackage = pkgs.pinentry-qt;
+    pinentry.package = pkgs.pinentry-qt;
     defaultCacheTtl = 28800; # 8h — don't retype the passphrase every commit.
     maxCacheTtl = 28800;
   };
