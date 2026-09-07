@@ -30,12 +30,14 @@
         #".local/share/sddm"
         #".local/share/zoxide"
         "Downloads"
+        "Sync" # Syncthing-shared folder (KeePassXC database lives here).
         # https://discourse.nixos.org/t/slow-application-startup/29857/3
         ".cache"
         { directory = ".ssh"; mode = "0700"; }
         { directory = ".gnupg"; mode = "0700"; } # GPG keyring - signing key must survive rollback.
         ".config/gh" # GitHub CLI auth token + config.
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
+        ".local/state/syncthing" # Syncthing device key, certs, and DB.
       ];
       files = [
         #".bash_history"

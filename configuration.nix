@@ -281,6 +281,23 @@
     openFirewall = true;
   };
 
+  # Syncthing for peer-to-peer file sync (web UI at http://127.0.0.1:8384).
+  services.syncthing = {
+    enable = true;
+    openDefaultPorts = true;
+    # Run as the regular user so file permissions just work for ~/Sync.
+    user = "andrew";
+    dataDir = "/home/andrew";
+    configDir = "/home/andrew/.local/state/syncthing";
+    # Let devices/folders added via the web UI survive nixos-rebuild.
+    overrideDevices = false;
+    overrideFolders = false;
+    settings.folders."Sync" = {
+      path = "/home/andrew/Sync";
+      label = "Sync";
+    };
+  };
+
   # Additional certificates.
   security.pki.certificates = [
     (builtins.readFile ./certs/mitmproxy-ca-cert.pem)
