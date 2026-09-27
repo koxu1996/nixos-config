@@ -69,11 +69,8 @@
       options = [ "bind" ];
     };
 
-  fileSystems."/xmr" =
-    {
-      device = "rpool/safe/xmr";
-      fsType = "zfs";
-    };
+  # NOTE: /xmr (rpool/safe/xmr) is mounted in ./monero.nix, which owns both the
+  # Monero blockchain storage and the monerod service.
 
   swapDevices = [ ];
 

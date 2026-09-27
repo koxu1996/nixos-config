@@ -11,6 +11,8 @@
       ./hardware-configuration.nix
       # Persistence config.
       ./persist.nix
+      # Monero node (monerod) + its blockchain storage mount.
+      ./monero.nix
     ];
 
   # I would like to use the latest kernel - ArchOS like experience - but ZFS
