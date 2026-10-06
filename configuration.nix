@@ -55,7 +55,7 @@
   # Custom `/etc/hosts`.
   networking.hosts = {
     # Block direct access to the official Rust crates.
-    "127.0.0.1" = ["static.crates.io" "index.crates.io"];
+    #"127.0.0.1" = ["static.crates.io" "index.crates.io"];
   };
 
   # Timezone.
@@ -217,7 +217,7 @@
     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
 
     # Use custom crates.io proxy.
-    CARGO_HTTP_PROXY = "https://crates:password@proxy.devpeek.io:8002";
+    #CARGO_HTTP_PROXY = "https://crates:password@proxy.devpeek.io:8002";
 
     # Use vim as default editor.
     EDITOR = "vim";
