@@ -212,6 +212,7 @@
     openssl
     pkg-config
     clang
+    python3
     wireguard-tools
   ];
 
