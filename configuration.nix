@@ -96,6 +96,9 @@
     #drivers = [ pkgs.cnijfilter2 ];
   };
 
+  # Don't fail system activation when the printer is offline.
+  systemd.services.ensure-printers.wantedBy = lib.mkForce [ ];
+
   # Enable sound.
   services.pipewire = {
     enable = true;
