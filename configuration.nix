@@ -155,6 +155,11 @@
   # TODO: Find a way to avoid manual adding each key with `ssh-add`.
   programs.ssh.startAgent = true;
 
+  # Steam + gaming stack (CS2 is native Linux).
+  programs.steam.enable = true;
+  programs.gamescope.enable = true; # Valve compositor; useful for fullscreen scaling on Hyprland.
+  programs.gamemode.enable = true; # CPU governor / niceness tweaks while playing.
+
   # List services that you want to enable:
 
   # Enable the OpenSSH daemon.
@@ -238,6 +243,7 @@
 
   hardware.graphics = {
     enable = true;
+    enable32Bit = true; # Required for Steam's 32-bit runtime.
   };
 
   # Custom issue "greeter".
