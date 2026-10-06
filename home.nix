@@ -31,8 +31,10 @@
     ripgrep
     obs-studio
     kubectl
-    #rustup <- It does NOT resolve system-trusted CAs - see rust-lang/cargo#15376.
+    #rustup # system-trusted CAs now work by setting CARGO_HTTP_PROXY_CAINFO - see rust-lang/cargo#15376 (closed).
     cargo # It works with devpeek proxy!
+    rustfmt # Cargo formatter.
+    rustc
     buf # Required to compile `gevulot-rs`.
     protobuf # Required to compile `gevulot-rs`.
     mold # Modern linker.
