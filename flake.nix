@@ -27,6 +27,7 @@
         impermanence.nixosModules.impermanence
         disko.nixosModules.disko
         ./disko.nix
+        ./tpm.nix
         ./configuration.nix
         tbsm.nixosModules.tbsm
         {
