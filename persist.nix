@@ -38,8 +38,12 @@
         ".config/gh" # GitHub CLI auth token + config.
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
         ".local/state/syncthing" # Syncthing device key, certs, and DB.
+        # Claude Code: login token (.credentials.json), session transcripts
+        # (projects/), settings, todos. mode 0700 to protect the OAuth token.
+        { directory = ".claude"; mode = "0700"; }
       ];
       files = [
+        ".claude.json" # Claude Code: account info + per-project prompt history.
         #".bash_history"
         #".config/systemsettingsrc"
         #".zsh_history" # Moved to .local/state/zsh directory - see above.
