@@ -215,6 +215,19 @@
     wireguard-tools
   ];
 
+  #nix.binaryCaches = [
+  #"https://cache.nixos.org?priority=1"
+  #"https://nix-community.cachix.org?priority=2"
+  # Try using cache v2 (experimental, might break!)
+  # "https://aseipp-nix-cache.global.ssl.fastly.net"
+  # "https://aseipp-nix-cache.freetls.fastly.net"
+  #];
+  #nix.settings = {
+  # max-jobs = 32;
+  #http-connections = 128;
+  #max-substitution-jobs = 128;
+  #};
+
   # Add OpenSSL path to additional pkgconfig paths.
   environment.variables = {
     PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
