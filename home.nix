@@ -21,7 +21,6 @@
     hack-font
     signal-desktop
     rclone
-    hdrop # Script for guake/tilde like behavior for my floating terminal.
     slurp
     wl-clipboard
     grim
