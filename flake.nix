@@ -15,11 +15,14 @@
     # Disko - declarative disk partitioning / ZFS layout.
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # clutch HUD (local checkout; committed files only).
+    clutch.url = "git+file:///home/andrew/Downloads/tmp/clutch";
+    clutch.inputs.nixpkgs.follows = "nixpkgs";
     # Dynamic cursor.
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, ... }@inputs: {
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, clutch, ... }@inputs: {
     # nixPC is the hostname.
     nixosConfigurations.nixPC = nixpkgs.lib.nixosSystem {
       modules = [
@@ -29,6 +32,8 @@
         ./disko.nix
         ./tpm.nix
         ./configuration.nix
+        # Patched Hyprland (noscreenshare layers hidden from shares) + noscreenshare-demo.
+        ./hyprland-noscreenshare
         tbsm.nixosModules.tbsm
         {
           tbsm = {
@@ -53,7 +58,7 @@
 
           # Pass extra arguments to home.nix
           home-manager.extraSpecialArgs = {
-            inherit tbsm;
+            inherit tbsm clutch;
           };
         }
       ];

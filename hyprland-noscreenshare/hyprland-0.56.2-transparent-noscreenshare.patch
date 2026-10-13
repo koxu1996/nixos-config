@@ -1,0 +1,166 @@
+diff --git a/src/managers/screenshare/ScreenshareFrame.cpp b/src/managers/screenshare/ScreenshareFrame.cpp
+index c74adcb..eb39d26 100644
+--- a/src/managers/screenshare/ScreenshareFrame.cpp
++++ b/src/managers/screenshare/ScreenshareFrame.cpp
+@@ -237,28 +237,9 @@ void CScreenshareFrame::renderMonitor() {
+         };
+     };
+ 
+-    for (auto const& l : Desktop::layerState()->layers()) {
+-        if (!l->m_ruleApplicator->noScreenShare().valueOrDefault())
+-            continue;
+-
+-        if UNLIKELY (!l->visible())
+-            continue;
+-
+-        const auto REALPOS  = l->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT);
+-        const auto REALSIZE = l->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT);
+-
+-        const auto noScreenShareBox = CBox{REALPOS.x, REALPOS.y, std::max(REALSIZE.x, 5.0), std::max(REALSIZE.y, 5.0)}
+-                                          .translate(-PMONITOR->m_position)
+-                                          .scale(PMONITOR->m_scale)
+-                                          .translate(-m_session->m_captureBox.pos());
+-
+-        g_pHyprRenderer->draw(CRectPassElement::SRectData{.box = noScreenShareBox, .color = Colors::BLACK}, noScreenShareBox);
+-
+-        const auto     geom            = l->m_geometry;
+-        const Vector2D popupBaseOffset = REALPOS - Vector2D{geom.pos().x, geom.pos().y};
+-        if (l->m_popupHead)
+-            l->m_popupHead->breadthfirst(hidePopups(popupBaseOffset), nullptr);
+-    }
++    // noScreenShare layers are excluded from the mirror texture during
++    // the main render pass via CMirrorTogglePassElement, so no black-box
++    // override is needed for them here.
+ 
+     for (auto const& w : Desktop::windowState()->windows()) {
+         if (!w->m_ruleApplicator->noScreenShare().valueOrDefault())
+diff --git a/src/output/Monitor.cpp b/src/output/Monitor.cpp
+index e69d8dd..9477496 100644
+--- a/src/output/Monitor.cpp
++++ b/src/output/Monitor.cpp
+@@ -2715,6 +2715,11 @@ bool CMonitor::needsUnmodifiedCopy() {
+     if (*PKEEP == 1)
+         return true;
+ 
++    // Force MRT when screenshare is active so that CMirrorTogglePassElement
++    // can exclude noScreenShare layers from the mirror texture.
++    if (Screenshare::mgr()->outputNeedsCopyFB(m_self.lock()))
++        return true;
++
+     const bool HAS_MODS = m_sdrMinLuminance != SDR_MIN_LUMINANCE || m_sdrMaxLuminance != SDR_MAX_LUMINANCE || (m_sdrBrightness > 0 && m_sdrBrightness != 1.0) ||
+         (m_sdrSaturation > 0 && m_sdrSaturation != 1.0);
+ 
+diff --git a/src/render/Renderer.cpp b/src/render/Renderer.cpp
+index 249f084..cd8aa89 100644
+--- a/src/render/Renderer.cpp
++++ b/src/render/Renderer.cpp
+@@ -45,6 +45,7 @@
+ #include "pass/RectPassElement.hpp"
+ #include "pass/RendererHintsPassElement.hpp"
+ #include "pass/SurfacePassElement.hpp"
++#include "pass/MirrorTogglePassElement.hpp"
+ #include "../debug/log/Logger.hpp"
+ #include "../protocols/ColorManagement.hpp"
+ #include "../protocols/types/ContentType.hpp"
+@@ -944,6 +945,10 @@ void IHyprRenderer::renderLayer(PHLLS pLayer, PHLMONITOR pMonitor, const Time::s
+         (lockscreen && !pLayer->m_ruleApplicator->aboveLock().valueOrDefault()))
+         return;
+ 
++    const bool skipMirror = pLayer->m_ruleApplicator->noScreenShare().valueOrDefault();
++    if (skipMirror)
++        m_renderPass.add(makeUnique<CMirrorTogglePassElement>(true));
++
+     static auto PDIMAROUND = CConfigValue<Config::FLOAT>("decoration:dim_around");
+ 
+     if (*PDIMAROUND && pLayer->m_ruleApplicator->dimAround().valueOrDefault() && !m_bRenderingSnapshot && !popups) {
+@@ -1027,6 +1032,9 @@ void IHyprRenderer::renderLayer(PHLLS pLayer, PHLMONITOR pMonitor, const Time::s
+             },
+             &renderdata);
+     }
++
++    if (skipMirror)
++        m_renderPass.add(makeUnique<CMirrorTogglePassElement>(false));
+ }
+ 
+ void IHyprRenderer::renderIMEPopup(CInputPopup* pPopup, PHLMONITOR pMonitor, const Time::steady_tp& time) {
+diff --git a/src/render/pass/MirrorTogglePassElement.cpp b/src/render/pass/MirrorTogglePassElement.cpp
+new file mode 100644
+index 0000000..2d4ddcd
+--- /dev/null
++++ b/src/render/pass/MirrorTogglePassElement.cpp
+@@ -0,0 +1,43 @@
++#include "MirrorTogglePassElement.hpp"
++#include "../Renderer.hpp"
++#include "../OpenGL.hpp"
++
++CMirrorTogglePassElement::CMirrorTogglePassElement(bool pause) : m_pause(pause) {
++    ;
++}
++
++std::vector<UP<IPassElement>> CMirrorTogglePassElement::draw() {
++    const auto& FB = g_pHyprRenderer->m_renderData.mainFB;
++    if (!FB || !FB->getMirrorTexture())
++        return {};
++
++    if (m_pause) {
++        GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
++        glDrawBuffers(1, drawBuffers);
++    } else {
++        GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
++        glDrawBuffers(2, drawBuffers);
++    }
++
++    return {};
++}
++
++bool CMirrorTogglePassElement::needsLiveBlur() {
++    return false;
++}
++
++bool CMirrorTogglePassElement::needsPrecomputeBlur() {
++    return false;
++}
++
++std::optional<CBox> CMirrorTogglePassElement::boundingBox() {
++    return std::nullopt;
++}
++
++CRegion CMirrorTogglePassElement::opaqueRegion() {
++    return {};
++}
++
++bool CMirrorTogglePassElement::undiscardable() {
++    return true;
++}
+diff --git a/src/render/pass/MirrorTogglePassElement.hpp b/src/render/pass/MirrorTogglePassElement.hpp
+new file mode 100644
+index 0000000..945eef8
+--- /dev/null
++++ b/src/render/pass/MirrorTogglePassElement.hpp
+@@ -0,0 +1,26 @@
++#pragma once
++#include "PassElement.hpp"
++
++class CMirrorTogglePassElement : public IPassElement {
++  public:
++    CMirrorTogglePassElement(bool pause);
++    virtual ~CMirrorTogglePassElement() = default;
++
++    virtual std::vector<UP<IPassElement>> draw();
++    virtual bool                          needsLiveBlur();
++    virtual bool                          needsPrecomputeBlur();
++    virtual std::optional<CBox>           boundingBox();
++    virtual CRegion                       opaqueRegion();
++    virtual bool                          undiscardable();
++
++    virtual const char*                   passName() {
++        return "CMirrorTogglePassElement";
++    }
++
++    virtual ePassElementType type() {
++        return EK_CUSTOM;
++    };
++
++  private:
++    bool m_pause = false;
++};

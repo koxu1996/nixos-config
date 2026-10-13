@@ -1,5 +1,5 @@
 # Hyprland window manager — split out of home.nix.
-{ pkgs, lib, config, ... }:
+{ pkgs, lib, config, clutch, ... }:
 let
   # Pick a command with fzf and start it detached from the (closing) launcher terminal.
   # NOTE: needs bashInteractive; writeShellScript's bash lacks the compgen builtin.
@@ -10,6 +10,9 @@ let
   '';
 in
 {
+  # clutch HUD: start it from the app launcher (`clutch`); it is not autostarted.
+  home.packages = [ clutch.packages.${pkgs.stdenv.hostPlatform.system}.clutch ];
+
   wayland.windowManager.hyprland = {
     enable = true;
     # Lua config (hyprlang is deprecated). Home Manager generates ~/.config/hypr/hyprland.lua:
@@ -123,6 +126,10 @@ in
         decoration = {
           -- Minor rounding around windows.
           rounding = 4,
+          -- Light blur behind translucent surfaces (the clutch HUD card).
+          blur = {
+            size = 3,
+          },
         },
 
         -- https://wiki.hyprland.org/Configuring/Variables/#animations
@@ -278,6 +285,45 @@ in
         size = "monitor_w*0.7 monitor_h*0.35",
         move = "monitor_w*0.15 monitor_h*0.6",
       })
+
+      -- Keep the demo HUD out of screen shares (needs the patched Hyprland,
+      -- see hyprland-noscreenshare/; stock Hyprland draws a black box instead).
+      hl.layer_rule({
+        name = "noscreenshare-demo",
+        match = { namespace = "^noscreenshare-demo$" },
+        no_screen_share = true,
+      })
+
+      -- clutch HUD (run `clutch` from the launcher): hidden from screen shares and from its
+      -- own captures (needs the patched Hyprland), blurred behind the card.
+      hl.layer_rule({
+        name = "clutch-hud",
+        match = { namespace = "^clutch-hud$" },
+        no_screen_share = true,
+        blur = true,
+        ignore_alpha = 0.3,
+        no_anim = true,
+      })
+
+      -- clutch HUD shortcuts (Hyprland global shortcuts, appid "hud"). Bound by key name, not
+      -- keycode, so they follow the Dvorak layout; the description's "hud:<action>" prefix
+      -- is how the HUD finds them for its key hints.
+      for _, b in ipairs({
+        { "h", "capture", "Capture screen" },
+        { "d", "ask", "Process screenshots" },
+        { "g", "dismiss", "Reset HUD" },
+        { "a", "toggle", "Show or hide HUD" },
+        { "semicolon", "quit", "Quit HUD" },
+        { "c", "copy", "Copy answer" },
+        { "e", "scrollUp", "Scroll answer up" },
+        { "u", "scrollDown", "Scroll answer down" },
+        { "Left", "moveLeft", "Move HUD left" },
+        { "Right", "moveRight", "Move HUD right" },
+        { "Up", "moveUp", "Move HUD up" },
+        { "Down", "moveDown", "Move HUD down" },
+      }) do
+        hl.bind("SUPER + " .. b[1], hl.dsp.global("hud:" .. b[2]), { description = "hud:" .. b[2] .. " " .. b[3] })
+      end
     '';
     systemd = {
       enable = true;

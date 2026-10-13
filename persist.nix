@@ -43,6 +43,7 @@
         # Claude Code: login token (.credentials.json), session transcripts
         # (projects/), settings, todos. mode 0700 to protect the OAuth token.
         { directory = ".claude"; mode = "0700"; }
+        { directory = ".config/clutch"; mode = "0700"; } # clutch HUD config + OpenCode Zen API key.
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.
