@@ -5,49 +5,23 @@
 { config, lib, pkgs, ... }:
 
 {
+  # Shared by every host. Host-specific settings live in hosts/<name>/.
   imports =
     [
-      # Include the results of the hardware scan.
-      ./hardware-configuration.nix
       # Persistence config.
       ./persist.nix
-      # Monero node (monerod) + its blockchain storage mount.
-      ./monero.nix
+      # ZFS root rolled back to a blank snapshot on every boot.
+      ./zfs-impermanence.nix
+      # Home printer + scanner (network devices).
+      ./printing.nix
     ];
-
-  # I would like to use the latest kernel - ArchOS like experience - but ZFS
-  # is NOT compatible...
-  boot.kernelPackages = pkgs.linuxPackages_6_12;
-
-  # Keep force-importing the ZFS root (current behavior) and silence the 26.11
-  # default-change warning. Safe on a single-machine local pool; set to false
-  # only if this pool could ever be imported by another running system.
-  boot.zfs.forceImportRoot = true;
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
-  boot.loader.efi.canTouchEfiVariables = true;
 
   # Clear old temporary files on boot.
   boot.tmp.cleanOnBoot = true;
 
-  # Rollback root dataset on boot.
-  boot.initrd.systemd.services.rollback-root = {
-    description = "Rollback ZFS root dataset to blank snapshot";
-    wantedBy = [ "initrd.target" ];
-    after = [ "zfs-import-rpool.service" ];
-    before = [ "sysroot.mount" ];
-    path = [ config.boot.zfs.package ];
-    unitConfig.DefaultDependencies = "no";
-    serviceConfig.Type = "oneshot";
-    script = ''
-      zfs rollback -r rpool/local/root@blank
-    '';
-  };
-
-  # Hostname.
-  networking.hostName = "nixPC";
-  networking.hostId = "666ab666"; # Required by ZFS.
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
@@ -87,17 +61,6 @@
   services.xserver.xkb.layout = "pl";
   services.xserver.xkb.variant = "dvp";
   # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  services.printing = {
-    enable = true;
-
-    # IMPORTANT: Do NOT use below driver for Canon Pixma G3411 - IPP Everywhere is better.
-    #drivers = [ pkgs.cnijfilter2 ];
-  };
-
-  # Don't fail system activation when the printer is offline.
-  systemd.services.ensure-printers.wantedBy = lib.mkForce [ ];
 
   # Enable sound.
   services.pipewire = {
@@ -157,11 +120,6 @@
   # Run OpenSSH agent to remember passhprases.
   # TODO: Find a way to avoid manual adding each key with `ssh-add`.
   programs.ssh.startAgent = true;
-
-  # Steam + gaming stack (CS2 is native Linux).
-  programs.steam.enable = true;
-  programs.gamescope.enable = true; # Valve compositor; useful for fullscreen scaling on Hyprland.
-  programs.gamemode.enable = true; # CPU governor / niceness tweaks while playing.
 
   # List services that you want to enable:
 
@@ -258,10 +216,7 @@
   # Hyperland desktop.
   #programs.hyprland.enable = true;
 
-  hardware.graphics = {
-    enable = true;
-    enable32Bit = true; # Required for Steam's 32-bit runtime.
-  };
+  hardware.graphics.enable = true;
 
   # Custom issue "greeter".
   environment.etc.issue.text = ''
@@ -300,13 +255,6 @@
   # Enable Docker.
   virtualisation.docker.enable = true;
 
-  # Service required to locate printers/scanners in the network.
-  services.avahi = {
-    enable = true;
-    nssmdns4 = true;
-    openFirewall = true;
-  };
-
   # Syncthing for peer-to-peer file sync (web UI at http://127.0.0.1:8384).
   services.syncthing = {
     enable = true;
@@ -326,6 +274,6 @@
 
   # Additional certificates.
   security.pki.certificates = [
-    (builtins.readFile ./certs/mitmproxy-ca-cert.pem)
+    (builtins.readFile ../certs/mitmproxy-ca-cert.pem)
   ];
 }

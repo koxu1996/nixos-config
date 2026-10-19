@@ -8,6 +8,8 @@ let
     cmd=$(compgen -c | sort -u | ${pkgs.fzf}/bin/fzf) || exit 0
     setsid -f "$cmd" >/dev/null 2>&1 </dev/null
   '';
+  mainMod = config.my.hyprland.mainMod;
+  secondaryMod = if mainMod == "ALT" then "SUPER" else "ALT";
 in
 {
   wayland.windowManager.hyprland = {
@@ -171,8 +173,8 @@ in
       --- KEYBINDINGS ---
       -------------------
 
-      local mainMod = "ALT" -- Sets "ALT" key as main modifier
-      local sup = "SUPER"
+      local mainMod = "${mainMod}" -- Sets "${mainMod}" key as main modifier
+      local sup = "${secondaryMod}"
 
       -- https://wiki.hyprland.org/Configuring/Binds/
 

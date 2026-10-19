@@ -1,4 +1,4 @@
-{ config, pkgs, nixpkgs, tbsm, ... }:
+{ config, lib, pkgs, nixpkgs, tbsm, ... }:
 
 {
   home.username = "andrew";
@@ -44,7 +44,6 @@
     kdePackages.ark
     sshfs
     difftastic
-    tor-browser
     file
     monero-gui
     deno
@@ -52,6 +51,9 @@
     parallel
     claude-code
     imagemagick
+  ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
+    # Not built for aarch64 (nixAir).
+    tor-browser
     bazecor
   ];
 
@@ -316,6 +318,7 @@
   #programs.command-not-found.enable = true;
 
   imports = [
+    ./options.nix
     ./waybar.nix
     ./hyprland.nix
     tbsm.homeManagerModules.tbsm
@@ -346,7 +349,7 @@
 
     wallpaper {
       monitor =
-      path = ${config.home.homeDirectory}/Downloads/wallpaper.jpg
+      path = ${config.my.wallpaper}
     }
   '';
 
@@ -398,7 +401,7 @@
       background = [
         {
           monitor = "";
-          path = "/home/andrew/Downloads/wallpaper.jpg";
+          path = config.my.wallpaper;
           blur_passes = 2; # 0 disables blurring
           blur_size = 7;
           noise = 1.17e-2;

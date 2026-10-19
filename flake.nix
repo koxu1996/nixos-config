@@ -15,49 +15,98 @@
     # Disko - declarative disk partitioning / ZFS layout.
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
+    nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";
+    nixos-apple-silicon.inputs.nixpkgs.follows = "nixpkgs";
     # Dynamic cursor.
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, ... }@inputs: {
-    # nixPC is the hostname.
-    nixosConfigurations.nixPC = nixpkgs.lib.nixosSystem {
-      modules = [
-        { nixpkgs.hostPlatform = "x86_64-linux"; }
-        impermanence.nixosModules.impermanence
-        disko.nixosModules.disko
-        ./disko.nix
-        ./tpm.nix
-        ./configuration.nix
-        tbsm.nixosModules.tbsm
-        {
-          tbsm = {
-            enable = true;
-            autoStart = {
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, ... }@inputs:
+    let
+      # One NixOS system per host. `modules` are the host's own modules (they
+      # import ./modules/base.nix themselves where order matters); everything
+      # else here is shared by all hosts.
+      mkHost = { system, modules }: nixpkgs.lib.nixosSystem {
+        modules = [
+          { nixpkgs.hostPlatform = system; }
+          impermanence.nixosModules.impermanence
+          disko.nixosModules.disko
+        ] ++ modules ++ [
+          tbsm.nixosModules.tbsm
+          {
+            tbsm = {
               enable = true;
-              allowedTtys = [ "/dev/tty1" ];
+              autoStart = {
+                enable = true;
+                allowedTtys = [ "/dev/tty1" ];
+              };
+              config = ''
+                #XserverArg="-quiet -nolisten tcp"
+                verboseLevel=2 # info level
+                theme=""
+              '';
             };
-            config = ''
-              #XserverArg="-quiet -nolisten tcp"
-              verboseLevel=2 # info level
-              theme=""
-            '';
-          };
-        }
-        home-manager.nixosModules.home-manager
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          home-manager.backupFileExtension = "hm-backup";
-          home-manager.users.andrew = import ./home.nix;
+          }
+          home-manager.nixosModules.home-manager
+          {
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.backupFileExtension = "hm-backup";
+            home-manager.users.andrew = import ./home;
 
-          # Pass extra arguments to home.nix
-          home-manager.extraSpecialArgs = {
-            inherit tbsm;
-          };
-        }
+            # Pass extra arguments to home/default.nix
+            home-manager.extraSpecialArgs = {
+              inherit tbsm;
+            };
+          }
+        ];
+      };
+    in
+    {
+    # nixPC is the hostname.
+    nixosConfigurations.nixPC = mkHost {
+      system = "x86_64-linux";
+      modules = [
+        ./hosts/nixPC/disko.nix
+        ./hosts/nixPC/tpm.nix
+        ./modules/base.nix
+        ./hosts/nixPC
       ];
     };
+
+    # nixAir: MacBook Air M2 (Apple Silicon). Build with --impure (firmware).
+    nixosConfigurations.nixAir = mkHost {
+      system = "aarch64-linux";
+      modules = [
+        nixos-apple-silicon.nixosModules.apple-silicon-support
+        ./hosts/nixAir/disko.nix
+        ./modules/base.nix
+        ./hosts/nixAir
+      ];
+    };
+
+    # Installer for nixAir: nixos-apple-silicon's installer ISO plus ZFS, on the
+    # same nixpkgs (so the same Asahi kernel and ZFS) as nixAir itself. The
+    # official ISO has ZFS switched off. Build:
+    #   nix build --option builders "" .#installer-nixAir -o result-installer
+    packages.aarch64-linux.installer-nixAir =
+      let
+        installer = nixpkgs.lib.nixosSystem {
+          modules = [
+            nixos-apple-silicon.nixosModules.apple-silicon-installer
+            ({ lib, ... }: {
+              nixpkgs.hostPlatform = "aarch64-linux";
+              boot.supportedFilesystems.zfs = lib.mkForce true;
+              networking.hostId = "a35dc981"; # nixAir's, so the pool imports cleanly.
+              environment.systemPackages = [ disko.packages.aarch64-linux.default ];
+            })
+          ];
+        };
+      in
+      installer.config.system.build.isoImage.overrideAttrs (old: {
+        passthru = (old.passthru or { }) // { inherit (installer) config; };
+      });
 
     # Include formatter, so we can run `nix fmt`.
     formatter.x86_64-linux = nixpkgs.legacyPackages.x86_64-linux.nixpkgs-fmt;
