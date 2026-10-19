@@ -1,6 +1,6 @@
 # nixAir — MacBook Air M2 13" (2022), aarch64, NixOS next to macOS and Arch on
 # the internal disk. ZFS pool `mpool` on one partition (see disko.nix).
-{ config, lib, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   zfsModule = config.boot.kernelPackages.${config.boot.zfs.package.kernelModuleAttribute};
@@ -34,6 +34,14 @@ in
   # Hyprland main key, and Alt+Backspace etc. in every app and the TTY),
   # Option sends Super. Applies from the first keystroke, no remapping daemon.
   boot.extraModprobeConfig = "options hid_apple swap_opt_cmd=1";
+
+  # NixOS snowflake instead of the Asahi logo on the m1n1 boot screen. The
+  # boot-picker icon and name live in the macOS stub volume and can only be
+  # changed from macOS; nixos-icon.png on the ESP is the source image for that
+  # (convert it on macOS with `sips -s format icns`).
+  boot.m1n1CustomLogo = "${pkgs.nixos-icons}/share/icons/hicolor/256x256/apps/nix-snowflake.png";
+  boot.loader.systemd-boot.extraFiles."nixos-icon.png" =
+    "${pkgs.nixos-icons}/share/icons/hicolor/512x512/apps/nix-snowflake.png";
 
   # U-Boot provides EFI, but Apple's boot policy can't be changed from Linux.
   boot.loader.efi.canTouchEfiVariables = false;

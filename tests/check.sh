@@ -97,5 +97,10 @@ laptop() { # Final review: nixAir laptop fixes
   expect nixpc-waybar-no-battery false "$("${NIX[@]}" eval --impure --json '.#nixosConfigurations.nixPC.config.home-manager.users.andrew.programs.waybar.settings.mainBar.modules-right' --apply 'builtins.elem "battery"' 2>&1 | tail -1)"
 }
 
+bootlogo() { # nixAir: NixOS snowflake as m1n1's boot logo; a 512px copy on the ESP for the boot-picker icon (set from macOS)
+  case "$(ev nixAir.config.boot.m1n1CustomLogo)" in /nix/store/*/256x256/apps/nix-snowflake.png) echo "PASS nixair-m1n1-logo";; *) echo "FAIL nixair-m1n1-logo: <$(ev nixAir.config.boot.m1n1CustomLogo)>"; fail=1;; esac
+  case "$(ev 'nixAir.config.boot.loader.systemd-boot.extraFiles."nixos-icon.png"')" in /nix/store/*/512x512/apps/nix-snowflake.png) echo "PASS nixair-esp-icon";; *) echo "FAIL nixair-esp-icon"; fail=1;; esac
+}
+
 for g in "${@:-nixpc-baseline}"; do "${g//-/_}"; done
 exit $fail
