@@ -15,6 +15,10 @@
     # Disko - declarative disk partitioning / ZFS layout.
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # clutch HUD — private GitLab repo (app source stays private; only the glue
+    # in this public config + the hyprland-noscreenshare patch are public).
+    clutch.url = "git+ssh://git@gitlab.com/andrzej1_1/clutch";
+    clutch.inputs.nixpkgs.follows = "nixpkgs";
     # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
     nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";
     nixos-apple-silicon.inputs.nixpkgs.follows = "nixpkgs";
@@ -22,7 +26,7 @@
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, ... }@inputs:
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, ... }@inputs:
     let
       # One NixOS system per host. `modules` are the host's own modules (they
       # import ./modules/base.nix themselves where order matters); everything
@@ -57,7 +61,7 @@
 
             # Pass extra arguments to home/default.nix
             home-manager.extraSpecialArgs = {
-              inherit tbsm;
+              inherit tbsm clutch;
             };
           }
         ];
@@ -72,6 +76,8 @@
         ./hosts/nixPC/tpm.nix
         ./modules/base.nix
         ./hosts/nixPC
+        # Patched Hyprland (no_screen_share layers hidden from shares) + demo.
+        ./hyprland-noscreenshare
       ];
     };
 

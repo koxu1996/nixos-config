@@ -45,10 +45,11 @@
     after = [ "graphical-session.target" ];
     partOf = [ "graphical-session.target" ];
     unitConfig.ConditionPathExists = "/dev/tpmrm0";
-    # tpm-fido shells out to a `pinentry` program for the touch/confirm prompt;
-    # it must be on PATH and able to reach the Hyprland/Wayland session. If the
-    # prompt never appears, try pkgs.pinentry-qt or pkgs.pinentry-all instead.
-    path = [ pkgs.pinentry-gnome3 ];
+    # tpm-fido shells out to a `pinentry` program for the touch/confirm prompt.
+    # Use pinentry-qt: it displays reliably under Hyprland/Wayland (pinentry-gnome3
+    # needs GNOME/gcr and silently fails to pop up here), and it matches the
+    # pinentry this machine's gpg-agent already uses successfully.
+    path = [ pkgs.pinentry-qt ];
     serviceConfig = {
       ExecStart = "${pkgs.tpm-fido}/bin/tpm-fido";
       Restart = "on-failure";

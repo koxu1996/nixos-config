@@ -11,8 +11,8 @@ expect() { # name expected actual
 ev() { "${NIX[@]}" eval --impure --raw ".#nixosConfigurations.$1" 2>&1 | tail -1; }
 evj() { "${NIX[@]}" eval --impure --json ".#nixosConfigurations.$1" 2>&1 | tail -1; }
 
-nixpc_baseline() { # nixPC must not change while nixAir is added (baseline: kernel 7.2.10, lock 2026-10-15, shared look)
-  expect nixpc-drv "/nix/store/3zh7has1wkm0x9npc3snk6rxyl41a5h9-nixos-system-nixPC-26.11.20261015.fe13242.drv" \
+nixpc_baseline() { # nixPC must not change while nixAir is added (baseline: kernel 7.2.10, lock 2026-10-15, shared look + clutch)
+  expect nixpc-drv "/nix/store/g5xwv74hsrk6xm8gf9fly8qj69v8i6xk-nixos-system-nixPC-26.11.20261015.fe13242.drv" \
     "$(ev nixPC.config.system.build.toplevel.drvPath)"
 }
 

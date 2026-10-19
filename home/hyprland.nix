@@ -1,7 +1,8 @@
 # Hyprland window manager, shared by every host: hy3 tiling, the Quickshell bar's launcher,
 # tools and media keys, the drop-down terminal on ` and, on the MacBook (notch), fullscreen that
 # keeps the black bar row; elsewhere real fullscreen. Monitors and host specifics: hosts/<name>/home.nix.
-{ pkgs, lib, config, ... }:
+# Also the clutch HUD's layer rules and shortcuts.
+{ pkgs, lib, config, clutch, ... }:
 let
   # Fullscreen: on a notched panel (my.look.notchGap > 0) keep the bar row beside the notch;
   # elsewhere (the workstation: games, gamescope) real fullscreen.
@@ -153,6 +154,10 @@ in
         decoration = {
           -- Minor rounding around windows.
           rounding = 4,
+          -- Light blur behind translucent surfaces (the clutch HUD card).
+          blur = {
+            size = 3,
+          },
 
           -- Don't dim the screen behind a shown special workspace (the drop-down terminal).
           dim_special = 0,
@@ -207,6 +212,7 @@ in
         -------------------------
         ecosystem = {
           no_update_news = true, -- Prevent popup on Hyprland update.
+          no_donation_nag = true, -- Prevent the twice-a-year donation popup.
         },
       })
 
@@ -347,6 +353,45 @@ in
         border_color = "rgb(c5f36a) rgb(2a2f38)",
         no_blur = true,
       })
+
+      -- Keep the demo HUD out of screen shares (needs the patched Hyprland,
+      -- see hyprland-noscreenshare/; stock Hyprland draws a black box instead).
+      hl.layer_rule({
+        name = "noscreenshare-demo",
+        match = { namespace = "^noscreenshare-demo$" },
+        no_screen_share = true,
+      })
+
+      -- clutch HUD (run `clutch` from the launcher): hidden from screen shares and from its
+      -- own captures (needs the patched Hyprland), blurred behind the card.
+      hl.layer_rule({
+        name = "clutch-hud",
+        match = { namespace = "^clutch-hud$" },
+        no_screen_share = true,
+        blur = true,
+        ignore_alpha = 0.3,
+        no_anim = true,
+      })
+
+      -- clutch HUD shortcuts (Hyprland global shortcuts, appid "hud"). Bound by key name, not
+      -- keycode, so they follow the Dvorak layout; the description's "hud:<action>" prefix
+      -- is how the HUD finds them for its key hints.
+      for _, b in ipairs({
+        { "h", "capture", "Capture screen" },
+        { "d", "ask", "Process screenshots" },
+        { "g", "dismiss", "Reset HUD" },
+        { "a", "toggle", "Show or hide HUD" },
+        { "semicolon", "quit", "Quit HUD" },
+        { "c", "copy", "Copy answer" },
+        { "e", "scrollUp", "Scroll answer up" },
+        { "u", "scrollDown", "Scroll answer down" },
+        { "Left", "moveLeft", "Move HUD left" },
+        { "Right", "moveRight", "Move HUD right" },
+        { "Up", "moveUp", "Move HUD up" },
+        { "Down", "moveDown", "Move HUD down" },
+      }) do
+        hl.bind("SUPER + " .. b[1], hl.dsp.global("hud:" .. b[2]), { description = "hud:" .. b[2] .. " " .. b[3] })
+      end
     '';
     systemd = {
       enable = true;
@@ -354,6 +399,8 @@ in
   };
 
   home.packages = [
+    # clutch HUD: start it from the app launcher (`clutch`); it is not autostarted.
+    clutch.packages.${pkgs.stdenv.hostPlatform.system}.clutch
     pkgs.nnn # mainMod + n
     pkgs.dex # XDG autostart
     pkgs.brightnessctl # brightness keys (+ Glow on laptops)

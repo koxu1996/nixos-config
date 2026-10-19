@@ -1,5 +1,25 @@
 {
   "nodes": {
+    "clutch": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791915156,
+        "narHash": "sha256-SD0xm7Q9QuCkZhRyayPqoLJNbwyDmT51cUw7DSYzCZU=",
+        "ref": "refs/heads/master",
+        "rev": "81240789b0f4291c5b12ef487bd143ebeb6d62b7",
+        "revCount": 119,
+        "type": "git",
+        "url": "ssh://git@gitlab.com/andrzej1_1/clutch"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://git@gitlab.com/andrzej1_1/clutch"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -150,6 +170,7 @@
     },
     "root": {
       "inputs": {
+        "clutch": "clutch",
         "disko": "disko",
         "home-manager": "home-manager",
         "impermanence": "impermanence",

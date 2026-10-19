@@ -27,6 +27,7 @@
     gimp
     fzf
     ripgrep
+    btop # Resource monitor.
     obs-studio
     kubectl
     #rustup # system-trusted CAs now work by setting CARGO_HTTP_PROXY_CAINFO - see rust-lang/cargo#15376 (closed).

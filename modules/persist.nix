@@ -40,6 +40,7 @@
         ".config/gh" # GitHub CLI auth token + config.
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
         ".local/state/syncthing" # Syncthing device key, certs, and DB.
+        ".local/share/hyprland" # lastVersion/lastNag - otherwise the update popup reappears after every reboot.
       ] ++ lib.optionals config.programs.steam.enable [
         ".local/share/Steam" # Steam library + installed games (CS2 ~35 GB).
         ".steam" # Steam runtime, login session, compat tools.
@@ -47,6 +48,7 @@
         # Claude Code: login token (.credentials.json), session transcripts
         # (projects/), settings, todos. mode 0700 to protect the OAuth token.
         { directory = ".claude"; mode = "0700"; }
+        { directory = ".config/clutch"; mode = "0700"; } # clutch HUD config + OpenCode Zen API key.
         # Quickshell bar state: Glow mode/manual values, notifications + do-not-disturb.
         ".local/state/quickshell"
       ];
