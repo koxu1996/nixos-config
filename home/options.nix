@@ -2,15 +2,6 @@
 { lib, ... }:
 
 {
-  options.my.hyprland.mainMod = lib.mkOption {
-    type = lib.types.enum [ "ALT" "SUPER" ];
-    default = "ALT";
-    description = ''
-      Main Hyprland modifier. The other of ALT/SUPER becomes the secondary
-      modifier (lock screen etc.).
-    '';
-  };
-
   options.my.wallpaper = lib.mkOption {
     type = lib.types.str;
     example = lib.literalExpression ''"''${../wallpapers/space1.jpg}"'';

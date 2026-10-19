@@ -65,11 +65,13 @@ nixair_ids() { # Task 6: real partition ids (ESP p4 "EFI - NIXAI", ZFS p9 "nixai
   expect nixair-boot-device /dev/disk/by-uuid/87A7-1509 "$(ev 'nixAir.config.fileSystems."/boot".device')"
 }
 
-mainmod() { # nixAir: Cmd (Super) is the main Hyprland key, Option (Alt) the secondary; nixPC keeps Alt/Super
+mainmod() { # nixAir: Cmd/Option swapped in the kernel (hid_apple), so Hyprland keeps ALT on both hosts
   local hm='config.home-manager.users.andrew.wayland.windowManager.hyprland.extraConfig'
-  expect nixair-mainmod 'local mainMod = "SUPER"' "$("${NIX[@]}" eval --impure --raw ".#nixosConfigurations.nixAir.$hm" 2>&1 | grep -o 'local mainMod = "[A-Z]*"')"
-  expect nixair-secondmod 'local sup = "ALT"' "$("${NIX[@]}" eval --impure --raw ".#nixosConfigurations.nixAir.$hm" 2>&1 | grep -o 'local sup = "[A-Z]*"')"
+  expect nixair-mainmod 'local mainMod = "ALT"' "$("${NIX[@]}" eval --impure --raw ".#nixosConfigurations.nixAir.$hm" 2>&1 | grep -o 'local mainMod = "[A-Z]*"')"
   expect nixpc-mainmod 'local mainMod = "ALT"' "$("${NIX[@]}" eval --impure --raw ".#nixosConfigurations.nixPC.$hm" 2>&1 | grep -o 'local mainMod = "[A-Z]*"')"
+  expect nixair-swap-opt-cmd 'options hid_apple swap_opt_cmd=1' "$(ev nixAir.config.boot.extraModprobeConfig | grep -o 'options hid_apple swap_opt_cmd=1')"
+  expect nixpc-no-swap '' "$(ev nixPC.config.boot.extraModprobeConfig | grep -o 'hid_apple')"
+  expect no-mainmod-option false "$("${NIX[@]}" eval --impure --json .#nixosConfigurations.nixAir.config.home-manager.users.andrew --apply 'u: u ? my && u.my ? hyprland' 2>&1 | tail -1)"
 }
 
 wallpaper() { # nixAir's wallpaper comes from the repo (store path), not a loose file in $HOME
@@ -79,6 +81,20 @@ wallpaper() { # nixAir's wallpaper comes from the repo (store path), not a loose
   case "$hl" in /nix/store/*-space1.jpg) echo "PASS nixair-hyprlock-store";; *) echo "FAIL nixair-hyprlock-store: <$hl>"; fail=1;; esac
   hp=$("${NIX[@]}" eval --impure --raw '.#nixosConfigurations.nixPC.config.home-manager.users.andrew.home.file.".config/hypr/hyprpaper.conf".text' 2>&1 | grep -o 'path = .*')
   case "$hp" in "path = /nix/store/"*.jpg) echo "PASS nixpc-hyprpaper-store ($hp)";; *) echo "FAIL nixpc-hyprpaper-store: <$hp>"; fail=1;; esac
+}
+
+laptop() { # Final review: nixAir laptop fixes
+  local hm='.#nixosConfigurations.nixAir.config.home-manager.users.andrew'
+  expect nixair-no-dhcpcd false "$(evj nixAir.config.networking.dhcpcd.enable)"
+  expect nixair-esp-generations 3 "$(evj nixAir.config.boot.loader.systemd-boot.configurationLimit)"
+  local lua; lua=$("${NIX[@]}" eval --impure --raw "$hm.wayland.windowManager.hyprland.extraConfig" 2>&1)
+  for k in XF86MonBrightnessUp XF86MonBrightnessDown XF86AudioRaiseVolume XF86AudioLowerVolume XF86AudioMute XF86AudioPlay; do
+    if grep -q "\"$k\"" <<<"$lua"; then echo "PASS nixair-key-$k"; else echo "FAIL nixair-key-$k"; fail=1; fi
+  done
+  if grep -q 'key(mainMod .. " + SHIFT", "s")' <<<"$lua"; then echo "PASS nixair-screenshot-bind"; else echo "FAIL nixair-screenshot-bind"; fail=1; fi
+  expect nixair-brightnessctl true "$("${NIX[@]}" eval --impure --json "$hm.home.packages" --apply 'ps: builtins.any (p: (p.pname or "") == "brightnessctl") ps' 2>&1 | tail -1)"
+  expect nixair-waybar-battery true "$("${NIX[@]}" eval --impure --json "$hm.programs.waybar.settings.mainBar.modules-right" --apply 'builtins.elem "battery"' 2>&1 | tail -1)"
+  expect nixpc-waybar-no-battery false "$("${NIX[@]}" eval --impure --json '.#nixosConfigurations.nixPC.config.home-manager.users.andrew.programs.waybar.settings.mainBar.modules-right' --apply 'builtins.elem "battery"' 2>&1 | tail -1)"
 }
 
 for g in "${@:-nixpc-baseline}"; do "${g//-/_}"; done

@@ -30,8 +30,16 @@ in
     }
   ];
 
+  # Swap Cmd and Option in the internal keyboard's driver: Cmd sends Alt (the
+  # Hyprland main key, and Alt+Backspace etc. in every app and the TTY),
+  # Option sends Super. Applies from the first keystroke, no remapping daemon.
+  boot.extraModprobeConfig = "options hid_apple swap_opt_cmd=1";
+
   # U-Boot provides EFI, but Apple's boot policy can't be changed from Linux.
   boot.loader.efi.canTouchEfiVariables = false;
+  # The ESP the Asahi installer made is only 477 MB and each generation with a
+  # new kernel/initrd takes ~100 MB of it.
+  boot.loader.systemd-boot.configurationLimit = 3;
 
   my.zfs.pool = "mpool";
 
@@ -39,7 +47,10 @@ in
   networking.hostName = "nixAir";
   networking.hostId = "a35dc981"; # Required by ZFS.
 
-  # Wi-Fi via iwd (`iwctl`), with iwd's own DHCP client.
+  # Wi-Fi via iwd (`iwctl`), with iwd's own DHCP client - so no dhcpcd,
+  # which would otherwise also manage wlan0.
+  networking.useDHCP = false;
+  networking.dhcpcd.enable = false;
   networking.wireless.iwd = {
     enable = true;
     settings.General.EnableNetworkConfiguration = true;
