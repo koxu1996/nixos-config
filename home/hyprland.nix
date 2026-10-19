@@ -168,6 +168,7 @@ in
         -------------------------
         ecosystem = {
           no_update_news = true, -- Prevent popup on Hyprland update.
+          no_donation_nag = true, -- Prevent the twice-a-year donation popup.
         },
       })
 
