@@ -52,8 +52,10 @@ step "Install bootloader and system profile"
 nixos-install --system "$TOPLEVEL" --no-root-passwd --no-channel-copy
 
 step "Copy ~/nixos into the persisted home"
-mkdir -p /mnt/persist/home/andrew
-cp -a "$REPO" /mnt/persist/home/andrew/nixos
+# Activation (in nixos-install) already created ~/nixos's persist dir
+# (impermanence), so copy the repo's contents into it - not the directory.
+mkdir -p /mnt/persist/home/andrew/nixos
+cp -a "$REPO/." /mnt/persist/home/andrew/nixos/
 chown -R 1000:100 /mnt/persist/home/andrew
 
 step "Unmount and export the pool"

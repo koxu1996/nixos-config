@@ -105,5 +105,13 @@ bootlogo() { # nixAir: NixOS snowflake as m1n1's boot logo; a 512px copy on the 
   case "$(ev 'nixAir.config.boot.loader.systemd-boot.extraFiles."nixos-icon.png"')" in /nix/store/*/512x512/apps/nix-snowflake.png) echo "PASS nixair-esp-icon";; *) echo "FAIL nixair-esp-icon"; fail=1;; esac
 }
 
+install_copy() { # install.sh copies the repo INTO ~/nixos even when activation already created it (impermanence)
+  local t; t=$(mktemp -d); mkdir -p "$t/src/hosts" "$t/mnt/persist/home/andrew/nixos"; touch "$t/src/flake.nix"
+  local line; line=$(grep -E '^cp -a "\$REPO' hosts/nixAir/install.sh)
+  (REPO="$t/src"; cd "$t" && eval "${line//\/mnt\//$t/mnt/}")
+  if [ -f "$t/mnt/persist/home/andrew/nixos/flake.nix" ] && [ ! -e "$t/mnt/persist/home/andrew/nixos/src" ]; then echo "PASS install-copy-flat"; else echo "FAIL install-copy-flat: $(cd "$t/mnt/persist/home/andrew/nixos" && ls -A)"; fail=1; fi
+  rm -rf "$t"
+}
+
 for g in "${@:-nixpc-baseline}"; do "${g//-/_}"; done
 exit $fail
