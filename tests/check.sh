@@ -86,6 +86,9 @@ wallpaper() { # nixAir's wallpaper comes from the repo (store path), not a loose
 laptop() { # Final review: nixAir laptop fixes
   local hm='.#nixosConfigurations.nixAir.config.home-manager.users.andrew'
   expect nixair-no-dhcpcd false "$(evj nixAir.config.networking.dhcpcd.enable)"
+  # iwd's DHCP must hand DNS to resolvconf (NixOS default), not to systemd-resolved which isn't running.
+  expect nixair-iwd-dns resolvconf "$(ev nixAir.config.networking.wireless.iwd.settings.Network.NameResolvingService)"
+  expect nixair-resolvconf true "$(evj nixAir.config.networking.resolvconf.enable)"
   expect nixair-esp-generations 3 "$(evj nixAir.config.boot.loader.systemd-boot.configurationLimit)"
   local lua; lua=$("${NIX[@]}" eval --impure --raw "$hm.wayland.windowManager.hyprland.extraConfig" 2>&1)
   for k in XF86MonBrightnessUp XF86MonBrightnessDown XF86AudioRaiseVolume XF86AudioLowerVolume XF86AudioMute XF86AudioPlay; do

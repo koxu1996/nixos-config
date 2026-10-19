@@ -62,6 +62,9 @@ in
   networking.wireless.iwd = {
     enable = true;
     settings.General.EnableNetworkConfiguration = true;
+    # iwd's default is systemd-resolved, which isn't running here; NixOS
+    # manages /etc/resolv.conf with resolvconf (openresolv).
+    settings.Network.NameResolvingService = "resolvconf";
   };
   environment.persistence."/persist".directories = [
     "/var/lib/iwd" # Known networks + passphrases.
