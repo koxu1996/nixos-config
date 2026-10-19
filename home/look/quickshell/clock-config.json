@@ -1,0 +1,4 @@
+[
+  { "name": "UTC", "tz": "UTC" },
+  { "name": "New York", "tz": "America/New_York" }
+]

@@ -35,6 +35,10 @@ in
   # Option sends Super. Applies from the first keystroke, no remapping daemon.
   boot.extraModprobeConfig = "options hid_apple swap_opt_cmd=1";
 
+  # Show the real notch area (1280x832 logical; the bar sits beside it, see
+  # my.look.notchGap) and the Wi-Fi driver quirk the Arch install boots with.
+  boot.kernelParams = [ "appledrm.show_notch=1" "brcmfmac.feature_disable=0x82000" ];
+
   # NixOS snowflake instead of the Asahi logo on the m1n1 boot screen. The
   # boot-picker icon and name live in the macOS stub volume and can only be
   # changed from macOS; nixos-icon.png on the ESP is the source image for that
@@ -48,6 +52,9 @@ in
   # The ESP the Asahi installer made is only 477 MB and each generation with a
   # new kernel/initrd takes ~100 MB of it.
   boot.loader.systemd-boot.configurationLimit = 3;
+
+  # CPU profiles for the bar (Apple M2).
+  my.cpuProfile.script = ./cpu-profile;
 
   my.zfs.pool = "mpool";
 

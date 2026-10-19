@@ -26,6 +26,9 @@ in
 
   boot.loader.efi.canTouchEfiVariables = true;
 
+  # CPU profiles for the bar (i7-9700).
+  my.cpuProfile.script = ./cpu-profile;
+
   my.zfs.pool = "rpool";
 
   # Hostname.
@@ -39,6 +42,26 @@ in
 
   hardware.graphics.enable32Bit = true; # Required for Steam's 32-bit runtime.
 
-  # Wallpaper from the repo (hyprpaper + hyprlock).
-  home-manager.users.andrew.my.wallpaper = "${../../wallpapers/space1.jpg}";
+  home-manager.users.andrew = {
+    # Wallpaper from the repo (hyprpaper + hyprlock).
+    my.wallpaper = "${../../wallpapers/space1.jpg}";
+
+    # Bar features of this wired desktop (home/look): no Wi-Fi, battery, backlight
+    # or notch; CPU profiles in the CPU/MEM panel.
+    my.look = {
+      wifi = false;
+      battery = false;
+      glowBrightness = false;
+      cpuProfile = "stats";
+      # coretemp's package sensor; no hwmon power sensor on this board (no power chart).
+      machine = {
+        name = "Workstation · i7-9700";
+        cores = "8 cores";
+        coreCount = 8;
+        tempLabel = "Package id 0";
+        tempWarm = 85;
+        tempThrottle = 100;
+      };
+    };
+  };
 }

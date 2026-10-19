@@ -1,0 +1,49 @@
+#!/bin/sh
+# cpu-profile: CPU profile of the i7-9700 workstation (intel_pstate with HWP).
+# Runs as root via pkexec (modules/cpu-profile.nix). Accepts only:
+#   saver        governor powersave,   EPP power,               turbo off
+#   balanced     governor powersave,   EPP balance_performance, turbo on
+#   performance  governor performance, EPP performance,         turbo on
+# Without an argument it prints the current profile ("profile=<name>", or "custom")
+# and a one-line description ("detail=...") for the bar; that needs no root.
+set -eu
+
+ROOT=/sys
+# Test hook (tests/check.sh): a fake sysfs tree. Ignored when running as root.
+if [ "$(id -u)" != 0 ] && [ -n "${CPU_SYSFS_ROOT:-}" ]; then ROOT=$CPU_SYSFS_ROOT; fi
+CPUS=$ROOT/devices/system/cpu
+NO_TURBO=$CPUS/intel_pstate/no_turbo
+
+first() { for f in "$CPUS"/cpu[0-9]*/cpufreq/"$1"; do cat "$f"; return; done; }
+
+status() {
+    gov=$(first scaling_governor)
+    epp=$(first energy_performance_preference)
+    nt=$(cat "$NO_TURBO" 2>/dev/null || echo "?")
+    case "$gov:$epp:$nt" in
+        powersave:power:1) p=saver ;;
+        powersave:balance_performance:0) p=balanced ;;
+        performance:performance:0) p=performance ;;
+        *) p=custom ;;
+    esac
+    turbo=on; [ "$nt" = 1 ] && turbo=off
+    echo "profile=$p"
+    echo "detail=$gov · EPP $epp · turbo $turbo"
+}
+
+case "${1:-}" in
+    "") status; exit 0 ;;
+    saver) gov=powersave epp=power nt=1 ;;
+    balanced) gov=powersave epp=balance_performance nt=0 ;;
+    performance) gov=performance epp=performance nt=0 ;;
+    *) echo "usage: cpu-profile [saver|balanced|performance]" >&2; exit 2 ;;
+esac
+
+# Governor first: with the performance governor intel_pstate only accepts EPP "performance".
+for d in "$CPUS"/cpu[0-9]*/cpufreq; do
+    printf '%s\n' "$gov" > "$d/scaling_governor"
+    printf '%s\n' "$epp" > "$d/energy_performance_preference"
+done
+printf '%s\n' "$nt" > "$NO_TURBO"
+
+echo "cpu-profile: $1 applied ($(status | sed -n 's/^detail=//p'))"

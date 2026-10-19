@@ -14,6 +14,8 @@
       ./zfs-impermanence.nix
       # Home printer + scanner (network devices).
       ./printing.nix
+      # CPU profile switch for the bar (script per host).
+      ./cpu-profile.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
@@ -250,6 +252,8 @@
   fonts.packages = with pkgs; [
     font-awesome
     google-fonts
+    jetbrains-mono # terminal + numbers in the bar (home/look)
+    inter # labels in the bar
   ];
 
   # Enable Docker.

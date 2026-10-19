@@ -1,0 +1,9 @@
+{
+  "latitude": 52.23,
+  "longitude": 21.01,
+  "profiles": [
+    { "name": "Day", "time": "07:00", "temperature": 6500 },
+    { "name": "Evening", "time": "sunset", "temperature": 4000 },
+    { "name": "Night", "time": "22:30", "temperature": 2700 }
+  ]
+}

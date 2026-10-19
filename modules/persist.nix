@@ -47,6 +47,8 @@
         # Claude Code: login token (.credentials.json), session transcripts
         # (projects/), settings, todos. mode 0700 to protect the OAuth token.
         { directory = ".claude"; mode = "0700"; }
+        # Quickshell bar state: Glow mode/manual values, notifications + do-not-disturb.
+        ".local/state/quickshell"
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.

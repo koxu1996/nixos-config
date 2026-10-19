@@ -1,0 +1,117 @@
+#!/bin/sh
+# cpu-profile: switch the CPU frequency profile on an Apple M2 (Asahi, apple-cpufreq).
+# Runs as root via pkexec (modules/cpu-profile.nix). Accepts only:
+#   saver        schedutil on both clusters, P-cores capped near 2.0 GHz, boost off
+#   balanced     schedutil on both clusters, full range, boost off
+#   performance  performance governor on both, boost on, P-cores up to the top boost step
+# Clusters: policy0 = E-cores cpu0-3 (600-2424 MHz), policy4 = P-cores cpu4-7
+# (660-3204 MHz, boost steps 3324/3408/3504 MHz).
+# Without an argument it prints the current profile ("profile=<name>", or "custom") and a
+# one-line description ("detail=...") for the bar; that needs no root.
+set -eu
+
+ROOT=/sys
+# Test hook (tests/check.sh): a fake sysfs tree. Ignored when running as root.
+if [ "$(id -u)" != 0 ] && [ -n "${CPU_SYSFS_ROOT:-}" ]; then ROOT=$CPU_SYSFS_ROOT; fi
+CPUFREQ=$ROOT/devices/system/cpu/cpufreq
+E=$CPUFREQ/policy0
+P=$CPUFREQ/policy4
+
+mhz() { echo $(($1 / 1000)); }
+
+# The current profile, as the bar shows it (same rules as the bar used to apply itself).
+status() {
+    gov=$(cat "$P/scaling_governor")
+    max=$(cat "$P/scaling_max_freq")
+    top=$(tr ' ' '\n' < "$P/scaling_available_frequencies" | grep . | sort -n | tail -n 1)
+    boost=$(cat "$CPUFREQ/boost" 2>/dev/null || echo 0)
+    if [ "$gov" = performance ]; then
+        with=""; [ "$boost" = 1 ] && with=" with boost"
+        echo "profile=performance"
+        echo "detail=performance · P-cores up to $(mhz "$max") MHz$with · runs hot without a fan"
+    elif [ "$gov" = schedutil ] && [ "$max" -lt "$top" ]; then
+        echo "profile=saver"
+        echo "detail=schedutil · P-cores capped at $(mhz "$max") MHz · boost off"
+    elif [ "$gov" = schedutil ]; then
+        echo "profile=balanced"
+        echo "detail=schedutil · E $(mhz "$(cat "$E/scaling_min_freq")")–$(mhz "$(cat "$E/scaling_max_freq")") MHz · P $(mhz "$(cat "$P/scaling_min_freq")")–$(mhz "$max") MHz · boost off"
+    else
+        echo "profile=custom"
+        echo "detail=custom: $gov"
+    fi
+}
+
+case "${1:-}" in
+    "") status; exit 0 ;;
+    saver | balanced | performance) ;;
+    *) echo "usage: cpu-profile [saver|balanced|performance]" >&2; exit 2 ;;
+esac
+
+put() { printf '%s\n' "$2" > "$1"; }
+
+# Available step of policy $1 closest to $2 kHz.
+closest() {
+    best=""; bestd=""
+    # shellcheck disable=SC2013 # space-separated list: split on words on purpose
+    for f in $(cat "$1/scaling_available_frequencies"); do
+        if [ "$f" -gt "$2" ]; then d=$((f - $2)); else d=$(($2 - f)); fi
+        if [ -z "$bestd" ] || [ "$d" -lt "$bestd" ]; then best=$f; bestd=$d; fi
+    done
+    echo "$best"
+}
+
+# Highest boost step of policy $1 (falls back to the top non-boost step).
+top_boost() {
+    top=$(top_step "$1")
+    if [ -r "$1/scaling_boost_frequencies" ]; then
+        # shellcheck disable=SC2013 # space-separated list
+        for f in $(cat "$1/scaling_boost_frequencies"); do [ "$f" -gt "$top" ] && top=$f; done
+    fi
+    echo "$top"
+}
+
+# The per-policy boost file only accepts writes while global boost is on (EINVAL
+# otherwise), so enable global first, and disable the policy before global.
+set_boost() {
+    if [ "$1" = 1 ]; then
+        put "$CPUFREQ/boost" 1
+        if [ -w "$P/boost" ]; then put "$P/boost" 1 2>/dev/null || true; fi
+    else
+        if [ -w "$P/boost" ]; then put "$P/boost" 0 2>/dev/null || true; fi
+        put "$CPUFREQ/boost" 0
+    fi
+}
+
+# Highest / lowest non-boost step of policy $1. (cpuinfo_max_freq can't be used: once boost
+# has been enabled it keeps reporting the top boost step even after boost is off.)
+top_step() { tr ' ' '\n' < "$1/scaling_available_frequencies" | grep . | sort -n | tail -n 1; }
+bottom_step() { tr ' ' '\n' < "$1/scaling_available_frequencies" | grep . | sort -n | head -n 1; }
+
+# Full non-boost range on both clusters (boost must be off first).
+reset_range() {
+    for pol in "$E" "$P"; do
+        put "$pol/scaling_max_freq" "$(top_step "$pol")"
+        put "$pol/scaling_min_freq" "$(bottom_step "$pol")"
+    done
+}
+
+case "$1" in
+    saver)
+        set_boost 0
+        reset_range
+        for pol in "$E" "$P"; do put "$pol/scaling_governor" schedutil; done
+        put "$P/scaling_max_freq" "$(closest "$P" 2000000)"
+        ;;
+    balanced)
+        set_boost 0
+        reset_range
+        for pol in "$E" "$P"; do put "$pol/scaling_governor" schedutil; done
+        ;;
+    performance)
+        set_boost 1
+        for pol in "$E" "$P"; do put "$pol/scaling_governor" performance; done
+        put "$P/scaling_max_freq" "$(top_boost "$P")"
+        ;;
+esac
+
+echo "cpu-profile: $1 applied (P-cores: $(cat "$P/scaling_governor"), max $(($(cat "$P/scaling_max_freq") / 1000)) MHz, boost $(cat "$CPUFREQ/boost"))"
