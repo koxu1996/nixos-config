@@ -369,6 +369,25 @@ in
         no_blur = true,
       })
 
+      -- File choosers float, centred, at 70 % × 77 % of the screen. Tiled, they get squeezed below
+      -- their minimum width: Hyprland then scales the too-big buffer into the tile (distorted) and
+      -- clicks land in the wrong place. Their own remembered size can be taller than the screen.
+      -- Brave's GTK chooser is not marked modal, so match titles.
+      hl.window_rule({
+        name = "file-dialogs",
+        match = { title = "^(.* wants to (save|open|edit).*|Save File|Save As|Open Files?|Open Folder|Select .*|Choose .*|File Upload)$" },
+        float = true,
+        size = "monitor_w*0.7 monitor_h*0.77",
+        center = true,
+      })
+      hl.window_rule({
+        name = "portal-dialogs",
+        match = { class = "^(xdg-desktop-portal-gtk|org\\.freedesktop\\.impl\\.portal\\..*)$" },
+        float = true,
+        size = "monitor_w*0.7 monitor_h*0.77",
+        center = true,
+      })
+
       -- Keep the demo HUD out of screen shares (needs the patched Hyprland,
       -- see hyprland-noscreenshare/; stock Hyprland draws a black box instead).
       hl.layer_rule({
