@@ -1,7 +1,7 @@
 .pragma library
 // iwd.js: parsing for WifiService.qml. Input is `busctl --json=short` output of iwd's D-Bus API
 // (net.connman.iwd): ObjectManager.GetManagedObjects, Station.GetOrderedNetworks and
-// StationDiagnostic.GetDiagnostics. Pure functions, tested by tests/iwd/iwd.test.js (node).
+// StationDiagnostic.GetDiagnostics. Pure functions.
 
 // busctl wraps every value as { type, data }.
 function v(x) { return x && typeof x === "object" && "data" in x ? x.data : x; }

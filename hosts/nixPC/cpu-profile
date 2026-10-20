@@ -9,8 +9,6 @@
 set -eu
 
 ROOT=/sys
-# Test hook (tests/check.sh): a fake sysfs tree. Ignored when running as root.
-if [ "$(id -u)" != 0 ] && [ -n "${CPU_SYSFS_ROOT:-}" ]; then ROOT=$CPU_SYSFS_ROOT; fi
 CPUS=$ROOT/devices/system/cpu
 NO_TURBO=$CPUS/intel_pstate/no_turbo
 

@@ -1,1 +1,0 @@
-{"type":"a{sv}","data":[{"ConnectedBss":{"type":"s","data":"11:22:33:44:55:66"},"Frequency":{"type":"u","data":5180},"RSSI":{"type":"n","data":-48},"TxBitrate":{"type":"u","data":8660},"RxMode":{"type":"s","data":"802.11ax"},"Security":{"type":"s","data":"WPA3-Personal"}}]}
