@@ -193,6 +193,9 @@ in
           -- Prevent automatic focus switch when hovering a window under the floating one.
           float_switch_override_focus = false,
 
+          -- Windows behind a shown special workspace (the drop-down terminal) stay clickable.
+          special_fallthrough = true,
+
           -- Touchpad (laptops; ignored without one):
           -- - no inverted scrolling
           -- - 1 finger is left, 2 fingers are right, 3 fingers are middle button
