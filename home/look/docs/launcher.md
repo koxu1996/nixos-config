@@ -15,7 +15,7 @@ Pinned apps are listed in `home/look/quickshell/launcher.json`, which Home Manag
 ```
 
 - Each entry is a desktop-entry id (the `.desktop` file name without `.desktop`, e.g.
-  `org.keepassxc.KeePassXC`) or something close to it (`keepassxc`, `brave`): an exact id
+  `org.keepassxc.KeePassXC`) or something close to it (`keepassxc`, `brave`, or the command it runs, like `obs`): an exact id
   is tried first, then Quickshell's heuristic lookup. The desktop entry supplies the name,
   the icon and how the app is started.
 - If no desktop entry matches, the entry is shown as a plain command with a terminal glyph

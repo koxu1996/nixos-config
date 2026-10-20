@@ -53,13 +53,16 @@ Singleton {
         });
     }
 
-    // heuristicLookup() misses short names like "brave" (brave-browser.desktop): also accept
-    // an entry whose id starts with "<id>-" or "<id>.", or whose name is <id>, ignoring case.
+    // heuristicLookup() misses short names like "brave" (brave-browser.desktop) or "obs"
+    // (com.obsproject.Studio.desktop): also accept an entry whose id starts with "<id>-" or
+    // "<id>.", whose name is <id>, or whose command is <id>, ignoring case.
     function looseLookup(id) {
         const want = id.toLowerCase();
         const apps = DesktopEntries.applications.values.filter(e => !e.noDisplay);
+        const program = e => (e.command?.[0] ?? "").split("/").pop().toLowerCase();
         return apps.find(e => e.id.toLowerCase().startsWith(want + "-") || e.id.toLowerCase().startsWith(want + "."))
             ?? apps.find(e => e.name.toLowerCase() === want)
+            ?? apps.find(e => program(e) === want)
             ?? null;
     }
 
