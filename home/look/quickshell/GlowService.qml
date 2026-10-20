@@ -204,7 +204,7 @@ Singleton {
     }
 
     // ---- Backlight (independent of the mode) -----------------------------------------
-    // Current backlight %, -1 until the first read. Updated from `light -G` at startup and
+    // Current backlight %, -1 until the first read. Updated from `brightnessctl -m` at startup and
     // every second while `watchBacklight` is true (the popup is open), so changes from the
     // brightness keys show up. Set only when the user moves the slider.
     property int brightness: -1

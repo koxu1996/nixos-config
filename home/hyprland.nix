@@ -309,7 +309,7 @@ in
       hl.bind(key(mainMod, "Return"), hl.dsp.exec_cmd(terminal))
 
 
-      -- Screenshots through the bar's Tools (quickshell/bar/tools/screenshot.sh):
+      -- Screenshots through the bar's Tools (home/look/quickshell/tools/screenshot.sh):
       -- Print = region (or click a window) -> clipboard, Shift + Print = active window -> /tmp.
       local tools = "quickshell ipc -c bar call tools "
       hl.bind(key("", "Print"), hl.dsp.exec_cmd(tools .. "screenshot region"))

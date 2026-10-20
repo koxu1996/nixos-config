@@ -1,4 +1,4 @@
-# The Quickshell bar's palette (quickshell/bar/Theme.qml), for everything else that wants to
+# The Quickshell bar's palette (quickshell/Theme.qml), for everything else that wants to
 # match it: Alacritty, tmux, the zsh prompt (terminal.nix).
 {
   base = "#12151b"; raised = "#161a21"; raisedHigh = "#1b2028"; inset = "#0c0e12";

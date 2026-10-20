@@ -1,6 +1,5 @@
 # Identifiers of nixAir's own partitions on the Mac's internal disk.
-# Placeholders until the Asahi installer has created the ESP and the ZFS
-# partition exists (plan Task 6); read them with `lsblk -o NAME,UUID,PARTUUID`.
+# Read them with `lsblk -o NAME,UUID,PARTUUID`.
 {
   # vfat UUID of the ESP created by the Asahi installer ("UEFI environment only").
   espUuid = "87A7-1509"; # nvme0n1p4, "EFI - NIXAI…", created 2026-10-19
