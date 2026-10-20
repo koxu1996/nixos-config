@@ -23,7 +23,7 @@
     };
   };
 
-  # Wallpaper from the repo (same image as on the Mac's Arch setup).
+  # Wallpaper from the repo.
   my.wallpaper = "${../../wallpapers/space1.jpg}";
 
   wayland.windowManager.hyprland.extraConfig = lib.mkAfter ''

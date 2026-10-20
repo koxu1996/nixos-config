@@ -1,5 +1,5 @@
-# disko.nix — nixAir's ZFS pool. The Mac's disk is shared with macOS, Apple's
-# boot/recovery partitions and the Arch install, so disko only ever sees ONE
+# disko.nix — nixAir's ZFS pool. The Mac's disk is shared with macOS and Apple's
+# boot/recovery partitions, so disko only ever sees ONE
 # partition (by PARTUUID) and puts the pool directly on it: no partition table
 # is written, and the ESP is mounted, never formatted (hardware-configuration.nix).
 #

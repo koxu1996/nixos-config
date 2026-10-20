@@ -14,12 +14,11 @@ in
 
   # Apple's peripheral firmware (Wi-Fi, webcam, ...) from the ESP the Asahi
   # installer filled. It is non-redistributable and never committed, so nixAir
-  # is always built with `--impure`. /boot/efi/vendorfw is the Arch install's
-  # ESP on this same Mac (identical firmware), used when building from Arch.
+  # is always built with `--impure`. /mnt/boot/vendorfw: building from the installer.
   hardware.asahi.peripheralFirmwareDirectory = lib.findFirst
     (dir: builtins.pathExists (dir + "/firmware.cpio"))
     (throw "nixAir: no vendorfw/firmware.cpio found - build with --impure on the Mac")
-    [ /boot/vendorfw /mnt/boot/vendorfw /boot/efi/vendorfw ];
+    [ /boot/vendorfw /mnt/boot/vendorfw ];
 
   # Kernel (linux-asahi) comes from nixos-apple-silicon; ZFS must support it.
   boot.supportedFilesystems.zfs = true;
@@ -36,7 +35,7 @@ in
   boot.extraModprobeConfig = "options hid_apple swap_opt_cmd=1";
 
   # Show the real notch area (1280x832 logical; the bar sits beside it, see
-  # my.look.notchGap) and the Wi-Fi driver quirk the Arch install boots with.
+  # my.look.notchGap), and a brcmfmac Wi-Fi driver quirk (feature_disable).
   boot.kernelParams = [ "appledrm.show_notch=1" "brcmfmac.feature_disable=0x82000" ];
 
   # NixOS snowflake instead of the Asahi logo on the m1n1 boot screen. The
