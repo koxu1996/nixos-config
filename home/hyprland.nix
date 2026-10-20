@@ -251,6 +251,21 @@ in
       end
       hl.bind(key("", "grave"), toggle_dropterm)
 
+      -- While the drop-down is shown its special workspace has focus, so anything started then
+      -- (launcher, a link from the terminal, ...) would open there and hide/show with it. Move such
+      -- windows to the monitor's regular workspace, focus them and hide the drop-down.
+      local function evict_from_dropterm(w)
+        if not w or w.class == "dropterm" then return end
+        local ws = w.workspace
+        if not (ws and ws.special and ws.name == "special:dropterm") then return end
+        local regular = w.monitor and w.monitor.active_workspace or hl.get_active_workspace()
+        if not regular then return end
+        hl.dispatch(hl.dsp.window.move({ workspace = regular.id, follow = false, window = w }))
+        hl.dispatch(hl.dsp.workspace.toggle_special("dropterm"))
+        hl.dispatch(hl.dsp.focus({ window = w }))
+      end
+      hl.on("window.open", evict_from_dropterm)
+
       -- Launch lockscreen with sup + L.
       hl.bind(key(sup, "l"), hl.dsp.exec_cmd("hyprlock"))
 

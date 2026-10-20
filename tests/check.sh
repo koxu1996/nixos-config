@@ -12,7 +12,7 @@ ev() { "${NIX[@]}" eval --impure --raw ".#nixosConfigurations.$1" 2>&1 | tail -1
 evj() { "${NIX[@]}" eval --impure --json ".#nixosConfigurations.$1" 2>&1 | tail -1; }
 
 nixpc_baseline() { # nixPC must not change while nixAir is added (baseline: kernel 7.2.10, lock 2026-10-15, shared look + clutch)
-  expect nixpc-drv "/nix/store/g5xwv74hsrk6xm8gf9fly8qj69v8i6xk-nixos-system-nixPC-26.11.20261015.fe13242.drv" \
+  expect nixpc-drv "/nix/store/g99nz6z789r24bq5vjlkiizijmxhswlp-nixos-system-nixPC-26.11.20261015.fe13242.drv" \
     "$(ev nixPC.config.system.build.toplevel.drvPath)"
 }
 
@@ -195,7 +195,7 @@ look_hyprland() { # Task 5: the Mac's Hyprland behaviour on both hosts, no Arch 
   local lua
   for h in nixAir nixPC; do
     lua=$("${NIX[@]}" eval --impure --raw ".#nixosConfigurations.$h.config.home-manager.users.andrew.wayland.windowManager.hyprland.extraConfig" 2>/dev/null)
-    for want in toggle_dropterm 'special:dropterm' 'call launcher toggle' 'bar call tools ' 'tools .. "screenshot region"' 'bar call media ' 'mpris .. "playPause"' 'dim_special = 0' 'hy3.make_group'; do
+    for want in toggle_dropterm 'special:dropterm' 'call launcher toggle' 'hl.on("window.open"' 'evict_from_dropterm' 'bar call tools ' 'tools .. "screenshot region"' 'bar call media ' 'mpris .. "playPause"' 'dim_special = 0' 'hy3.make_group'; do
       grep -qF "$want" <<<"$lua" && echo "PASS look-$h-hl:$want" || { echo "FAIL look-$h-hl:$want"; fail=1; }
     done
     for bad in wlsunset swaylock 'light -' floating_terminal_1 appLauncher 'Application launcher - System'; do
@@ -227,7 +227,7 @@ cpu_profile() { # Task 6: cpu-profile helper + polkit on both hosts; per-CPU scr
   grep -q energy_performance_preference hosts/nixPC/cpu-profile 2>/dev/null && grep -q no_turbo hosts/nixPC/cpu-profile \
     && echo "PASS cpu-nixPC-intel" || { echo "FAIL cpu-nixPC-intel"; fail=1; }
   grep -q policy4 hosts/nixAir/cpu-profile 2>/dev/null && echo "PASS cpu-nixAir-m2" || { echo "FAIL cpu-nixAir-m2"; fail=1; }
-  local sc; sc=$("${NIX[@]}" run nixpkgs#shellcheck -- -s sh hosts/nixPC/cpu-profile hosts/nixAir/cpu-profile 2>&1); expect cpu-shellcheck "" "$sc"
+  local sc; sc=$("${NIX[@]}" run nixpkgs#shellcheck -- -s sh hosts/nixPC/cpu-profile hosts/nixAir/cpu-profile 2>/dev/null); expect cpu-shellcheck "" "$sc"
 
   # nixPC helper against a fake sysfs (2 CPUs).
   local t; t=$(mktemp -d)
