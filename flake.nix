@@ -88,6 +88,8 @@
         nixos-apple-silicon.nixosModules.apple-silicon-support
         ./hosts/nixAir/disko.nix
         ./modules/base.nix
+        # Hyprland: crop oversized windows at scale 2 instead of squishing them.
+        ./hyprland-integer-scale
         ./hosts/nixAir
       ];
     };

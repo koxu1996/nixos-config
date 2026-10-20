@@ -1,0 +1,14 @@
+--- a/src/render/ElementRenderer.cpp	2026-10-20 15:35:40.002864775 +0200
++++ b/src/render/ElementRenderer.cpp	2026-10-20 15:35:40.018864785 +0200
+@@ -92,7 +92,10 @@
+             // to let the apps know to NOT add CSD. Also if source is there.
+             // there is no way to fix this if that's the case
+             const auto MONITOR_WL_SCALE = std::ceil(pMonitor->m_scale);
+-            const bool SCALE_UNAWARE    = pMonitor->m_scale != 1.f && (MONITOR_WL_SCALE == pSurface->m_current.scale || !pSurface->m_current.viewport.hasDestination);
++            // Only on fractional scales: at an integer scale (2 on a HiDPI laptop) a buffer-scale-2
++            // surface maps 1:1, so an oversized one must be cropped like at scale 1. Without this it
++            // is squished into the tile (distorted, and clicks land in the wrong place).
++            const bool SCALE_UNAWARE    = pMonitor->m_scale != MONITOR_WL_SCALE && (MONITOR_WL_SCALE == pSurface->m_current.scale || !pSurface->m_current.viewport.hasDestination);
+             const auto EXPECTED_SIZE    = getSurfaceExpectedSize(pWindow, pSurface, pMonitor, main).value_or((projSize * pMonitor->m_scale).round());
+ 
+             const auto RATIO = projSize / EXPECTED_SIZE;
