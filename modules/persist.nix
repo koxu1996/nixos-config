@@ -27,6 +27,7 @@
     users.andrew = {
       directories = [
         "nixos"
+        "projects" # Code to work on (clones, own projects).
         #".local/share/kscreen"
         #".local/share/kwalletd"
         #".local/share/sddm"
