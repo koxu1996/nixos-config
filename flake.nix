@@ -90,6 +90,8 @@
         ./modules/base.nix
         # Hyprland: crop oversized windows at scale 2 instead of squishing them.
         ./hyprland-integer-scale
+        # Patched Hyprland (no_screen_share layers hidden from shares) + demo.
+        ./hyprland-noscreenshare
         ./hosts/nixAir
       ];
     };
