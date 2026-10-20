@@ -420,4 +420,16 @@ in
     pkgs.dex # XDG autostart
     pkgs.brightnessctl # brightness keys (+ Glow on laptops)
   ];
+
+  # clutch has no desktop entry of its own: add one, with its icon in the hicolor theme,
+  # so the launcher (pinned in launcher.json) shows it with the icon.
+  xdg.dataFile."icons/hicolor/scalable/apps/clutch.svg".source = ./clutch.svg;
+  xdg.desktopEntries.clutch = {
+    name = "Clutch";
+    comment = "Overlay HUD";
+    exec = "clutch";
+    icon = "clutch";
+    terminal = false;
+    categories = [ "Utility" ];
+  };
 }

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="clutch">
+  <defs>
+    <linearGradient id="clutch-glass" gradientUnits="userSpaceOnUse" x1="4" y1="0" x2="60" y2="0">
+      <stop offset="0" stop-color="#8b7bff"/>
+      <stop offset="1" stop-color="#4fd1ff"/>
+    </linearGradient>
+    <clipPath id="clutch-card">
+      <rect x="4" y="4" width="50" height="50" rx="12"/>
+    </clipPath>
+  </defs>
+  <!-- ghost layer behind: the overlay is translucent -->
+  <rect x="10" y="10" width="50" height="50" rx="12" fill="url(#clutch-glass)" opacity="0.35"/>
+  <!-- glass card -->
+  <rect x="4" y="4" width="50" height="50" rx="12" fill="url(#clutch-glass)"/>
+  <!-- glowing top edge: bright line plus a soft bleed, both clipped to the card -->
+  <g clip-path="url(#clutch-card)" fill="#ecebf5">
+    <rect x="4" y="4" width="50" height="12" opacity="0.28"/>
+    <rect x="4" y="4" width="50" height="5"/>
+  </g>
+  <!-- prompt and cursor -->
+  <path d="M16 21 L26 31 L16 41" fill="none" stroke="#121218" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="30" y="36" width="15" height="6" rx="3" fill="#121218"/>
+</svg>
