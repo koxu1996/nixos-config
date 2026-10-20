@@ -152,134 +152,133 @@ PanelWindow {
                     onEscaped: launcher.close()
                 }
 
-                // ---- 2. Pinned ----
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    visible: launcher.pinnedResults.length > 0
-                    spacing: 8
-
-                    SectionLabel { text: "PINNED" }
-
-                    Column {
-                        Layout.fillWidth: true
-                        spacing: 4
-
-                        Repeater {
-                            model: launcher.pinnedResults
-
-                            delegate: PinnedRow {
-                                required property var modelData
-                                required property int index
-                                width: parent.width
-                                item: modelData
-                                selected: !launcher.fallback && launcher.selected === index
-                                onActivated: launcher.activate(index)
-                            }
-                        }
-                    }
-                }
-
-                // ---- 3. Commands ----
-                ColumnLayout {
+                // ---- 2. Pinned + commands: one scrolling list ----
+                // Pinned apps and the "COMMANDS" heading are the list's header, so everything
+                // scrolls together; the commands below stay virtualized (ListView).
+                ListView {
+                    id: commandList
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 8
+                    clip: true
+                    reuseItems: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: launcher.commandResults
 
-                    Row {
+                    header: Column {
+                        width: commandList.width - 8 // room for the scrollbar
                         spacing: 8
+                        bottomPadding: 8
 
-                        SectionLabel { id: commandsLabel; text: "COMMANDS" }
+                        // Pinned
+                        SectionLabel { text: "PINNED"; visible: launcher.pinnedResults.length > 0 }
 
-                        Text {
-                            anchors.baseline: commandsLabel.baseline
-                            text: launcher.query.trim() === ""
-                                ? `${LauncherService.commands.length}`
-                                : `${launcher.commandResults.length} of ${LauncherService.commands.length}`
-                            color: Theme.textDisabled
-                            font.family: Theme.monoFont
-                            font.pixelSize: Theme.fontSizeSmall
+                        Column {
+                            width: parent.width
+                            spacing: 4
+                            visible: launcher.pinnedResults.length > 0
+
+                            Repeater {
+                                model: launcher.pinnedResults
+
+                                delegate: PinnedRow {
+                                    required property var modelData
+                                    required property int index
+                                    width: parent.width
+                                    item: modelData
+                                    selected: !launcher.fallback && launcher.selected === index
+                                    onActivated: launcher.activate(index)
+                                }
+                            }
                         }
-                    }
 
-                    // No match: run the query in a shell.
-                    Rectangle {
-                        Layout.fillWidth: true
-                        visible: launcher.fallback
-                        implicitHeight: 34
-                        radius: Theme.radiusSmall
-                        color: Theme.accentBg
+                        Item { width: 1; height: Theme.popupSpacing - 8; visible: launcher.pinnedResults.length > 0 }
 
+                        // Commands heading
                         Row {
-                            x: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 10
+                            spacing: 8
 
-                            AppGlyph {
+                            SectionLabel { id: commandsLabel; text: "COMMANDS" }
+
+                            Text {
+                                anchors.baseline: commandsLabel.baseline
+                                text: launcher.query.trim() === ""
+                                    ? `${LauncherService.commands.length}`
+                                    : `${launcher.commandResults.length} of ${LauncherService.commands.length}`
+                                color: Theme.textDisabled
+                                font.family: Theme.monoFont
+                                font.pixelSize: Theme.fontSizeSmall
+                            }
+                        }
+
+                        // No match: run the query in a shell.
+                        Rectangle {
+                            width: parent.width
+                            visible: launcher.fallback
+                            implicitHeight: 34
+                            radius: Theme.radiusSmall
+                            color: Theme.accentBg
+
+                            Row {
+                                x: 10
                                 anchors.verticalCenter: parent.verticalCenter
-                                kind: "terminal"
-                                size: 14
-                                color: Theme.accent
+                                spacing: 10
+
+                                AppGlyph {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    kind: "terminal"
+                                    size: 14
+                                    color: Theme.accent
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: Math.min(implicitWidth, panel.width - 120)
+                                    elide: Text.ElideRight
+                                    textFormat: Text.StyledText
+                                    text: `Run <font face="${Theme.monoFont}">${LauncherService.highlight(launcher.query.trim(), [])}</font> in a shell`
+                                    color: Theme.textPrimary
+                                    font.family: Theme.sansFont
+                                    font.pixelSize: Theme.fontSize
+                                }
                             }
 
                             Text {
+                                anchors.right: parent.right
+                                anchors.rightMargin: 10
                                 anchors.verticalCenter: parent.verticalCenter
-                                width: Math.min(implicitWidth, panel.width - 120)
-                                elide: Text.ElideRight
-                                textFormat: Text.StyledText
-                                text: `Run <font face="${Theme.monoFont}">${LauncherService.highlight(launcher.query.trim(), [])}</font> in a shell`
-                                color: Theme.textPrimary
-                                font.family: Theme.sansFont
+                                text: "↵"
+                                color: Theme.accent
+                                font.family: Theme.monoFont
                                 font.pixelSize: Theme.fontSize
                             }
-                        }
 
-                        Text {
-                            anchors.right: parent.right
-                            anchors.rightMargin: 10
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "↵"
-                            color: Theme.accent
-                            font.family: Theme.monoFont
-                            font.pixelSize: Theme.fontSize
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: launcher.activate(0)
+                            MouseArea {
+                                anchors.fill: parent
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: launcher.activate(0)
+                            }
                         }
                     }
 
-                    ListView {
-                        id: commandList
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        visible: !launcher.fallback
-                        clip: true
-                        reuseItems: true
-                        boundsBehavior: Flickable.StopAtBounds
-                        model: launcher.commandResults
+                    delegate: CommandRow {
+                        required property var modelData
+                        required property int index
+                        width: commandList.width - 8 // room for the scrollbar
+                        name: modelData.name
+                        indices: modelData.indices
+                        selected: launcher.selected === launcher.pinnedResults.length + index
+                        onActivated: launcher.activate(launcher.pinnedResults.length + index)
+                    }
 
-                        delegate: CommandRow {
-                            required property var modelData
-                            required property int index
-                            width: commandList.width - 8 // room for the scrollbar
-                            name: modelData.name
-                            indices: modelData.indices
-                            selected: launcher.selected === launcher.pinnedResults.length + index
-                            onActivated: launcher.activate(launcher.pinnedResults.length + index)
-                        }
-
-                        // Thin scrollbar.
-                        Rectangle {
-                            anchors.right: parent.right
-                            y: commandList.visibleArea.yPosition * commandList.height
-                            width: 3
-                            height: Math.max(20, commandList.visibleArea.heightRatio * commandList.height)
-                            radius: 1.5
-                            color: Theme.border
-                            visible: commandList.visibleArea.heightRatio < 1
-                        }
+                    // Thin scrollbar.
+                    Rectangle {
+                        anchors.right: parent.right
+                        y: commandList.visibleArea.yPosition * commandList.height
+                        width: 3
+                        height: Math.max(20, commandList.visibleArea.heightRatio * commandList.height)
+                        radius: 1.5
+                        color: Theme.border
+                        visible: commandList.visibleArea.heightRatio < 1
                     }
                 }
 
