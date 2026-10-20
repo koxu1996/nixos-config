@@ -35,6 +35,15 @@ in
     neededForBoot = true;
   };
 
+  # Copy of the old Arch install's backup SSD (home + system notes), to clean up
+  # over time. Its own dataset: `zfs list` shows its size, `zfs destroy` drops it.
+  # Created by hand (`zfs create -o mountpoint=legacy mpool/safe/arch-backup`), not by disko.
+  fileSystems."/persist/arch-backup" = {
+    device = "mpool/safe/arch-backup";
+    fsType = "zfs";
+    options = [ "nofail" ]; # boot on without it (e.g. once destroyed)
+  };
+
   # Manage NixOS config directly from the user directory.
   fileSystems."/etc/nixos" = {
     device = "/home/andrew/nixos";
