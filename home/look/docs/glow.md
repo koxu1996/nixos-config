@@ -1,7 +1,7 @@
 # Glow
 
 Screen colour temperature (through hyprsunset) and backlight brightness for Hyprland.
-Lives in the Quickshell bar (`quickshell/bar`): `GlowService.qml` (state, schedule,
+Lives in the Quickshell bar (`home/look/quickshell`): `GlowService.qml` (state, schedule,
 IPC, sunset maths), `Glow.qml` (popup), `GlowButton.qml` (bar chip),
 `ModeSelector.qml`, `ProfileCard.qml`, `GlowSlider.qml`. Styling comes from `Theme.qml`.
 
@@ -21,8 +21,8 @@ MouseArea { anchors.fill: myButton; onClicked: glow.toggle() }
 
 ## Config: `~/.config/quickshell/glow/profiles.json`
 
-A symlink to `quickshell/glow/profiles.json` in this repo, so edits apply live (the
-file is watched) and stay in git. Profiles are read-only in the UI.
+A symlink to `home/look/quickshell/glow-profiles.json` in this repo (set up in
+`quickshell.nix`), so edits apply live (the file is watched) and stay in git. Profiles are read-only in the UI.
 
 ```json
 {
@@ -47,9 +47,10 @@ file is watched) and stay in git. Profiles are read-only in the UI.
 
 The popup has two independent parts:
 
-- **Brightness** (top): the panel backlight, in both modes. The slider shows the real
-  level (read with `light -G` every second while the popup is open, so the brightness
-  keys show up) and sets it with `light -S` when you move it. 0–100 %; at 0 the backlight
+- **Brightness** (top): the panel backlight, in both modes, shown only on hosts with
+  `my.look.glowBrightness` (`Host.glowBrightness`). The slider shows the real level (read
+  with `brightnessctl -m` every second while the popup is open, so the brightness keys
+  show up) and sets it with `brightnessctl set N%` when you move it. 0–100 %; at 0 the backlight
   may switch off entirely.
 - **Color**: a Schedule / Manual switch for the colour temperature only.
 
@@ -69,9 +70,9 @@ The colour mode and manual temperature persist in Quickshell's state dir
 ## Backend
 
 hyprsunset runs as a Home Manager user service (`services.hyprsunset` in
-`hyprland.nix`) with no profiles of its own and `--identity`, so it starts neutral and
-Glow owns the schedule. Glow drives it with `hyprctl hyprsunset temperature|identity` (50 ms debounce) and keeps
-hyprsunset's gamma at 100: on this MacBook (Asahi), Apple's display coprocessor applies
+`quickshell.nix`) with no profiles of its own and `--identity`, so it starts neutral and
+Glow owns the schedule. Glow drives it with `hyprctl hyprsunset temperature|identity` (50 ms
+debounce) and keeps hyprsunset's gamma at 100: on the MacBook (nixAir, Asahi), Apple's display coprocessor applies
 the colour matrix's tint but ignores its overall scale, so hyprsunset gamma cannot dim
 the screen. In hyprsunset, setting a temperature also turns identity off. Even 6500 K is not identity (hyprsunset still trims ~2% blue);
 only Disabled gives the untouched original colours.

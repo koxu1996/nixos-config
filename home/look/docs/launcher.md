@@ -1,14 +1,14 @@
 # App launcher
 
 `Launcher.qml` (window), `LauncherSearch.qml`, `PinnedRow.qml`, `CommandRow.qml` and
-`LauncherService.qml` (data, fuzzy matching, launching) in `quickshell/bar`. It is created
+`LauncherService.qml` (data, fuzzy matching, launching) in `home/look/quickshell`. It is created
 once in `shell.qml` and opened on the focused screen with **Super+D**
 (`quickshell ipc -c bar call launcher toggle`, bound in `hyprland.nix`).
 
 ## Pinned apps
 
-Pinned apps are listed in `launcher.json` in this directory, which Home Manager links to
-`~/.config/quickshell/launcher/launcher.json`:
+Pinned apps are listed in `home/look/quickshell/launcher.json`, which Home Manager links to
+`~/.config/quickshell/launcher/launcher.json` (set up in `quickshell.nix`):
 
 ```json
 { "pinned": ["brave", "keepassxc"] }

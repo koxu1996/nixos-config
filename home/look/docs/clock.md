@@ -1,7 +1,7 @@
 # Clock
 
 Bar clock with a popup (big time, date, ISO week, month calendar, extra time zones).
-Lives in the Quickshell bar (`quickshell/bar`): `ClockService.qml` (shared time, date
+Lives in the Quickshell bar (`home/look/quickshell`): `ClockService.qml` (shared time, date
 helpers, zone lookups), `ClockChip.qml` (bar chip), `ClockPopup.qml`, `MonthCalendar.qml`,
 `ZoneList.qml`. Styling comes from `Theme.qml`.
 
@@ -9,13 +9,14 @@ helpers, zone lookups), `ClockChip.qml` (bar chip), `ClockPopup.qml`, `MonthCale
 
 `ClockChip {}` is self-contained: it shows `21:59 · Wed 14 Oct`, and a click toggles the
 popup (opens under the chip, right-aligned; Escape or a click outside closes it). In
-`shell.qml` it sits at the far right of the right-end overlay, after volume and Glow:
+`shell.qml` it sits in the right-end row, between the Tools and notification chips:
 
 ```qml
 Row {
-    Volume {}
-    GlowButton {}
+    // ... Media, SystemStats, Volume, GlowButton, Wi-Fi, Battery
+    ToolsChip {}
     ClockChip {}
+    NotificationChip {}
 }
 ```
 
@@ -24,7 +25,8 @@ Row {
 
 ## Time zones: `~/.config/quickshell/clock/config.json`
 
-A symlink to `quickshell/clock/config.json` in this repo; edits apply live.
+A symlink to `home/look/quickshell/clock-config.json` in this repo (set up in
+`quickshell.nix`); edits apply live.
 
 ```json
 [
