@@ -93,6 +93,7 @@ in
     # The kernel has the TPM and TEE trusted-key sources built in (Asahi config defaults);
     # the trusted core binds the first one that inits at boot, so apple_sep's source
     # ("applesep", trusted_shim.c) later hit EBUSY. Name it explicitly instead.
+    # Reported upstream: https://github.com/aurora-silicon/linux/pull/152#issuecomment-6325044380
     boot.kernelParams = [ "trusted.source=applesep" ];
 
     environment.systemPackages = [ aurora-sep pkgs.libfprint pkgs.fprintd ];

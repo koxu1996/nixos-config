@@ -9,7 +9,9 @@ Steps 1–4 below are done and Touch ID works on this J413: right index finger
 enrolled, `fprintd-verify` matches, `sudo` accepts the finger, and after a reboot
 the templates are restored (`restore master/owner/user catacomb … Restored`,
 `identity count 1`) and the finger still verifies. Merged into `master`.
-Only step 5 (report upstream) is open. What it took beyond the plan:
+Step 5 is done too: the J413 result is reported upstream as a comment on
+PR 152, https://github.com/aurora-silicon/linux/pull/152#issuecomment-6325044380
+(2026-10-21). What it took beyond the plan:
 
 - **Kernel source hash was wrong** in `touchid/linux-asahi-sep.nix`; corrected
   after checking the fetched tree (7.1.9 Makefile, `sep.rs`, J413 DT with Mesa on
@@ -137,7 +139,8 @@ Upstream (aurora-silicon/linux PR 152) validated this profile only on the
    sudo -k; sudo true  # pam_fprintd is on for all services once fprintd is enabled
    ```
    Reboot and verify again: persistence across reboots is the real test.
-5. Report the J413 result upstream (aurora-silicon/linux, referencing PR 152):
+5. Report the J413 result upstream (aurora-silicon/linux, referencing PR 152) —
+   done 2026-10-21: https://github.com/aurora-silicon/linux/pull/152#issuecomment-6325044380
    sensor id `0x3352`, SPI mode 1 confirmed from the kext, enrol/verify/reboot.
 
 ## Rules
@@ -172,6 +175,7 @@ Upstream (aurora-silicon/linux PR 152) validated this profile only on the
 ## Sources
 
 - https://github.com/aurora-silicon/linux (branch `feat/sep`, pinned rev `120e030e`), PR 152, tools/aurora-sep
+- Our J413 report on PR 152 (results + the trusted-keys EBUSY finding): https://github.com/aurora-silicon/linux/pull/152#issuecomment-6325044380
 - https://github.com/aurora-silicon/m1n1/pull/3 (original warm-registration patch)
 - https://github.com/aurora-silicon/nixos-aurora (`modules/sep.nix`, `sep/` — the services here are adapted from it)
 - https://asahilinux.org/docs/hw/soc/sep/
