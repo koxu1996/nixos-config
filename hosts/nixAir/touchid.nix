@@ -97,6 +97,9 @@ in
 
     environment.systemPackages = [ aurora-sep pkgs.libfprint pkgs.fprintd ];
     services.fprintd.enable = true;
+    # fprintd turns pam_fprintd on for every PAM service. Log in with the password
+    # (once per boot); keep the finger for sudo, su and polkit prompts.
+    security.pam.services.login.fprintAuth = false;
 
     # --- persistent state ---------------------------------------------------
     environment.persistence."/persist".directories = [
