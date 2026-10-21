@@ -43,7 +43,7 @@ let
         owner = "aurora-silicon";
         repo = "linux";
         rev = "120e030eac9fc34b1586b9a9a6bf365959828e7a"; # feat/sep
-        hash = "sha256-vdlisGI0co3GTWY7xmLWvLz+AcF6N8cP4woKXCbGik4=";
+        hash = "sha256-zoFo7xlUtB/bY3p2Vbez5WYnOqD6xYdVuGjKUdFB9ys=";
       };
 
       kernelPatches = [
