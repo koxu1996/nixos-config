@@ -90,6 +90,11 @@ in
     # /lib/firmware (calibration) first. aurora-sep.service loads it explicitly.
     boot.blacklistedKernelModules = [ "apple_sep" ];
 
+    # The kernel has the TPM and TEE trusted-key sources built in (Asahi config defaults);
+    # the trusted core binds the first one that inits at boot, so apple_sep's source
+    # ("applesep", trusted_shim.c) later hit EBUSY. Name it explicitly instead.
+    boot.kernelParams = [ "trusted.source=applesep" ];
+
     environment.systemPackages = [ aurora-sep pkgs.libfprint pkgs.fprintd ];
     services.fprintd.enable = true;
 
