@@ -11,11 +11,12 @@ in
     ./touchid.nix
   ];
 
-  # Touch ID through the Secure Enclave (see HANDOVER-touchid.md). Starts
-  # read-only: the first boots only prove the driver attaches. Set
-  # my.touchid.xartWrites = true after that, with the iBoot container backed up.
+  # Touch ID through the Secure Enclave (see HANDOVER-touchid.md). The read-only
+  # boots passed (2026-10-21: endpoints to 0x12, sensor bound in mode 1, calibration
+  # sha256 matches macOS, xART 12 live records, applesep trusted-key source); the
+  # iBoot container is backed up (isc-j413-backup.img). Writes on: keybag provisioning.
   my.touchid.enable = true;
-  my.touchid.xartWrites = false;
+  my.touchid.xartWrites = true;
 
   hardware.asahi.enable = true;
 
