@@ -8,7 +8,14 @@ in
 {
   imports = [
     ./hardware-configuration.nix
+    ./touchid.nix
   ];
+
+  # Touch ID through the Secure Enclave (see HANDOVER-touchid.md). Starts
+  # read-only: the first boots only prove the driver attaches. Set
+  # my.touchid.xartWrites = true after that, with the iBoot container backed up.
+  my.touchid.enable = true;
+  my.touchid.xartWrites = false;
 
   hardware.asahi.enable = true;
 
