@@ -69,6 +69,9 @@
 
   home.stateVersion = "24.11";
 
+  # OpenCode 2 installs itself here (curl -fsSL https://opencode.ai/v2/install | bash)
+  home.sessionPath = [ "$HOME/.opencode/bin" ];
+
   home.pointerCursor = {
     enable = true;
     package = pkgs.phinger-cursors;
