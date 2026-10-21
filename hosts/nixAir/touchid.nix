@@ -116,6 +116,11 @@ in
     };
     systemd.services.aurora-sep = {
       description = "Apple SEP trusted keys and Touch ID (apple_sep loader)";
+      # The SEP handoff happens once per boot and module parameters are fixed at load:
+      # never let nixos-rebuild switch stop or restart this. A changed loader takes
+      # effect on the next boot.
+      restartIfChanged = false;
+      stopIfChanged = false;
       after = [ "local-fs.target" "systemd-tmpfiles-setup.service" ];
       wants = [ "aurora-sep-ready.service" ];
       unitConfig = {
@@ -142,6 +147,7 @@ in
       };
     };
     systemd.services.aurora-sep-ready = {
+      restartIfChanged = false; # same once-per-boot rule as aurora-sep
       description = "Restore fingerprint reader state";
       requires = [ "aurora-sep.service" ];
       after = [ "aurora-sep.service" ];
