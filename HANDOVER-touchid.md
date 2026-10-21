@@ -1,7 +1,50 @@
 # Touch ID on nixAir — handover
 
 Written 2026-10-21 from a macOS-side session on this exact machine. Read this
-before touching `hosts/nixAir/touchid.nix` or booting the `touchid` branch.
+before touching `hosts/nixAir/touchid.nix`.
+
+## Status (2026-10-21 evening): working
+
+Steps 1–4 below are done and Touch ID works on this J413: right index finger
+enrolled, `fprintd-verify` matches, `sudo` accepts the finger, and after a reboot
+the templates are restored (`restore master/owner/user catacomb … Restored`,
+`identity count 1`) and the finger still verifies. Merged into `master`.
+Only step 5 (report upstream) is open. What it took beyond the plan:
+
+- **Kernel source hash was wrong** in `touchid/linux-asahi-sep.nix`; corrected
+  after checking the fetched tree (7.1.9 Makefile, `sep.rs`, J413 DT with Mesa on
+  spi2, GPIO 178, `apple/mesacal-j413.bin`).
+- **`trusted.source=applesep`** on the kernel command line. The Asahi config
+  builds in the TPM and TEE trusted-key sources; the trusted core binds the first
+  one at boot, so the SEP source hit `trusted-keys: registration failed (EBUSY)`
+  and step 4's seal/unseal could not work.
+- **SEP units are never restarted by `nixos-rebuild switch`**
+  (`restartIfChanged`/`stopIfChanged = false`). Flipping `xartWrites` made switch
+  restart the loader on a driver already loaded read-only (parameters are fixed
+  at load), so it looped on the seal/unseal probe until its 120 s timeout. Harmless,
+  but exactly what the rules below forbid. Use `nixos-rebuild boot` + reboot for
+  anything that changes these units.
+- **OS UUID pinned** in `hosts/nixAir/default.nix`:
+  `apple_sep.os_uuid_hi=4099658544154233333 apple_sep.os_uuid_lo=13248823857061546668`
+  (= m1n1's apfs-preboot-uuid `38E4E9B9-98B5-49F5-B7DD-471A4BDFCAAC`, big-endian
+  halves; the driver logs `using explicit OS UUID 38e4e9b998b549f5-b7dd471a4bdfcaac`).
+- **Polkit agent**: no agent was running, so `fprintd-enroll` failed with
+  `Not Authorized: net.reactivated.fprint.device.enroll`. `hyprpolkitagent` now
+  runs (home/hyprland.nix).
+- **PAM**: login is password-only (`security.pam.services.login.fprintAuth =
+  false`); sudo, su and polkit take the finger.
+
+Expected messages that look like errors but are not:
+- Read-only mode (`xartWrites = false`): `Touch ID activation failed: ENOENT`
+  (no keybag can exist without writes), then `EIO` (no retries this boot).
+- Before the first enrolment: `matching unavailable this boot … template state is
+  unproven` (no catacomb files yet). Gone once a finger is enrolled and rebooted.
+- Early `trusted-keys: seal failed (ENODEV)` lines: the loader polling before the
+  key store endpoint (0x12) is up.
+
+Open, minor: at boot the loader can check for `/dev/sep-bio` a moment too early
+("trusted keys are ready; no biometric device is present"), so
+`aurora-sep-ready` is skipped; fprintd still brings the sensor up on first use.
 Full report with the hardware evidence:
 https://claude.ai/code/artifact/699bdfb4-6287-4d41-8d61-c522dc9d5fc4
 
@@ -23,8 +66,8 @@ of the stock Asahi stack from nixos-apple-silicon — nothing else is replaced:
 | Bootloader | m1n1 2.0.0 + one patch: on M2+ do not query the SEP for the RNG seed (it breaks the sensor registration iBoot hands over) and forward `apfs-preboot-uuid` to the FDT | `hosts/nixAir/touchid/m1n1-v2.0.0-sep-warm-registration.patch` |
 | Userspace | libfprint 1.94.100 + Aurora's `aurora` driver; loader, calibration and readiness services; fprintd stock | `hosts/nixAir/touchid.nix`, `hosts/nixAir/touchid/aurora-sep/` |
 
-Switch: `my.touchid.enable = true` in `hosts/nixAir/default.nix` (already set).
-Gate: `my.touchid.xartWrites` — **false on this branch**. See "Order of operations".
+Switch: `my.touchid.enable = true` in `hosts/nixAir/default.nix`.
+Gate: `my.touchid.xartWrites` — **true since 2026-10-21** (after the read-only boots passed). See "Order of operations".
 
 ## Hardware facts already verified from macOS (do not re-derive)
 
