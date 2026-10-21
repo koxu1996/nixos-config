@@ -133,6 +133,10 @@
   # survives the stateless root rollback.
   services.tailscale.enable = true;
 
+  # iOS devices over USB (deploys from Xcode-less toolchains, libimobiledevice). Pairing
+  # records live in /var/lib/lockdown (persisted, see persist.nix).
+  services.usbmuxd.enable = true;
+
   # Disable the default firewall.
   networking.firewall.enable = false;
 
