@@ -208,12 +208,16 @@
     enable = true;
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
+      # File chooser (xdg-desktop-portal-hyprland has none). Without it, browsers fall back
+      # to their in-process GTK dialog, where Enter / double-click on a file did nothing.
+      xdg-desktop-portal-gtk
     ];
     config = {
       common = {
         default = [
           "hyprland"
         ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
       };
     };
   };
