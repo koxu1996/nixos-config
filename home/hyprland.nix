@@ -424,6 +424,10 @@ in
     pkgs.brightnessctl # brightness keys (+ Glow on laptops)
   ];
 
+  # Polkit authentication agent (password dialog for polkit prompts, e.g. fprintd-enroll,
+  # apps asking for admin rights). Without one, polkit actions that need auth just fail.
+  services.hyprpolkitagent.enable = true;
+
   # clutch has no desktop entry of its own: add one, with its icon in the hicolor theme,
   # so the launcher (pinned in launcher.json) shows it with the icon.
   xdg.dataFile."icons/hicolor/scalable/apps/clutch.svg".source = ./clutch.svg;
