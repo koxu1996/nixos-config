@@ -44,7 +44,15 @@ in
 
   # Show the real notch area (1280x832 logical; the bar sits beside it, see
   # my.look.notchGap), and a brcmfmac Wi-Fi driver quirk (feature_disable).
-  boot.kernelParams = [ "appledrm.show_notch=1" "brcmfmac.feature_disable=0x82000" ];
+  boot.kernelParams = [
+    "appledrm.show_notch=1"
+    "brcmfmac.feature_disable=0x82000"
+    # Touch ID: pin the OS identity the enclave was provisioned with (2026-10-21), so a
+    # bootloader change cannot orphan enrolled fingerprints. m1n1's apfs-preboot-uuid
+    # 38E4E9B9-98B5-49F5-B7DD-471A4BDFCAAC as two big-endian u64 halves (decimal).
+    "apple_sep.os_uuid_hi=4099658544154233333" # 0x38E4E9B998B549F5
+    "apple_sep.os_uuid_lo=13248823857061546668" # 0xB7DD471A4BDFCAAC
+  ];
 
   # NixOS snowflake instead of the Asahi logo on the m1n1 boot screen. The
   # boot-picker icon and name live in the macOS stub volume and can only be
