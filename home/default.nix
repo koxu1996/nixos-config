@@ -9,7 +9,8 @@
     #hyprland # We already have it in system packages...
     hyprpaper
     firefox
-    brave
+    # No welcome / first-run screen: the profile is not persisted, so every boot is a first run.
+    (brave.override { commandLineArgs = "--no-first-run"; })
     fzf
     lazygit
     gh # GitHub CLI.
