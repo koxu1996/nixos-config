@@ -53,6 +53,13 @@
         { directory = ".config/clutch"; mode = "0700"; } # clutch HUD config + OpenCode Zen API key.
         # Quickshell bar state: Glow mode/manual values, notifications + do-not-disturb.
         ".local/state/quickshell"
+        # Agent usage panel (home/agent-usage): the subscription-account registry and the
+        # added accounts' homes (their own OAuth credentials, hence 0700), usage records,
+        # panel order.
+        { directory = ".local/state/omarchy"; mode = "0700"; }
+        # OpenCode's database: its sessions, and the per-response costs the Zen balance
+        # estimate subtracts.
+        ".local/share/opencode"
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.

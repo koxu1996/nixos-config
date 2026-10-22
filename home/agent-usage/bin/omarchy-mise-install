@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): there is no mise here. Install the tool
+# from Nix (home.packages) instead.
+# omarchy:args=<package> [command-name [bin-name]]
+
+echo "omarchy-mise-install: install ${1:-the tool} from Nix (home.packages); mise isn't used here" >&2
+exit 1

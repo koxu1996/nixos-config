@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): there is no mise here. The agent CLIs
+# come from Nix, so Omarchy declares no default mise tools.
+# omarchy:args=<list|declares <tool>|disable|enable>
+# omarchy:hidden=true
+
+case "${1:-}" in
+list) exit 0 ;;
+declares) exit 1 ;;
+*)
+  echo "omarchy-mise-default-tools: not available; the agent CLIs come from Nix" >&2
+  exit 1
+  ;;
+esac

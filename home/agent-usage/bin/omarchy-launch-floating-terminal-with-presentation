@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): run a command line in $TERMINAL and keep
+# the window open until a key is pressed, like Omarchy's presentation wrapper.
+# omarchy:args=<command>
+
+cmd="$*"
+script="$cmd; code=\$?; if (( code != 130 )); then echo; if (( code == 0 )); then echo Done.; else echo \"Failed (\$code).\"; fi; read -rsn1 -p 'Press any key to close'; fi"
+exec setsid -f "${TERMINAL:-xterm}" -e bash -c "$script"

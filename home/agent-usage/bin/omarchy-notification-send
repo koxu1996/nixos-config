@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): Omarchy's notification sender, mapped
+# onto notify-send. Same flags as upstream; the Omarchy-only hints (glyph,
+# click command) are dropped, except that a glyph is prefixed to the headline.
+# omarchy:args=[--app-name <app-name>] [-g <glyph>] [-u <low|normal|critical>] [-i <icon>] [-t <ms>] [-r <id>] [-p] [--image <path-or-uri>] <headline> [description] [--exec <program> [args...]]
+
+set -euo pipefail
+
+args=(--app-name=omarchy-action)
+glyph=""
+positional=()
+
+while (($# > 0)); do
+  case $1 in
+  --exec) break ;; # the click command and everything after it
+  -p | --print-id) args+=(--print-id) ;;
+  -g | --glyph) glyph=$2; shift ;;
+  -u | --urgency) args+=("--urgency=$2"); shift ;;
+  --app-name) args[0]="--app-name=$2"; shift ;;
+  -i | --icon) args+=("--icon=$2"); shift ;;
+  --image) args+=("--hint=string:image-path:$2"); shift ;;
+  -r | --replace-id) args+=("--replace-id=$2"); shift ;;
+  -t | --expire-time) args+=("--expire-time=$2"); shift ;;
+  --glyph=*) glyph=${1#*=} ;;
+  --urgency=* | --app-name=* | --icon=* | --replace-id=* | --expire-time=*) args+=("$1") ;;
+  --image=*) args+=("--hint=string:image-path:${1#*=}") ;;
+  *) positional+=("$1") ;;
+  esac
+  shift
+done
+
+if ((${#positional[@]} < 1)); then
+  echo "Usage: omarchy-notification-send [-g <glyph>] [-u <urgency>] <headline> [description]" >&2
+  exit 1
+fi
+
+headline=${positional[0]}
+[[ -n $glyph ]] && headline="$glyph  $headline"
+# The leading -- keeps a headline like "-50% off" from being read as an option.
+exec notify-send "${args[@]}" -- "$headline" "${positional[@]:1:1}"

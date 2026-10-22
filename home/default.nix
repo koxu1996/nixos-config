@@ -120,7 +120,16 @@
     ./pixma-scan.nix # `pixma-scan <format> <resolution> <output>` scan helper.
     ./thunderbird.nix # Thunderbird + pre-configured kontakt@brosoft.xyz account.
     ./gpg-tools.nix # `gpg-load` + `tgpg`: KeePass-backed RAM-only GPG keyring.
+    ./agent-usage # Omarchy's AI agent usage panel in the bar + OpenCode Zen balance.
   ];
+
+  programs.agent-usage = {
+    enable = true;
+    # Per-machine snapshots (<hostname>.json) merge into one set of totals; the Zen
+    # funding list lives here too, so every machine sees the same one.
+    syncDir = "~/Sync/agent-usage";
+    syncthingFolder = "~/Sync";
+  };
   tbsm = {
     enable = true;
     defaultSession = "Hyprland";

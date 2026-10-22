@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): run a TUI command in $TERMINAL.
+# omarchy:args=[--app-id=<app-id>] <command> [args...]
+
+[[ ${1:-} == --app-id=* ]] && shift
+exec setsid -f "${TERMINAL:-xterm}" -e "$@"

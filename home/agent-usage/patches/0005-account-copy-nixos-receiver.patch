@@ -1,0 +1,20 @@
+--- a/bin/omarchy-agent-account-transfer
++++ b/bin/omarchy-agent-account-transfer
+@@ -349,13 +349,15 @@
+     if args == ["capabilities"]:
+       print(json.dumps({"streamVersion": 1, "sourceNames": True}))
+     elif args in (["receiver-command"], ["receiver-command", "--replace"]):
+-      command = "/usr/bin/python3 -I -c " + shlex.quote(RECEIVER_BOOTSTRAP)
++      # agent-usage: NixOS has no /usr/bin/python3 or /bin/bash; the system profile's
++      # are just as fixed a path.
++      command = "/run/current-system/sw/bin/python3 -I -c " + shlex.quote(RECEIVER_BOOTSTRAP)
+       if "--replace" in args:
+         command += " --replace"
+       # Avoid user profiles, BASH_ENV and home-directory Python modules
+       # while credentials are on stdin. Load only the system bootstrap.
+       command = ". /etc/profile.d/omarchy.sh 2>/dev/null; exec " + command
+-      print("/bin/bash --noprofile --norc -p -c " + shlex.quote(command))
++      print("/run/current-system/sw/bin/bash --noprofile --norc -p -c " + shlex.quote(command))
+     elif args and args[0] in ("export", "bundle"):
+       payload = export_accounts(args[1:] or list(FILES))
+       if len(json.dumps(payload).encode()) > MAX_STREAM:

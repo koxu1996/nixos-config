@@ -1,0 +1,471 @@
+#!/usr/bin/python3
+# LOCAL ADDITION (not an upstream copy).
+# omarchy:summary=Print the OpenCode Zen usage record as JSON
+# omarchy:args=[--force] [--limits-only]
+# omarchy:hidden=true
+"""Collect OpenCode Zen usage into one display-ready JSON record.
+
+Zen is pay-as-you-go: credits bought in the console, drawn down per request.
+Its balance is console-only (no API key can read it), so like the Fireworks
+collector this carries an estimated balance instead of rate limits: the
+funding listed in ~/.config/omarchy/agents/opencode.json minus what OpenCode
+itself recorded as the cost of each Zen (provider `opencode`) response since
+the earliest funding date.
+
+    {"funding": [{"usd": 20, "at": "2026-10-01"}, {"usd": 20, "at": "2026-10-19"}]}
+
+Token stats come from the same read-only scan of OpenCode's SQLite database
+that the Claude collector does for Anthropic-provider sessions. With synced
+aggregation on, each machine also drops its daily Zen spend into
+<syncDir>/opencode-spend/<device>.json, and the balance subtracts every
+machine's spend, since the credits are one account-wide pool.
+"""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+import re
+import socket
+import sqlite3
+import sys
+import tempfile
+import time
+from pathlib import Path
+from typing import Any
+
+AGENT_ID = "opencode"
+AGENT_NAME = "OpenCode Zen"
+PROVIDER_ID = "opencode"
+# Zen tops the account up by this much when it falls under $5.
+AUTO_RELOAD_USD = 20
+# How far below zero the estimate may drift (rounding, a response still being
+# priced) before it is read as an auto-reload nobody wrote down.
+RELOAD_SLACK_USD = 1.0
+
+
+def number(value: Any) -> int:
+  try:
+    n = float(value or 0)
+    return round(n) if n == n else 0
+  except Exception:
+    return 0
+
+
+def money(value: Any) -> float:
+  try:
+    n = float(value or 0)
+    return n if n == n and n not in (float("inf"), float("-inf")) else 0.0
+  except Exception:
+    return 0.0
+
+
+def date_string(value: dt.date) -> str:
+  return value.strftime("%Y-%m-%d")
+
+
+def recent_date_strings() -> list[str]:
+  today = dt.datetime.now().date()
+  return [date_string(today - dt.timedelta(days=offset)) for offset in range(6, -1, -1)]
+
+
+def local_date_string() -> str:
+  return date_string(dt.datetime.now().date())
+
+
+def empty_bucket() -> dict[str, int]:
+  return {
+    "inputTokens": 0,
+    "outputTokens": 0,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0,
+  }
+
+
+def empty_stats() -> dict[str, Any]:
+  return {
+    "todayPrompts": 0,
+    "todaySessions": 0,
+    "todayTotalTokens": 0,
+    "todayTokensByModel": {},
+    "recentDays": [{"date": day, "messageCount": 0} for day in recent_date_strings()],
+    "totalPrompts": 0,
+    "totalSessions": 0,
+    "activeDays": 0,
+    "activeDates": [],
+    "modelUsage": {},
+  }
+
+
+def base_record(**overrides: Any) -> dict[str, Any]:
+  record: dict[str, Any] = {
+    "schemaVersion": 1,
+    "id": AGENT_ID,
+    "name": AGENT_NAME,
+    "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+    "ready": False,
+    "hasLocalStats": True,
+    # The stats come from this machine's database, so synced snapshots add up.
+    "scope": "device",
+    "hasPromptStats": True,
+    "tierLabel": "Prepaid",
+    "usageStatusText": "",
+    "authHelpText": "",
+    "limits": [],
+  }
+  record.update(empty_stats())
+  record.update(overrides)
+  return record
+
+
+# ------------------------------------------------------------------ files
+
+
+def cache_root() -> Path:
+  root = Path(os.environ.get("XDG_CACHE_HOME", Path.home() / ".cache")) / "omarchy" / "agent-usage"
+  root.mkdir(parents=True, exist_ok=True)
+  return root
+
+
+def config_home() -> Path:
+  return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
+
+
+def database_path() -> Path:
+  return Path(os.environ.get("XDG_DATA_HOME") or (Path.home() / ".local" / "share")) / "opencode" / "opencode.db"
+
+
+def read_json(path: Path) -> Any:
+  try:
+    return json.loads(path.read_text(encoding="utf-8"))
+  except Exception:
+    return None
+
+
+def read_fresh_json(path: Path, max_age_seconds: float) -> dict[str, Any] | None:
+  if max_age_seconds <= 0 or not path.exists():
+    return None
+  try:
+    age = time.time() - path.stat().st_mtime
+    if 0 <= age <= max_age_seconds:
+      return read_json(path)
+  except Exception:
+    return None
+  return None
+
+
+def write_json(path: Path, payload: Any, mode: int = 0o644) -> None:
+  path.parent.mkdir(parents=True, exist_ok=True)
+  handle_fd, tmp_name = tempfile.mkstemp(dir=path.parent, prefix="." + path.name + ".", suffix=".tmp")
+  tmp = Path(tmp_name)
+  try:
+    with os.fdopen(handle_fd, "w", encoding="utf-8") as handle:
+      handle.write(json.dumps(payload, separators=(",", ":"), sort_keys=True) + "\n")
+    tmp.chmod(mode)
+    tmp.replace(path)
+  except BaseException:
+    tmp.unlink(missing_ok=True)
+    raise
+
+
+# ------------------------------------------------------------- local scan
+
+
+# Read-only walk over every assistant row OpenCode stored for the Zen
+# provider. Ported from scan_opencode_usage() in omarchy-agent-usage-claude;
+# the only differences are the provider id and that each row's cost is kept,
+# per local day, for the balance.
+def scan_opencode(max_age_seconds: float) -> dict[str, Any] | None:
+  db = database_path()
+  if not db.is_file():
+    return None
+
+  cache_file = cache_root() / f"opencode-scan-{hashlib.sha1(str(db).encode('utf-8')).hexdigest()[:16]}.json"
+  cached = read_fresh_json(cache_file, max_age_seconds)
+  if cached is not None:
+    return cached.get("scan")
+
+  today = local_date_string()
+  recent_dates = recent_date_strings()
+  recent = {day: {"date": day, "messageCount": 0} for day in recent_dates}
+  sessions: set[str] = set()
+  active_days: set[str] = set()
+  today_sessions: set[str] = set()
+  today_tokens: dict[str, int] = {}
+  usage_by_model: dict[str, dict[str, int]] = {}
+  cost_by_day: dict[str, float] = {}
+  prompts = 0
+  today_prompt_count = 0
+  today_token_total = 0
+
+  try:
+    # Read-only: opencode may be writing right now.
+    conn = sqlite3.connect(db.resolve().as_uri() + "?mode=ro", uri=True, timeout=2)
+  except sqlite3.Error:
+    return None
+  try:
+    conn.execute("PRAGMA query_only = ON")
+    tables = {name for (name,) in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'")}
+    # opencode v1 keeps messages in `message`, with the role, provider and model
+    # in each row's data. v2 writes `session_message` instead: the role moves to
+    # the `type` column and the provider and model nest under data.model. A
+    # database can hold either or both.
+    queries = []
+    if "message" in tables:
+      queries.append(("opencode:", "SELECT session_id, data, NULL FROM message"))
+    if "session_message" in tables:
+      queries.append(("opencode-v2:", "SELECT session_id, data, type FROM session_message"))
+    rows = ((prefix, row) for prefix, query in queries for row in conn.execute(query))
+    for session_prefix, (session_id, raw, row_type) in rows:
+      try:
+        entry = json.loads(raw)
+        if not isinstance(entry, dict):
+          continue
+        if row_type is None:
+          role = entry.get("role")
+          provider = entry.get("providerID")
+          model_id = entry.get("modelID")
+        else:
+          role = row_type
+          model_info = entry.get("model") or {}
+          provider = model_info.get("providerID")
+          model_id = model_info.get("id")
+        # Exact match: opencode provider ids are free-form, and a custom
+        # gateway named after Zen is not Zen.
+        if role != "assistant" or str(provider or "") != PROVIDER_ID:
+          continue
+        tokens = entry.get("tokens") or {}
+        cache = tokens.get("cache") or {}
+        input_tokens = number(tokens.get("input"))
+        # opencode keeps thinking tokens out of output; both are generated.
+        output_tokens = number(tokens.get("output")) + number(tokens.get("reasoning"))
+        cache_read = number(cache.get("read"))
+        cache_write = number(cache.get("write"))
+        total = input_tokens + output_tokens + cache_read + cache_write
+        cost = money(entry.get("cost"))
+        if total <= 0 and cost <= 0:
+          continue
+
+        created = number((entry.get("time") or {}).get("created"))
+        day = dt.datetime.fromtimestamp(created / 1000).strftime("%Y-%m-%d") if created > 0 else today
+        model = str(model_id or "opencode").rstrip("/").split("/")[-1]
+      except Exception:
+        continue
+      session_key = session_prefix + str(session_id)
+      sessions.add(session_key)
+      active_days.add(day)
+      prompts += 1
+      cost_by_day[day] = cost_by_day.get(day, 0.0) + cost
+
+      bucket = usage_by_model.setdefault(model, empty_bucket())
+      bucket["inputTokens"] += input_tokens
+      bucket["outputTokens"] += output_tokens
+      bucket["cacheReadInputTokens"] += cache_read
+      bucket["cacheCreationInputTokens"] += cache_write
+
+      if day in recent:
+        # recentDays.messageCount is a token total, despite the legacy name.
+        recent[day]["messageCount"] += total
+      if day == today:
+        today_prompt_count += 1
+        today_sessions.add(session_key)
+        today_token_total += total
+        today_tokens[model] = today_tokens.get(model, 0) + total
+  except sqlite3.Error:
+    return None
+  finally:
+    conn.close()
+
+  result = {
+    "stats": {
+      "todayPrompts": today_prompt_count,
+      "todaySessions": len(today_sessions),
+      "todayTotalTokens": today_token_total,
+      "todayTokensByModel": today_tokens,
+      "recentDays": [recent[day] for day in recent_dates],
+      "modelUsage": usage_by_model,
+      "totalPrompts": prompts,
+      "totalSessions": len(sessions),
+      "activeDays": len(active_days),
+      "activeDates": sorted(active_days),
+    },
+    "costByDay": {day: round(cost, 6) for day, cost in sorted(cost_by_day.items())},
+  }
+  write_json(cache_file, {"scan": result})
+  return result
+
+
+# ---------------------------------------------------------------- balance
+
+
+def config_path() -> Path:
+  return config_home() / "omarchy" / "agents" / "opencode.json"
+
+
+class ConfigError(Exception):
+  pass
+
+
+# The funding entries, oldest first, as (usd, local date).
+def read_funding() -> list[tuple[float, str]]:
+  path = config_path()
+  if not path.exists():
+    return []
+  config = read_json(path)
+  if not isinstance(config, dict):
+    raise ConfigError(f"{path} is not a JSON object")
+  entries = config.get("funding") or []
+  if not isinstance(entries, list):
+    raise ConfigError("`funding` must be a list of {usd, at} entries")
+  funding = []
+  for entry in entries:
+    if not isinstance(entry, dict):
+      raise ConfigError("Each funding entry must be an object like {\"usd\": 20, \"at\": \"2026-10-01\"}")
+    try:
+      usd = float(entry.get("usd"))
+    except (TypeError, ValueError):
+      raise ConfigError(f"Funding usd must be a number: {entry.get('usd')!r}")
+    at = str(entry.get("at") or "")
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", at):
+      raise ConfigError(f"Funding date must be YYYY-MM-DD: {at!r}")
+    if usd > 0:
+      funding.append((usd, at))
+  return sorted(funding, key=lambda item: item[1])
+
+
+# --------------------------------------------------------- shared spend
+
+
+# The panel's own settings, for where synced snapshots live. Only the sync
+# keys are read.
+def sync_settings() -> dict[str, Any]:
+  path = Path(os.environ.get("AGENT_USAGE_SETTINGS") or config_home() / "agent-usage" / "settings.json")
+  settings = read_json(path)
+  return settings if isinstance(settings, dict) else {}
+
+
+def sync_enabled(value: Any) -> bool:
+  return value is True or str(value or "").strip().lower() in ("on", "enabled", "true", "yes", "1")
+
+
+def expand_dir(value: str) -> Path | None:
+  raw = value.strip()
+  if not raw:
+    return None
+  if raw.startswith("$HOME/"):
+    raw = "~/" + raw[6:]
+  path = Path(raw).expanduser()
+  return path if path.is_absolute() else Path.home() / path
+
+
+# Same rules as safeDeviceId() in Main.qml, so the spend file is named like
+# the snapshot it sits beside.
+def device_id(settings: dict[str, Any]) -> str:
+  raw = str(settings.get("syncDeviceId") or "").strip()
+  if not raw:
+    raw = os.environ.get("HOSTNAME") or ""
+  if not raw:
+    try:
+      raw = Path("/etc/hostname").read_text(encoding="utf-8").strip()
+    except OSError:
+      raw = socket.gethostname()
+  value = re.sub(r"[^A-Za-z0-9_.-]+", "-", raw).strip("._-") or "device"
+  return value[:80]
+
+
+# Writes this machine's daily Zen spend into the synced folder and returns
+# every machine's, keyed by device. Without sync, only this machine counts.
+def shared_spend(local: dict[str, float]) -> dict[str, dict[str, float]]:
+  settings = sync_settings()
+  directory = expand_dir(str(settings.get("syncDir") or "")) if sync_enabled(settings.get("syncMode")) else None
+  device = device_id(settings)
+  if directory is None:
+    return {device: local}
+
+  spend_dir = directory / "opencode-spend"
+  try:
+    current = read_json(spend_dir / f"{device}.json")
+    if not isinstance(current, dict) or current.get("costByDay") != local:
+      write_json(spend_dir / f"{device}.json", {
+        "schemaVersion": 1,
+        "deviceId": device,
+        "updatedAt": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "costByDay": local,
+      })
+  except OSError as error:
+    print(f"omarchy-agent-usage-opencode: could not write shared spend ({error})", file=sys.stderr)
+
+  devices = {device: local}
+  for path in sorted(spend_dir.glob("*.json")) if spend_dir.is_dir() else []:
+    data = read_json(path)
+    if not isinstance(data, dict) or not isinstance(data.get("costByDay"), dict):
+      continue
+    other = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(data.get("deviceId") or path.stem)).strip("._-")
+    if other and other != device:
+      devices[other] = {str(day): money(cost) for day, cost in data["costByDay"].items()}
+  return devices
+
+
+def estimated_balance(funding: list[tuple[float, str]], spend: dict[str, dict[str, float]]) -> dict[str, Any]:
+  since = funding[0][1]
+  funded = sum(usd for usd, _ in funding)
+  spent = sum(cost for days in spend.values() for day, cost in days.items() if day >= since)
+  return {
+    "remaining": round(funded - spent, 4),
+    "funded": round(funded, 2),
+    "spent": round(spent, 4),
+    "currency": "USD",
+    "estimated": True,
+  }
+
+
+def main() -> int:
+  parser = argparse.ArgumentParser(description="Print the OpenCode Zen usage record as JSON")
+  parser.add_argument("--force", action="store_true", help="rescan the database, ignoring the cache")
+  parser.add_argument("--limits-only", action="store_true", help="reuse any recent scan; Zen has no limits to probe")
+  parser.add_argument("--cache-seconds", type=float, default=20)
+  args = parser.parse_args()
+
+  scan_age = 0 if args.force else (900 if args.limits_only else args.cache_seconds)
+  try:
+    scan = scan_opencode(scan_age)
+  except Exception as error:
+    print(f"omarchy-agent-usage-opencode: {type(error).__name__}: {error}", file=sys.stderr)
+    print(json.dumps(base_record(usageStatusText="OpenCode Zen unavailable", authHelpText="OpenCode usage scan failed"), separators=(",", ":")))
+    return 0
+
+  record = base_record()
+  if scan is not None:
+    record.update(scan["stats"])
+  record["ready"] = number(record.get("totalPrompts")) > 0
+
+  try:
+    funding = read_funding()
+  except ConfigError as error:
+    record["usageStatusText"] = "Balance unavailable"
+    record["authHelpText"] = str(error)
+    funding = []
+
+  if funding:
+    balance = estimated_balance(funding, shared_spend(scan["costByDay"] if scan else {}))
+    if balance["remaining"] < -RELOAD_SLACK_USD:
+      # Zen reloads on its own under $5, so running past zero means credits
+      # arrived that the funding list doesn't know about yet.
+      record["usageStatusText"] = "Zen reload likely"
+      record["authHelpText"] = (
+        f"Estimated balance is -${-balance['remaining']:.2f}: Zen probably auto-reloaded ${AUTO_RELOAD_USD}. "
+        f"Add a funding entry to {config_path()}."
+      )
+    balance["remaining"] = max(0.0, balance["remaining"])
+    record["balance"] = balance
+    record["ready"] = True
+
+  print(json.dumps(record, separators=(",", ":"), sort_keys=True))
+  return 0
+
+
+if __name__ == "__main__":
+  raise SystemExit(main())

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- LOCAL ADDITION (not an upstream copy): a simple OpenCode-style block "O". -->
+  <path fill="#cfcecd" fill-rule="evenodd" d="M10 4h44v56H10zM20 14v36h24V14z"/>
+  <path fill="#807c7a" d="M20 32h24v18H20z"/>
+</svg>

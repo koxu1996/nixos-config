@@ -1,0 +1,65 @@
+--- a/bin/omarchy-agent-account-exec
++++ b/bin/omarchy-agent-account-exec
+@@ -34,16 +34,9 @@
+ # Resolve before restoring dispatch on PATH: mise removes the wrapper paths to
+ # avoid recursion, but the agent's subprocesses need them for other providers.
+ if ! agent_binary=$(type -P "$provider"); then
+-  # A mise dispatcher can exist before its CLI or first-run installer does.
+-  # Omarchy declares these agents, so installing one leaves the user's config
+-  # alone. A user who removed the preinstalls selects it in their own config.
+-  export MISE_MINIMUM_RELEASE_AGE=0
+-  if omarchy-mise-default-tools declares "$provider"; then
+-    mise install --quiet "$provider"
+-  else
+-    mise use -g --quiet "$provider"
+-  fi
+-  agent_binary=$(mise which "$provider")
++  # agent-usage: the CLIs come from Nix (home.packages), never mise.
++  echo "omarchy-agent-account-exec: $provider is not on PATH; install it with Nix (home.packages)" >&2
++  exit 127
+ fi
+ export PATH="${MISE_DATA_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/mise}/command-wrappers/bin:$PATH"
+ exec "$agent_binary" "$@"
+--- a/bin/omarchy-default-agent
++++ b/bin/omarchy-default-agent
+@@ -67,17 +67,16 @@
+     [[ -x $HOME/.local/bin/$agent ]] &&
+       { [[ -L $HOME/.local/bin/$agent ]] || ! grep -q '^mise use -g' "$HOME/.local/bin/$agent"; }
+   }
+-  agent_present() { user_install || mise where "$agent_package" &>/dev/null; }
++  # agent-usage: the CLIs come from Nix, so on PATH is installed.
++  agent_present() { user_install || type -P "$agent" &>/dev/null; }
+   # Omarchy declares the default agents as mise tools, so installing one is
+   # enough and leaves the user's config alone. A user who removed the
+   # preinstalls, like one without Omarchy's declarations, selects it instead.
+   agent_install() {
+     user_install && return
+-    if omarchy-mise-default-tools declares "$agent_package"; then
+-      mise install "$agent_package"
+-    else
+-      mise use -g "$agent_package"
+-    fi
++    agent_present && return
++    echo "$name is not on PATH; install it with Nix (home.packages)" >&2
++    return 1
+   }
+ fi
+ 
+--- a/bin/omarchy-agent-account-add
++++ b/bin/omarchy-agent-account-add
+@@ -112,13 +112,9 @@
+   wait $!
+ }
+ 
++# agent-usage: the CLIs come from Nix (home.packages), never mise.
+ if omarchy-cmd-missing "$provider"; then
+-  say "$(omarchy-i18n agents.installingCli "$name")"
+-  if [[ $events == "true" ]]; then
+-    mise use -g "$package" >/dev/null 2>&1 || fail "$(omarchy-i18n agents.installCliFailed "$name")"
+-  else
+-    mise use -g "$package" || exit 1
+-  fi
++  fail "$name ($package) is not on PATH; install it with Nix (home.packages)."
+ fi
+ 
+ # Your main browser is almost certainly signed in to the account you already

@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# LOCAL REPLACEMENT (not an upstream copy): English-only omarchy-i18n.
+# omarchy:summary=Print a user-facing string
+# omarchy:args=[--count <n>] <key> [args...] | --number <value>
+# omarchy:hidden=true
+
+set -euo pipefail
+
+# Looks <key> up in the English default/i18n/en/cli.json, falling back to the
+# key itself, and substitutes %1-style tokens from the remaining arguments.
+# --count picks the {one, other} form of a plural entry. Numbers are
+# English already, so arguments and --number pass through as they are.
+
+count=null
+if [[ ${1:-} == "--number" ]]; then
+  if [[ ! ${2:-} =~ ^-?[0-9]+([.][0-9]+)?$ ]]; then
+    echo "Usage: omarchy-i18n --number <value>" >&2
+    exit 1
+  fi
+  # English writes a number as it is: no grouping, '.' decimals.
+  printf '%s' "$2"
+  exit 0
+elif [[ ${1:-} == "--count" ]]; then
+  if [[ ! ${2:-} =~ ^-?[0-9]+$ ]]; then
+    echo "Usage: omarchy-i18n [--count <n>] <key> [args...]" >&2
+    exit 1
+  fi
+  count=$2
+  shift 2
+fi
+
+key=${1:-}
+if [[ -z $key ]]; then
+  echo "Usage: omarchy-i18n [--count <n>] <key> [args...]" >&2
+  exit 1
+fi
+shift
+
+catalog=${OMARCHY_PATH:-}/default/i18n/en/cli.json
+[[ -f $catalog ]] || catalog=/dev/null
+
+# One jq run picks the string; the result comes back NUL-terminated so a
+# string may span lines. The -- after --args keeps a dash-leading argument
+# (a label like "-work") from being read as a jq option.
+parts=()
+mapfile -d '' parts < <(jq -j -n \
+  --arg key "$key" --argjson count "$count" --slurpfile en "$catalog" '
+  def present: . != null and . != "";
+  ($en[0] // {}) as $e
+  | (if ($e[$key] | present) then $e[$key] else $key end) as $entry
+  | (if ($entry | type) == "object" then
+       (if $count != null and ($count == 1 or $count == -1) then ($entry.one // $entry.other) else $entry.other end)
+     else $entry end) as $string
+  | [$string // $key] + $ARGS.positional
+  | map(tostring + "\u0000") | add
+' --args -- "$@" 2>/dev/null) || true
+
+if (( ${#parts[@]} == 0 )); then
+  parts=("$key" "$@")
+fi
+string=${parts[0]}
+args=("${parts[@]:1}")
+
+# Substitute through sentinels so an argument that itself contains a %N
+# sequence is never substituted twice.
+if (( ${#args[@]} > 0 )); then
+  for (( i = 1; i <= ${#args[@]}; i++ )); do
+    string=${string//%$i/$'\001'"$i"$'\002'}
+  done
+  for (( i = 1; i <= ${#args[@]}; i++ )); do
+    string=${string//$'\001'"$i"$'\002'/"${args[i - 1]}"}
+  done
+fi
+
+printf '%s' "$string"

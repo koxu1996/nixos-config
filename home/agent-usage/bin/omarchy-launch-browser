@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# LOCAL SHIM (not an upstream copy): open a URL in the default browser with
+# xdg-open. --private (used when signing in a second account, so the main
+# browser's session isn't reused) asks the default browser for a private
+# window when it is one we know; otherwise it falls back to xdg-open.
+# omarchy:args=[--private] [url]
+
+private=false
+args=()
+for arg in "$@"; do
+  if [[ $arg == "--private" ]]; then private=true; else args+=("$arg"); fi
+done
+
+if [[ $private == "true" ]]; then
+  desktop=$(xdg-settings get default-web-browser 2>/dev/null || true)
+  case "$desktop" in
+  *firefox* | *librewolf* | *zen*) flag="--private-window" ;;
+  *brave* | *chrom* | *vivaldi* | *google-chrome*) flag="--incognito" ;;
+  *edge*) flag="--inprivate" ;;
+  *) flag="" ;;
+  esac
+  if [[ -n $flag ]]; then
+    browser=$(sed -n 's/^Exec=\([^ ]*\).*/\1/p' \
+      {"${XDG_DATA_HOME:-$HOME/.local/share}","/etc/profiles/per-user/$USER/share","$HOME/.nix-profile/share","/run/current-system/sw/share"}/applications/"$desktop" 2>/dev/null | head -1)
+    if [[ -n $browser ]] && command -v "$browser" >/dev/null; then
+      setsid -f "$browser" "$flag" "${args[@]}" >/dev/null 2>&1
+      exit 0
+    fi
+  fi
+  echo "omarchy-launch-browser: no private window for '${desktop:-unknown}', opening normally" >&2
+fi
+
+setsid -f xdg-open "${args[@]}" >/dev/null 2>&1
