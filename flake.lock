@@ -168,6 +168,23 @@
         "type": "github"
       }
     },
+    "opensk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791299046,
+        "narHash": "sha256-Na/4k0krWKrHURuvpF3mVYUeHW0iT8sQM1bDn6byWio=",
+        "owner": "google",
+        "repo": "OpenSK",
+        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "type": "github"
+      },
+      "original": {
+        "owner": "google",
+        "repo": "OpenSK",
+        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "clutch": "clutch",
@@ -176,7 +193,8 @@
         "impermanence": "impermanence",
         "nixos-apple-silicon": "nixos-apple-silicon",
         "nixpkgs": "nixpkgs_2",
-        "tbsm": "tbsm"
+        "tbsm": "tbsm",
+        "tpm2-passkey": "tpm2-passkey"
       }
     },
     "tbsm": {
@@ -198,6 +216,27 @@
         "ref": "add-nix-flake",
         "repo": "tbsm",
         "type": "github"
+      }
+    },
+    "tpm2-passkey": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "opensk": "opensk"
+      },
+      "locked": {
+        "lastModified": 1792652971,
+        "narHash": "sha256-baYEK7wPr2BgBG8AXmuSbHkNkz0inHceykp/3biRyNo=",
+        "ref": "refs/heads/master",
+        "rev": "39f5eeac33ebd9a554c74fe1888eaaf1ce6c80b1",
+        "revCount": 6,
+        "type": "git",
+        "url": "file:///home/andrew/Downloads/tmp/tpm2-passkey"
+      },
+      "original": {
+        "type": "git",
+        "url": "file:///home/andrew/Downloads/tmp/tpm2-passkey"
       }
     }
   },
