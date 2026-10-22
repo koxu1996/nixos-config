@@ -160,7 +160,9 @@
   programs.git = {
     enable = true;
     settings.user = {
-      email = "andrzej1_1@o2.pl";
+      # Matches the Google CLA (OpenSK contributions) and GitHub; the signing
+      # key carries both this and andrzej1_1@o2.pl as UIDs.
+      email = "koxu1996@gmail.com";
       name = "Andrzej Broński";
     };
     signing.key = "BF713D7A7BCEF5DC"; # personal default (andrzej1_1@o2.pl / koxu1996@gmail.com)
