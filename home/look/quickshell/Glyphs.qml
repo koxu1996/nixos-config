@@ -44,7 +44,15 @@ Singleton {
         sun: "M16 12A4 4 0 1 1 8 12A4 4 0 1 1 16 12Z M12 2V4 M12 20V22 M4.93 4.93L6.34 6.34 "
            + "M17.66 17.66L19.07 19.07 M2 12H4 M20 12H22 M6.34 17.66L4.93 19.07 M19.07 4.93L17.66 6.34",
         lock: "M7 11H17A2 2 0 0 1 19 13V19A2 2 0 0 1 17 21H7A2 2 0 0 1 5 19V13A2 2 0 0 1 7 11Z "
-            + "M8 11V7A4 4 0 0 1 16 7V11"
+            + "M8 11V7A4 4 0 0 1 16 7V11",
+        // Two arrows chasing each other round a circle (Syncthing).
+        sync: "M3 12a9 9 0 0 1 9-9a9.75 9.75 0 0 1 6.74 2.74L21 8 M21 3v5h-5 "
+            + "M21 12a9 9 0 0 1-9 9a9.75 9.75 0 0 1-6.74-2.74L3 16 M8 16H3v5",
+        folder: "M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4"
+              + "a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z",
+        pause: "M6 4H10V20H6Z M14 4H18V20H14Z",
+        play: "M6 3L20 12L6 21Z",
+        external: "M15 3H21V9 M10 14L21 3 M18 13V19A2 2 0 0 1 16 21H5A2 2 0 0 1 3 19V8A2 2 0 0 1 5 6H11"
     })
 
     // Glyph kind for a window class / app id, or "" if none is assigned.
