@@ -16,6 +16,16 @@ in
   # sha256 matches macOS, xART 12 live records, applesep trusted-key source); the
   # iBoot container is backed up (isc-j413-backup.img). Writes on: keybag provisioning.
   my.touchid.enable = true;
+
+  # Passkeys (FIDO2) with keys in the Secure Enclave: a dialog naming the site
+  # and account, then the fingerprint. Needs the key-ioctls patch (/dev/sep-key,
+  # hosts/nixAir/touchid). Store persisted in modules/persist.nix.
+  services.linux-passkey = {
+    enable = true;
+    user = "andrew";
+    backend = "sep";
+    uv = "fprintd";
+  };
   my.touchid.xartWrites = true;
 
   hardware.asahi.enable = true;
