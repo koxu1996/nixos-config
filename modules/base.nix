@@ -281,9 +281,18 @@
     # Let devices/folders added via the web UI survive nixos-rebuild.
     overrideDevices = false;
     overrideFolders = false;
+    # syncthing-init re-posts declared folders on every boot, replacing their device
+    # list, so sharing must be declared here or it resets to "shared with nobody".
+    # Listing a host's own ID is harmless, so one list serves every machine.
+    settings.devices = {
+      asahiPC.id = "2H5DSNR-735SUXR-CZ66LIC-LTAKRRM-HBLDDU3-W5QLJ34-2ZWBRYI-U3ZIEAK";
+      nixPC.id = "YDKAPMS-6KA3TRF-TIUGXNR-S7Z5Z22-RCIOKL4-GYSKHKA-2HTYNYO-XCERTQH";
+      iPhone.id = "L5XX5WK-G54WIPJ-22ZUXAX-2P664FE-TPL3O2G-5I74UKT-PPHDMOD-PBOEPQO";
+    };
     settings.folders."Sync" = {
       path = "/home/andrew/Sync";
       label = "Sync";
+      devices = [ "asahiPC" "nixPC" "iPhone" ];
     };
   };
 
