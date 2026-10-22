@@ -84,7 +84,7 @@ skills, history…) is a link back to `~/.claude`.
 
 1. Share the Syncthing folder `~/Sync` with the machine (web UI, `127.0.0.1:8384`).
 2. Its home config gets the same `programs.agent-usage = { enable = true; syncDir = "~/Sync/agent-usage"; syncthingFolder = "~/Sync"; };` — `home/default.nix` already does that for every host.
-3. Rebuild. It writes `~/Sync/agent-usage/<hostname>.json` (from `/etc/hostname`, i.e. `networking.hostName`; `syncDeviceId`/`syncFileName` override it), and the panel footer reads *Merged from 2 devices*. Each machine writes only its own file, so Syncthing has nothing to conflict over; `syncthingFolder` adds `.stignore` patterns for the writers' split-second temp files.
+3. Rebuild. It writes `~/Sync/agent-usage/<hostname>.json` (from `/etc/hostname`, i.e. `networking.hostName`; `syncDeviceId`/`syncFileName` override it), and the panel footer reads *Merged from 2 devices*. Each machine writes only its own file, so Syncthing normally has nothing to conflict over; `syncthingFolder` adds `.stignore` patterns for the writers' split-second temp files. If a conflict copy (`nixAir.sync-conflict-….json`) or a renamed file still turns up, the bar and the Zen spend merge keep only the newest snapshot per `deviceId` (patch 0006), so no machine is counted twice; the stale copy can simply be deleted.
 4. Second Claude account there: add it again, or `omarchy-agent-account-copy` it from here (above).
 
 Limits and balances are never merged: each machine probes its own accounts.

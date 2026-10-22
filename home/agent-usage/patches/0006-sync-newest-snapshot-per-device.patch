@@ -1,0 +1,58 @@
+--- a/bin/omarchy-agent-usage-opencode
++++ b/bin/omarchy-agent-usage-opencode
+@@ -399,12 +399,20 @@
+     print(f"omarchy-agent-usage-opencode: could not write shared spend ({error})", file=sys.stderr)
+ 
+   devices = {device: local}
++  # agent-usage: a device can have more than one file (a sync tool's conflict copy,
++  # a renamed file); keep the newest per device by updatedAt (UTC ISO strings, so
++  # they compare as text). This machine's own spend always comes from `local`.
++  stamps: dict[str, str] = {}
+   for path in sorted(spend_dir.glob("*.json")) if spend_dir.is_dir() else []:
+     data = read_json(path)
+     if not isinstance(data, dict) or not isinstance(data.get("costByDay"), dict):
+       continue
+     other = re.sub(r"[^A-Za-z0-9_.-]+", "-", str(data.get("deviceId") or path.stem)).strip("._-")
+     if other and other != device:
++      stamp = str(data.get("updatedAt") or "")
++      if other in stamps and stamp <= stamps[other]:
++        continue
++      stamps[other] = stamp
+       devices[other] = {str(day): money(cost) for day, cost in data["costByDay"].items()}
+   return devices
+ 
+--- a/shell/plugins/agents/Main.qml
++++ b/shell/plugins/agents/Main.qml
+@@ -578,11 +578,31 @@
+     }
+     flush()
+ 
+-    aggregateData = aggregateSnapshots(snapshots)
++    aggregateData = aggregateSnapshots(newestPerDevice(snapshots))
+     syncStatusText = ""
+     syncRevision++
+   }
+ 
++  // agent-usage: several snapshots can claim one device, e.g. a sync tool's conflict
++  // copy (nixAir.sync-conflict-….json) or a renamed file. Merging them all would
++  // count that device twice, so keep only the newest per deviceId (by updatedAt).
++  function newestPerDevice(snapshots) {
++    var newest = {}
++    var order = []
++    for (var i = 0; i < snapshots.length; i++) {
++      var device = safeDeviceId(snapshots[i].deviceId || "device")
++      var stamp = Date.parse(snapshots[i].updatedAt || "") || 0
++      if (newest[device] === undefined) order.push(device)
++      else if (stamp <= newest[device].stamp) continue
++      newest[device] = { snapshot: snapshots[i], stamp: stamp }
++    }
++    var kept = []
++    for (var j = 0; j < order.length; j++) kept.push(newest[order[j]].snapshot)
++    if (kept.length < snapshots.length)
++      console.info("agents/sync", "Ignored", snapshots.length - kept.length, "older duplicate snapshot(s)")
++    return kept
++  }
++
+   function cloneValue(value, fallback) {
+     if (value === undefined || value === null) return fallback
+     try {
