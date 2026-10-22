@@ -91,6 +91,14 @@ let
             OF_OVERLAY = yes; # -> OF_DYNAMIC
           };
         }
+        {
+          # Per-use Secure Enclave keys for a passkey authenticator (tpm2-passkey's SEP
+          # backend): SEP_BIO_KEY_CREATE / SEP_BIO_KEY_SIGN on /dev/sep-bio, reusing the
+          # driver's ref-key create (op "oc") and sign (op "osgn"). Also logs every xART
+          # write, to see whether key operations make the enclave persist anything.
+          name = "apple-sep-key-ioctls";
+          patch = ./apple-sep-key-ioctls.patch;
+        }
       ]
       ++ _kernelPatches;
     };

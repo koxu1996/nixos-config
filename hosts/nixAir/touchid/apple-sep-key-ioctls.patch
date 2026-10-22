@@ -1,0 +1,264 @@
+diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
+--- a/drivers/soc/apple/bio.rs	2026-10-22 10:15:41.811820301 +0200
++++ b/drivers/soc/apple/bio.rs	2026-10-22 10:16:17.107785547 +0200
+@@ -155,6 +155,39 @@
+     pub(crate) reserved: [u8; 3],
+ }
+ 
++/// Upper bound for a wrapped per-key ref-key blob (the machine key's is 344 bytes).
++pub(crate) const KEY_BLOB_MAX: usize = 1024;
++
++/// `SEP_BIO_KEY_CREATE`: the enclave creates a new P-256 key pair. Userspace gets
++/// the public point and the wrapped private-key blob; the private key itself never
++/// leaves the enclave, and the blob is only usable by this enclave and keybag.
++#[repr(C)]
++pub(crate) struct KeyCreate {
++    /// out: length of `blob`.
++    pub(crate) blob_len: u32,
++    /// out: public point, `04‖X‖Y`.
++    pub(crate) public: [u8; ATTEST_PUB_LEN],
++    pub(crate) reserved: [u8; 3],
++    /// out: wrapped key blob, zero-padded to `KEY_BLOB_MAX`.
++    pub(crate) blob: [u8; KEY_BLOB_MAX],
++}
++
++/// `SEP_BIO_KEY_SIGN`: the enclave signs `digest` (ECDSA-P256 over the digest as
++/// given) with the key wrapped in `blob`.
++#[repr(C)]
++pub(crate) struct KeySign {
++    /// in: length of `blob`.
++    pub(crate) blob_len: u32,
++    /// out: DER signature length.
++    pub(crate) sig_len: u32,
++    /// in: pre-computed digest to sign.
++    pub(crate) digest: [u8; ATTEST_CHALLENGE_LEN],
++    /// out: DER signature, zero-padded to `ATTEST_SIG_MAX`.
++    pub(crate) signature: [u8; ATTEST_SIG_MAX],
++    /// in: wrapped key blob from `SEP_BIO_KEY_CREATE`.
++    pub(crate) blob: [u8; KEY_BLOB_MAX],
++}
++
+ // Sizes are baked into the ioctl numbers.
+ static_assert!(core::mem::size_of::<Identity>() == 144);
+ static_assert!(core::mem::size_of::<Info>() == 32);
+@@ -165,6 +198,8 @@
+ static_assert!(core::mem::size_of::<VerifyPoll>() == 72);
+ static_assert!(core::mem::size_of::<Delete>() == 16);
+ static_assert!(core::mem::size_of::<Attest>() == 176);
++static_assert!(core::mem::size_of::<KeyCreate>() == 1096);
++static_assert!(core::mem::size_of::<KeySign>() == 1136);
+ 
+ macro_rules! ioctl_pod {
+     (to_user: $($t:ty),*; from_user: $($u:ty),*) => {
+@@ -179,8 +214,8 @@
+     };
+ }
+ ioctl_pod! {
+-    to_user: Info, List, EnrolPoll, VerifyPoll, Attest;
+-    from_user: EnrolStart, VerifyStart, Delete, Attest
++    to_user: Info, List, EnrolPoll, VerifyPoll, Attest, KeyCreate, KeySign;
++    from_user: EnrolStart, VerifyStart, Delete, Attest, KeySign
+ }
+ 
+ const MAGIC: u32 = 0xB1;
+@@ -195,6 +230,8 @@
+ const IOC_DELETE: u32 = _IOW::<Delete>(MAGIC, 0x08);
+ const IOC_DELETE_ALL: u32 = _IO(MAGIC, 0x09);
+ pub(crate) const IOC_ATTEST: u32 = _IOWR::<Attest>(MAGIC, 0x0a);
++pub(crate) const IOC_KEY_CREATE: u32 = _IOR::<KeyCreate>(MAGIC, 0x0b);
++pub(crate) const IOC_KEY_SIGN: u32 = _IOWR::<KeySign>(MAGIC, 0x0c);
+ 
+ pub(crate) struct MatchEvidence {
+     identity: [u8; UUID_LEN],
+diff --color -ruN a/drivers/soc/apple/refkey.rs b/drivers/soc/apple/refkey.rs
+--- a/drivers/soc/apple/refkey.rs	2026-10-22 10:15:41.815820297 +0200
++++ b/drivers/soc/apple/refkey.rs	2026-10-22 10:16:17.107785547 +0200
+@@ -317,6 +317,48 @@
+         Some(owned)
+     }
+ 
++    /// A new enclave key pair for userspace (op `oc`, the same class and key type as
++    /// the machine ref-key). Returns the wrapped blob and the public point. Nothing
++    /// is persisted here: the caller keeps the blob.
++    pub(crate) fn refkey_create_user(&self) -> Result<(KVec<u8>, KVec<u8>)> {
++        // The machine key's setup has already designated and unlocked the identity
++        // bag on this boot; reuse it so a user key never takes a first-time path.
++        self.ensure_machine_refkey()?;
++        let keybag::State::Present(stored) = keybag::read(keybag::Slot::Identity)? else {
++            return Err(ENODEV);
++        };
++        let (handle, _uuid) = self.sks_recover(&stored).ok_or(EIO)?;
++        let blob = self.sks_create_refkey(handle, stored.secret());
++        let _ = self.sks_send(self.sks_req_unload_keybag(handle));
++        let blob = blob.ok_or(EIO)?;
++        let pubv = Self::refkey_pub(&blob).ok_or(EIO)?;
++        let mut pub_raw: KVec<u8> = KVec::new();
++        pub_raw.extend_from_slice(pubv, GFP_KERNEL)?;
++        Ok((blob, pub_raw))
++    }
++
++    /// Op `osgn` with a caller-supplied wrapped blob: ECDSA-P256 over `digest`.
++    /// The blob is only shape-checked here; the enclave rejects anything it did not wrap.
++    pub(crate) fn refkey_sign_user(&self, blob: &[u8], digest: &[u8]) -> Result<KVec<u8>> {
++        Self::refkey_pub(blob).ok_or(EINVAL)?;
++        self.ensure_machine_refkey()?;
++        let keybag::State::Present(stored) = keybag::read(keybag::Slot::Identity)? else {
++            return Err(ENODEV);
++        };
++        let (handle, _uuid) = self.sks_recover(&stored).ok_or(EIO)?;
++        if let Some(healthy) = self.sks_health_check(c"ref-key user sign") {
++            let _ = self.sks_send(self.sks_req_change_lock_state(
++                handle,
++                LockState::Unlocked,
++                stored.secret(),
++                healthy,
++            ));
++        }
++        let sig = self.sks_refkey_sign(handle, blob, digest);
++        let _ = self.sks_send(self.sks_req_unload_keybag(handle));
++        sig.ok_or(EIO)
++    }
++
+     /// Attestation of key possession by signing proof; op `oa` (attestation-chained)
+     /// needs the SEP device attestation key, absent on a Linux-attached SEP.
+     pub(crate) fn refkey_attest_sign(&self, challenge: &[u8]) -> Result<(KVec<u8>, KVec<u8>)> {
+diff --color -ruN a/drivers/soc/apple/sbio.rs b/drivers/soc/apple/sbio.rs
+--- a/drivers/soc/apple/sbio.rs	2026-10-22 10:15:41.815820297 +0200
++++ b/drivers/soc/apple/sbio.rs	2026-10-22 10:16:17.107785547 +0200
+@@ -2723,6 +2723,12 @@
+         if cmd == bio::IOC_ATTEST {
+             return self.bio_attest(arg);
+         }
++        if cmd == bio::IOC_KEY_CREATE {
++            return self.bio_key_create(arg);
++        }
++        if cmd == bio::IOC_KEY_SIGN {
++            return self.bio_key_sign(arg);
++        }
+         // With xART writes off the enclave cannot persist what an enrolment or
+         // a match changes. It saves anti-replay state after every match, and a
+         // refused save has left it unresponsive until reboot. Refuse the
+@@ -2810,6 +2816,69 @@
+             .writer()
+             .write(&out)?;
+         Ok(bio::Handled {
++            ret: 0,
++            wake: false,
++            start_enrol: false,
++            start_verify: false,
++            delete_identity: None,
++            delete_identities: KVec::new(),
++        })
++    }
++
++    fn bio_key_create(&self, arg: usize) -> Result<bio::Handled> {
++        let user = kernel::uaccess::UserPtr::from_addr(arg);
++        let (blob, pubk) = self.refkey_create_user()?;
++        if blob.len() > bio::KEY_BLOB_MAX || pubk.len() != bio::ATTEST_PUB_LEN {
++            return Err(EIO);
++        }
++        let mut out = bio::KeyCreate {
++            blob_len: blob.len() as u32,
++            public: [0u8; bio::ATTEST_PUB_LEN],
++            reserved: [0u8; 3],
++            blob: [0u8; bio::KEY_BLOB_MAX],
++        };
++        out.public.copy_from_slice(&pubk);
++        out.blob[..blob.len()].copy_from_slice(&blob);
++        kernel::uaccess::UserSlice::new(user, core::mem::size_of::<bio::KeyCreate>())
++            .writer()
++            .write(&out)?;
++        dev_info!(self.dev, "sks: user key created ({} byte blob)\n", blob.len());
++        Ok(bio::Handled {
++            ret: 0,
++            wake: false,
++            start_enrol: false,
++            start_verify: false,
++            delete_identity: None,
++            delete_identities: KVec::new(),
++        })
++    }
++
++    fn bio_key_sign(&self, arg: usize) -> Result<bio::Handled> {
++        let user = kernel::uaccess::UserPtr::from_addr(arg);
++        let req: bio::KeySign =
++            kernel::uaccess::UserSlice::new(user, core::mem::size_of::<bio::KeySign>())
++                .reader()
++                .read()?;
++        let blob_len = req.blob_len as usize;
++        if blob_len == 0 || blob_len > bio::KEY_BLOB_MAX {
++            return Err(EINVAL);
++        }
++        let sig = self.refkey_sign_user(&req.blob[..blob_len], &req.digest)?;
++        if sig.len() > bio::ATTEST_SIG_MAX {
++            return Err(EIO);
++        }
++        let mut out = bio::KeySign {
++            blob_len: req.blob_len,
++            sig_len: sig.len() as u32,
++            digest: req.digest,
++            signature: [0u8; bio::ATTEST_SIG_MAX],
++            blob: req.blob,
++        };
++        out.signature[..sig.len()].copy_from_slice(&sig);
++        kernel::uaccess::UserSlice::new(user, core::mem::size_of::<bio::KeySign>())
++            .writer()
++            .write(&out)?;
++        Ok(bio::Handled {
+             ret: 0,
+             wake: false,
+             start_enrol: false,
+diff --color -ruN a/drivers/soc/apple/sep-bio.h b/drivers/soc/apple/sep-bio.h
+--- a/drivers/soc/apple/sep-bio.h	2026-10-22 10:15:41.819820293 +0200
++++ b/drivers/soc/apple/sep-bio.h	2026-10-22 10:16:17.107785547 +0200
+@@ -116,6 +116,28 @@
+   __u8  reserved[3];
+ };
+ 
++/*
++ * Per-use enclave keys. KEY_CREATE: the enclave makes a P-256 key pair and returns
++ * the public point and the wrapped private key ('blob', only usable by this
++ * enclave). KEY_SIGN: ECDSA-P256 over 'digest' (pre-computed) with that blob.
++ */
++#define SEP_BIO_KEY_BLOB_MAX 1024
++
++struct sep_bio_key_create {
++  __u32 blob_len;                              /* out */
++  __u8  public[SEP_BIO_ATTEST_PUB_LEN];        /* out: P-256 point, 04||X||Y */
++  __u8  reserved[3];
++  __u8  blob[SEP_BIO_KEY_BLOB_MAX];            /* out: wrapped key */
++};
++
++struct sep_bio_key_sign {
++  __u32 blob_len;                              /* in */
++  __u32 sig_len;                               /* out: DER signature length */
++  __u8  digest[SEP_BIO_CHALLENGE_LEN];         /* in */
++  __u8  signature[SEP_BIO_ATTEST_SIG_MAX];     /* out: DER SEQUENCE{r,s} */
++  __u8  blob[SEP_BIO_KEY_BLOB_MAX];            /* in: from KEY_CREATE */
++};
++
+ #define SEP_BIO_IOC_MAGIC 0xB1
+ 
+ #define SEP_BIO_GET_INFO     _IOR (SEP_BIO_IOC_MAGIC, 0x01, struct sep_bio_info)
+@@ -128,3 +150,5 @@
+ #define SEP_BIO_DELETE       _IOW (SEP_BIO_IOC_MAGIC, 0x08, struct sep_bio_delete)
+ #define SEP_BIO_DELETE_ALL   _IO  (SEP_BIO_IOC_MAGIC, 0x09)
+ #define SEP_BIO_ATTEST       _IOWR(SEP_BIO_IOC_MAGIC, 0x0a, struct sep_bio_attest)
++#define SEP_BIO_KEY_CREATE   _IOR (SEP_BIO_IOC_MAGIC, 0x0b, struct sep_bio_key_create)
++#define SEP_BIO_KEY_SIGN     _IOWR(SEP_BIO_IOC_MAGIC, 0x0c, struct sep_bio_key_sign)
+diff --color -ruN a/drivers/soc/apple/xart_store.rs b/drivers/soc/apple/xart_store.rs
+--- a/drivers/soc/apple/xart_store.rs	2026-10-22 10:15:41.815820297 +0200
++++ b/drivers/soc/apple/xart_store.rs	2026-10-22 10:16:17.107785547 +0200
+@@ -382,6 +382,12 @@
+             self.slots[old] = Slot::FREE;
+         }
+         self.valid_records = self.slots.iter().filter(|slot| slot.used).count();
++        pr_info!(
++            "apple_sep: xART write: kind {:#04x}, {} bytes, revision {}\n",
++            key.kind,
++            value.len(),
++            revision
++        );
+         Ok(())
+     }
+ 
