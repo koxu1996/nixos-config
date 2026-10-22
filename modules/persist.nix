@@ -47,7 +47,8 @@
         # Passkey store (hardware-wrapped keys + hardware-sealed store key) -
         # without it every reboot wipes all passkeys.
         { directory = ".local/share/linux-passkey"; mode = "0700"; }
-        # Pre-rename store: linux-passkey copies it to the dir above on first start.
+        # Pre-rename store (tpm2-passkey). linux-passkey copied it on first
+        # start; kept as a backup. Drop once the new store has proven itself.
         { directory = ".local/share/tpm2-passkey"; mode = "0700"; }
       ] ++ lib.optionals config.programs.steam.enable [
         ".local/share/Steam" # Steam library + installed games (CS2 ~35 GB).
