@@ -19,6 +19,9 @@
     # in this public config + the hyprland-noscreenshare patch are public).
     clutch.url = "git+ssh://git@gitlab.com/andrzej1_1/clutch";
     clutch.inputs.nixpkgs.follows = "nixpkgs";
+    # tpm2-passkey — TPM-backed FIDO2 passkey authenticator (only nixPC uses it).
+    tpm2-passkey.url = "github:koxu1996/tpm2-passkey";
+    tpm2-passkey.inputs.nixpkgs.follows = "nixpkgs";
     # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
     nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";
     nixos-apple-silicon.inputs.nixpkgs.follows = "nixpkgs";
@@ -26,7 +29,7 @@
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, ... }@inputs:
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, tpm2-passkey, ... }@inputs:
     let
       # One NixOS system per host. `modules` are the host's own modules (they
       # import ./modules/base.nix themselves where order matters); everything
@@ -73,6 +76,7 @@
       system = "x86_64-linux";
       modules = [
         ./hosts/nixPC/disko.nix
+        tpm2-passkey.nixosModules.default
         ./hosts/nixPC/tpm.nix
         ./modules/base.nix
         ./hosts/nixPC

@@ -168,6 +168,23 @@
         "type": "github"
       }
     },
+    "opensk": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791299046,
+        "narHash": "sha256-Na/4k0krWKrHURuvpF3mVYUeHW0iT8sQM1bDn6byWio=",
+        "owner": "google",
+        "repo": "OpenSK",
+        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "type": "github"
+      },
+      "original": {
+        "owner": "google",
+        "repo": "OpenSK",
+        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "clutch": "clutch",
@@ -176,7 +193,8 @@
         "impermanence": "impermanence",
         "nixos-apple-silicon": "nixos-apple-silicon",
         "nixpkgs": "nixpkgs_2",
-        "tbsm": "tbsm"
+        "tbsm": "tbsm",
+        "tpm2-passkey": "tpm2-passkey"
       }
     },
     "tbsm": {
@@ -197,6 +215,27 @@
         "owner": "koxu1996",
         "ref": "add-nix-flake",
         "repo": "tbsm",
+        "type": "github"
+      }
+    },
+    "tpm2-passkey": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "opensk": "opensk"
+      },
+      "locked": {
+        "lastModified": 1792654477,
+        "narHash": "sha256-7npxA78sDibU8RzynFPE4NwL81y+yMuqSCTVdy7GV9o=",
+        "owner": "koxu1996",
+        "repo": "tpm2-passkey",
+        "rev": "444446d414d42cea13d70fb5d0d0a5cc61a18491",
+        "type": "github"
+      },
+      "original": {
+        "owner": "koxu1996",
+        "repo": "tpm2-passkey",
         "type": "github"
       }
     }
