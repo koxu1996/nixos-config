@@ -1,7 +1,18 @@
 diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
---- a/drivers/soc/apple/bio.rs	2026-10-22 10:15:41.811820301 +0200
-+++ b/drivers/soc/apple/bio.rs	2026-10-22 10:16:17.107785547 +0200
-@@ -155,6 +155,39 @@
+--- a/drivers/soc/apple/bio.rs	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/bio.rs	2026-10-22 15:20:30.771573749 +0200
+@@ -21,6 +21,10 @@
+ 
+ pub(crate) const DEVICE_NAME: &CStr = c"sep-bio";
+ pub(crate) const DEVICE_MODE: u16 = 0o600;
++/// Key-only node for userspace authenticators: just KEY_CREATE / KEY_SIGN, so a
++/// group can be given it without access to Touch ID enrolment or matching.
++pub(crate) const KEY_DEVICE_NAME: &CStr = c"sep-key";
++pub(crate) const KEY_DEVICE_MODE: u16 = 0o600;
+ 
+ #[derive(Clone, Copy, Default)]
+ #[repr(u32)]
+@@ -155,6 +159,39 @@
      pub(crate) reserved: [u8; 3],
  }
  
@@ -41,7 +52,7 @@ diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
  // Sizes are baked into the ioctl numbers.
  static_assert!(core::mem::size_of::<Identity>() == 144);
  static_assert!(core::mem::size_of::<Info>() == 32);
-@@ -165,6 +198,8 @@
+@@ -165,6 +202,8 @@
  static_assert!(core::mem::size_of::<VerifyPoll>() == 72);
  static_assert!(core::mem::size_of::<Delete>() == 16);
  static_assert!(core::mem::size_of::<Attest>() == 176);
@@ -50,7 +61,7 @@ diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
  
  macro_rules! ioctl_pod {
      (to_user: $($t:ty),*; from_user: $($u:ty),*) => {
-@@ -179,8 +214,8 @@
+@@ -179,8 +218,8 @@
      };
  }
  ioctl_pod! {
@@ -61,7 +72,7 @@ diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
  }
  
  const MAGIC: u32 = 0xB1;
-@@ -195,6 +230,8 @@
+@@ -195,6 +234,8 @@
  const IOC_DELETE: u32 = _IOW::<Delete>(MAGIC, 0x08);
  const IOC_DELETE_ALL: u32 = _IO(MAGIC, 0x09);
  pub(crate) const IOC_ATTEST: u32 = _IOWR::<Attest>(MAGIC, 0x0a);
@@ -71,8 +82,8 @@ diff --color -ruN a/drivers/soc/apple/bio.rs b/drivers/soc/apple/bio.rs
  pub(crate) struct MatchEvidence {
      identity: [u8; UUID_LEN],
 diff --color -ruN a/drivers/soc/apple/refkey.rs b/drivers/soc/apple/refkey.rs
---- a/drivers/soc/apple/refkey.rs	2026-10-22 10:15:41.815820297 +0200
-+++ b/drivers/soc/apple/refkey.rs	2026-10-22 10:16:17.107785547 +0200
+--- a/drivers/soc/apple/refkey.rs	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/refkey.rs	2026-10-22 15:20:02.851529140 +0200
 @@ -317,6 +317,48 @@
          Some(owned)
      }
@@ -123,22 +134,56 @@ diff --color -ruN a/drivers/soc/apple/refkey.rs b/drivers/soc/apple/refkey.rs
      /// needs the SEP device attestation key, absent on a Linux-attached SEP.
      pub(crate) fn refkey_attest_sign(&self, challenge: &[u8]) -> Result<(KVec<u8>, KVec<u8>)> {
 diff --color -ruN a/drivers/soc/apple/sbio.rs b/drivers/soc/apple/sbio.rs
---- a/drivers/soc/apple/sbio.rs	2026-10-22 10:15:41.815820297 +0200
-+++ b/drivers/soc/apple/sbio.rs	2026-10-22 10:16:17.107785547 +0200
-@@ -2723,6 +2723,12 @@
-         if cmd == bio::IOC_ATTEST {
-             return self.bio_attest(arg);
-         }
-+        if cmd == bio::IOC_KEY_CREATE {
-+            return self.bio_key_create(arg);
+--- a/drivers/soc/apple/sbio.rs	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/sbio.rs	2026-10-22 15:20:30.771573749 +0200
+@@ -2581,9 +2581,46 @@
+         }?;
+ 
+         *guard = Some(dev);
++        drop(guard);
++        if let Err(e) = self.register_key_dev() {
++            dev_err!(self.dev, "could not publish /dev/{}: {:?}\n", bio::KEY_DEVICE_NAME, e);
 +        }
-+        if cmd == bio::IOC_KEY_SIGN {
-+            return self.bio_key_sign(arg);
+         Ok(())
+     }
+ 
++    /// `/dev/sep-key`: per-use enclave keys only. No session: any number of
++    /// openers, independent of `/dev/sep-bio` (which fprintd holds while matching).
++    fn register_key_dev(&self) -> Result<()> {
++        let mut guard = self.key_dev.lock();
++        if guard.is_some() {
++            return Ok(());
 +        }
-         // With xART writes off the enclave cannot persist what an enrolment or
-         // a match changes. It saves anti-replay state after every match, and a
-         // refused save has left it unresponsive until reboot. Refuse the
-@@ -2810,6 +2816,69 @@
++        let ctx = core::ptr::from_ref(self).cast_mut().cast::<c_void>();
++        // SAFETY: as for `/dev/sep-bio` in `register_bio`: `ctx` is this
++        // `SepData`, and `remove()` drops this registration before the `Arc`.
++        let dev = unsafe {
++            shim::BioChardev::register(
++                bio::KEY_DEVICE_NAME,
++                bio::KEY_DEVICE_MODE,
++                ctx,
++                key_open_trampoline,
++                key_release_trampoline,
++                key_ioctl_trampoline,
++                key_ready_trampoline,
++            )
++        }?;
++        *guard = Some(dev);
++        Ok(())
++    }
++
++    pub(crate) fn key_ioctl(&self, cmd: u32, arg: usize) -> Result<bio::Handled> {
++        match cmd {
++            bio::IOC_KEY_CREATE => self.bio_key_create(arg),
++            bio::IOC_KEY_SIGN => self.bio_key_sign(arg),
++            _ => Err(ENOTTY),
++        }
++    }
++
+     pub(crate) fn bio_open(&self) -> Result<()> {
+         let mut session = self.bio_session.lock();
+         bio::open(&mut session)?;
+@@ -2810,6 +2847,69 @@
              .writer()
              .write(&out)?;
          Ok(bio::Handled {
@@ -209,14 +254,15 @@ diff --color -ruN a/drivers/soc/apple/sbio.rs b/drivers/soc/apple/sbio.rs
              wake: false,
              start_enrol: false,
 diff --color -ruN a/drivers/soc/apple/sep-bio.h b/drivers/soc/apple/sep-bio.h
---- a/drivers/soc/apple/sep-bio.h	2026-10-22 10:15:41.819820293 +0200
-+++ b/drivers/soc/apple/sep-bio.h	2026-10-22 10:16:17.107785547 +0200
-@@ -116,6 +116,28 @@
+--- a/drivers/soc/apple/sep-bio.h	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/sep-bio.h	2026-10-22 15:20:30.771573749 +0200
+@@ -116,6 +116,29 @@
    __u8  reserved[3];
  };
  
 +/*
-+ * Per-use enclave keys. KEY_CREATE: the enclave makes a P-256 key pair and returns
++ * Per-use enclave keys, on /dev/sep-key (not /dev/sep-bio, so access to them can
++ * be granted separately). KEY_CREATE: the enclave makes a P-256 key pair and returns
 + * the public point and the wrapped private key ('blob', only usable by this
 + * enclave). KEY_SIGN: ECDSA-P256 over 'digest' (pre-computed) with that blob.
 + */
@@ -240,15 +286,78 @@ diff --color -ruN a/drivers/soc/apple/sep-bio.h b/drivers/soc/apple/sep-bio.h
  #define SEP_BIO_IOC_MAGIC 0xB1
  
  #define SEP_BIO_GET_INFO     _IOR (SEP_BIO_IOC_MAGIC, 0x01, struct sep_bio_info)
-@@ -128,3 +150,5 @@
+@@ -128,3 +151,5 @@
  #define SEP_BIO_DELETE       _IOW (SEP_BIO_IOC_MAGIC, 0x08, struct sep_bio_delete)
  #define SEP_BIO_DELETE_ALL   _IO  (SEP_BIO_IOC_MAGIC, 0x09)
  #define SEP_BIO_ATTEST       _IOWR(SEP_BIO_IOC_MAGIC, 0x0a, struct sep_bio_attest)
 +#define SEP_BIO_KEY_CREATE   _IOR (SEP_BIO_IOC_MAGIC, 0x0b, struct sep_bio_key_create)
 +#define SEP_BIO_KEY_SIGN     _IOWR(SEP_BIO_IOC_MAGIC, 0x0c, struct sep_bio_key_sign)
+diff --color -ruN a/drivers/soc/apple/sep.rs b/drivers/soc/apple/sep.rs
+--- a/drivers/soc/apple/sep.rs	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/sep.rs	2026-10-22 15:49:34.565116395 +0200
+@@ -647,6 +647,10 @@
+     #[pin]
+     bio_dev: Mutex<Option<shim::BioChardev>>,
+ 
++    /// `/dev/sep-key`, the key-only node (see `register_key_dev`).
++    #[pin]
++    key_dev: Mutex<Option<shim::BioChardev>>,
++
+     #[pin]
+     store: Mutex<Option<xart_store::Store>>,
+ 
+@@ -846,6 +850,7 @@
+                 bio_session <- new_mutex!(bio::Session::new()),
+                 bio_index <- new_mutex!(bio_index),
+                 bio_dev <- new_mutex!(None),
++                key_dev <- new_mutex!(None),
+                 store <- new_mutex!(store),
+                 host_store <- new_mutex!(host_store),
+                 xarm <- new_mutex!(XarmState::new()),
+@@ -2014,6 +2019,7 @@
+         trusted::unregister();
+         self.unregister_fv_kernel();
+ 
++        drop(self.key_dev.lock().take());
+         let dev = self.bio_dev.lock().take();
+         if dev.is_some() {
+             bio::release(&mut self.bio_session.lock());
+@@ -2132,6 +2138,32 @@
+ }
+ 
+ /// # Safety
++///
++/// `/dev/sep-key` callbacks: same contract as the `bio_*` trampolines above, for
++/// the registration in `register_key_dev`. Opening needs no session.
++unsafe extern "C" fn key_open_trampoline(_ctx: *mut c_void) -> c_int {
++    0
++}
++
++/// # Safety
++unsafe extern "C" fn key_release_trampoline(_ctx: *mut c_void) {}
++
++/// # Safety
++unsafe extern "C" fn key_ioctl_trampoline(ctx: *mut c_void, cmd: c_uint, arg: c_ulong) -> c_long {
++    // SAFETY: per the contract above.
++    let this = unsafe { &*ctx.cast::<SepData>() };
++    match this.key_ioctl(cmd, arg as usize) {
++        Ok(h) => h.ret as c_long,
++        Err(e) => e.to_errno() as c_long,
++    }
++}
++
++/// # Safety
++unsafe extern "C" fn key_ready_trampoline(_ctx: *mut c_void) -> c_int {
++    0
++}
++
++/// # Safety
+ ///
+ /// Only ever called by the hwrng core, through `hwrng_shim.c`. `ctx` is the
+ /// `*const SepData` handed to `HwRngHandle::register`, which stays valid for
 diff --color -ruN a/drivers/soc/apple/xart_store.rs b/drivers/soc/apple/xart_store.rs
---- a/drivers/soc/apple/xart_store.rs	2026-10-22 10:15:41.815820297 +0200
-+++ b/drivers/soc/apple/xart_store.rs	2026-10-22 10:16:17.107785547 +0200
+--- a/drivers/soc/apple/xart_store.rs	2026-10-22 15:20:02.843529127 +0200
++++ b/drivers/soc/apple/xart_store.rs	2026-10-22 15:20:02.851529140 +0200
 @@ -382,6 +382,12 @@
              self.slots[old] = Slot::FREE;
          }

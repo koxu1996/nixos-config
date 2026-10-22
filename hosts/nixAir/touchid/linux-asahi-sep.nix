@@ -92,10 +92,11 @@ let
           };
         }
         {
-          # Per-use Secure Enclave keys for a passkey authenticator (tpm2-passkey's SEP
-          # backend): SEP_BIO_KEY_CREATE / SEP_BIO_KEY_SIGN on /dev/sep-bio, reusing the
+          # Per-use Secure Enclave keys for a passkey authenticator (linux-passkey's SEP
+          # backend): SEP_BIO_KEY_CREATE / SEP_BIO_KEY_SIGN on their own node, /dev/sep-key,
+          # so a group can use them without access to Touch ID (/dev/sep-bio). Reuses the
           # driver's ref-key create (op "oc") and sign (op "osgn"). Also logs every xART
-          # write, to see whether key operations make the enclave persist anything.
+          # write (key operations cause none).
           name = "apple-sep-key-ioctls";
           patch = ./apple-sep-key-ioctls.patch;
         }
