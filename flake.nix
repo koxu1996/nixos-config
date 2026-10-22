@@ -21,7 +21,7 @@
     clutch.inputs.nixpkgs.follows = "nixpkgs";
     # tpm2-passkey — TPM-backed FIDO2 passkey authenticator (local repo, no
     # remote yet; only nixPC uses it, so nixAir never fetches it).
-    tpm2-passkey.url = "git+file:///home/andrew/Downloads/tmp/tpm2-passkey";
+    tpm2-passkey.url = "git+file:///home/andrew/projects/tpm2-passkey";
     tpm2-passkey.inputs.nixpkgs.follows = "nixpkgs";
     # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
     nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";

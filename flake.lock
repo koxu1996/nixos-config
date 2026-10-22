@@ -232,11 +232,11 @@
         "rev": "39f5eeac33ebd9a554c74fe1888eaaf1ce6c80b1",
         "revCount": 6,
         "type": "git",
-        "url": "file:///home/andrew/Downloads/tmp/tpm2-passkey"
+        "url": "file:///home/andrew/projects/tpm2-passkey"
       },
       "original": {
         "type": "git",
-        "url": "file:///home/andrew/Downloads/tmp/tpm2-passkey"
+        "url": "file:///home/andrew/projects/tpm2-passkey"
       }
     }
   },
