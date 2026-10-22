@@ -43,9 +43,12 @@
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
         ".local/state/syncthing" # Syncthing device key, certs, and DB.
         ".local/share/hyprland" # lastVersion/lastNag - otherwise the update popup reappears after every reboot.
-      ] ++ lib.optionals (config.services.tpm2-passkey.enable or false) [
+      ] ++ lib.optionals (config.services.linux-passkey.enable or false) [
         # Passkey store (TPM-wrapped keys + TPM-sealed AES key) - without it
         # every reboot wipes all passkeys.
+        { directory = ".local/share/linux-passkey"; mode = "0700"; }
+        # Pre-rename store (tpm2-passkey). linux-passkey copied it on first
+        # start; kept as a backup. Drop once the new store has proven itself.
         { directory = ".local/share/tpm2-passkey"; mode = "0700"; }
       ] ++ lib.optionals config.programs.steam.enable [
         ".local/share/Steam" # Steam library + installed games (CS2 ~35 GB).

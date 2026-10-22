@@ -1,17 +1,18 @@
-# tpm.nix — TPM 2.0 support + tpm2-passkey (TPM-backed FIDO2/CTAP2 passkeys).
+# tpm.nix — TPM 2.0 support + linux-passkey (TPM-backed FIDO2/CTAP2 passkeys).
 #
 # Requires the firmware TPM to be enabled in BIOS first (Intel PTT on this
-# Z370 board). Until /dev/tpmrm0 exists, the tpm2-passkey user service stays
+# Z370 board). Until /dev/tpmrm0 exists, the linux-passkey user service stays
 # inert (ConditionPathExists), so this module is safe to build and switch
 # before the BIOS toggle.
 #
-# tpm2-passkey (github:koxu1996/tpm2-passkey) replaces tpm-fido:
+# linux-passkey (github:koxu1996/linux-passkey, formerly tpm2-passkey)
+# replaces tpm-fido:
 # tpm-fido is U2F-only (no passkeys; sites answer "your device can't be used"),
 # and running both makes the browser show two prompts.
 #
 # Private keys never leave the TPM, but the passkey store (TPM-wrapped keys +
 # metadata, AES-encrypted with a TPM-sealed key) lives in
-# ~/.local/share/tpm2-passkey and is persisted in modules/persist.nix.
+# ~/.local/share/linux-passkey and is persisted in modules/persist.nix.
 # Clearing the TPM / an fTPM-wiping BIOS update destroys all passkeys, so keep
 # a backup authenticator on important accounts.
 { pkgs, ... }:
@@ -20,7 +21,7 @@
   # TPM 2.0 stack (tss group, udev rules, /dev/tpmrm0), uhid + its udev rule,
   # andrew in `tss`, and the systemd --user service in the graphical session.
   # Prompt: pinentry-qt (pinentry-gnome3 silently fails to show under Hyprland).
-  services.tpm2-passkey = {
+  services.linux-passkey = {
     enable = true;
     user = "andrew";
   };
