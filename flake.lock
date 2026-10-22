@@ -226,17 +226,17 @@
         "opensk": "opensk"
       },
       "locked": {
-        "lastModified": 1792652971,
-        "narHash": "sha256-baYEK7wPr2BgBG8AXmuSbHkNkz0inHceykp/3biRyNo=",
-        "ref": "refs/heads/master",
-        "rev": "39f5eeac33ebd9a554c74fe1888eaaf1ce6c80b1",
-        "revCount": 6,
-        "type": "git",
-        "url": "file:///home/andrew/projects/tpm2-passkey"
+        "lastModified": 1792654477,
+        "narHash": "sha256-7npxA78sDibU8RzynFPE4NwL81y+yMuqSCTVdy7GV9o=",
+        "owner": "koxu1996",
+        "repo": "tpm2-passkey",
+        "rev": "444446d414d42cea13d70fb5d0d0a5cc61a18491",
+        "type": "github"
       },
       "original": {
-        "type": "git",
-        "url": "file:///home/andrew/projects/tpm2-passkey"
+        "owner": "koxu1996",
+        "repo": "tpm2-passkey",
+        "type": "github"
       }
     }
   },

@@ -5,7 +5,7 @@
 # inert (ConditionPathExists), so this module is safe to build and switch
 # before the BIOS toggle.
 #
-# tpm2-passkey (flake input, ~/projects/tpm2-passkey) replaces tpm-fido:
+# tpm2-passkey (github:koxu1996/tpm2-passkey) replaces tpm-fido:
 # tpm-fido is U2F-only (no passkeys; sites answer "your device can't be used"),
 # and running both makes the browser show two prompts.
 #
