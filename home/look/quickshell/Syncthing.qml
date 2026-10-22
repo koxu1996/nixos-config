@@ -1,5 +1,5 @@
-// Syncthing.qml: bar chip (sync glyph in the state's colour, spinning while syncing, and
-// devices online "1/2") and a panel: state, transfer rates, things that need attention
+// Syncthing.qml: bar chip (sync glyph in the state's colour, spinning while syncing; the
+// device count is left to the panel) and a panel: state, transfer rates, things that need attention
 // (unshared folders, conflicts, pending devices, errors), folders, devices, and actions
 // (rescan, pause/resume all, web UI). Data: SyncthingService.
 // Only one bar popup at a time (PopupManager).
@@ -36,16 +36,6 @@ Item {
             SyncGlyph {
                 anchors.verticalCenter: parent.verticalCenter
                 size: Theme.barIconSize
-            }
-
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                visible: root.svc.reachable && root.svc.peersTotal > 0
-                text: `${root.svc.peersOnline}/${root.svc.peersTotal}`
-                color: Theme.textSecondary
-                font.family: Theme.monoFont
-                font.pixelSize: Theme.fontSize
-                font.features: { "tnum": 1 }
             }
         }
 
