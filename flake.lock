@@ -123,11 +123,11 @@
         "opensk": "opensk"
       },
       "locked": {
-        "lastModified": 1792675323,
-        "narHash": "sha256-fvplEK3ABK/WY0c1z7L6b4CcDe0vIHejseG9BmnTS/E=",
+        "lastModified": 1792768372,
+        "narHash": "sha256-JHdBSvh1CKRR/E04VzJgwcTsvBziWNbFt3euP0xKt4s=",
         "owner": "koxu1996",
         "repo": "linux-passkey",
-        "rev": "72bb67d9a4a2e06595bb080e3c9a8fd9b247dad9",
+        "rev": "8c686187f0d1bc013418d16a9614f4713d373d40",
         "type": "github"
       },
       "original": {
@@ -192,17 +192,17 @@
     "opensk": {
       "flake": false,
       "locked": {
-        "lastModified": 1791299046,
-        "narHash": "sha256-Na/4k0krWKrHURuvpF3mVYUeHW0iT8sQM1bDn6byWio=",
+        "lastModified": 1792676926,
+        "narHash": "sha256-YFA/8GWQ6pxU1B/zqM3OKgaKqbr71wp+9SxVDNyB9AY=",
         "owner": "google",
         "repo": "OpenSK",
-        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "rev": "af63209d857b93f342a297e7560e78c2b6915497",
         "type": "github"
       },
       "original": {
         "owner": "google",
         "repo": "OpenSK",
-        "rev": "a93efdb2a94a01607a8df2813fe06c3f6fb58292",
+        "rev": "af63209d857b93f342a297e7560e78c2b6915497",
         "type": "github"
       }
     },
