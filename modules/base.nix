@@ -230,6 +230,11 @@
   # Hyperland desktop.
   #programs.hyprland.enable = true;
 
+  # hyprlock's PAM service. home-manager's programs.hyprlock doesn't add one, and without
+  # /etc/pam.d/hyprlock hyprlock falls back to su's stack: fingerprint before the password
+  # on nixAir (a typed password waited for it to time out), u2f on nixPC.
+  security.pam.services.hyprlock = { };
+
   hardware.graphics.enable = true;
 
   # Custom issue "greeter".

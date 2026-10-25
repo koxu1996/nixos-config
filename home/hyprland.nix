@@ -278,8 +278,9 @@ in
       end
       hl.on("window.open", evict_from_dropterm)
 
-      -- Launch lockscreen with sup + L.
-      hl.bind(key(sup, "l"), hl.dsp.exec_cmd("hyprlock"))
+      -- Lock screen on sup + l, by key name (the letter l on Dvorak), not keycode: code:46
+      -- is QWERTY's L, which types n here. One instance only.
+      hl.bind(sup .. " + l", hl.dsp.exec_cmd("pidof hyprlock || hyprlock"))
 
       -- Open file browser with mainMod + n.
       hl.bind(key(mainMod, "n"), hl.dsp.exec_cmd("alacritty -e nnn"))
