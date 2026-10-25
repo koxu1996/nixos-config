@@ -79,7 +79,11 @@ function networkList(objs, ordered) {
             bands: [],
         });
     }
-    return rows.sort((a, b) => (b.saved - a.saved) || (b.rssi - a.rssi));
+    // One row per SSID (the same name can be advertised with different security): the
+    // panel keys rows and their expanded state by SSID.
+    const seen = {};
+    return rows.sort((a, b) => (b.saved - a.saved) || (b.rssi - a.rssi))
+        .filter(r => seen[r.ssid] ? false : (seen[r.ssid] = true));
 }
 
 // GetDiagnostics -> link details for the current-network card.

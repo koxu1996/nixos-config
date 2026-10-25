@@ -598,8 +598,15 @@ Item {
                             font.pixelSize: Theme.fontSize
                         }
 
+                        // A ScriptModel keyed by SSID, not the bare array: the service rebuilds the list
+                        // on every poll (2 s, 0.5 s while connecting), and a bare array made the Repeater
+                        // recreate every row, wiping a password being typed. Now rows persist (moving
+                        // as the order changes) and only their data updates.
                         Repeater {
-                            model: root.svc.networks
+                            model: ScriptModel {
+                                values: root.svc.networks
+                                objectProp: "ssid"
+                            }
 
                             delegate: NetworkRow {
                                 required property var modelData
@@ -692,7 +699,7 @@ Item {
             error = "";
             password.text = "";
             showPassword = false;
-            if (net.saved) WifiService.switchTo(net.profile);
+            if (net.saved) WifiService.switchTo(net.ssid);
             else WifiService.join(net.ssid, pw);
             owner.expandedSsid = "";
         }
@@ -830,7 +837,7 @@ Item {
                         danger: true
                         text: "Forget"
                         onClicked: {
-                            WifiService.forget(row.net.profile);
+                            WifiService.forget(row.net.ssid);
                             row.owner.confirmForget = "";
                             row.owner.expandedSsid = "";
                         }
