@@ -66,6 +66,11 @@ in
     "PATH=/run/wrappers/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin"
   ];
 
+  # Restart the bar when its QML changes. Quickshell only hot-reloads files it watches,
+  # and a switch swaps ~/.config/quickshell/bar to a new store path without touching
+  # the old files, so the running bar kept the previous config until a re-login.
+  config.systemd.user.services.quickshell.Unit.X-Restart-Triggers = [ "${cfg.barSource}" ];
+
   # Tools the bar's scripts call (tools/screenshot.sh: hyprctl comes with Hyprland).
   config.home.packages = [ pkgs.jq pkgs.grim pkgs.slurp pkgs.wl-clipboard pkgs.libnotify ];
 
