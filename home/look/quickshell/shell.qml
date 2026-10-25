@@ -72,6 +72,20 @@ ShellRoot {
                     || (shownSpecial !== ""
                         && (Hyprland.workspaces.values.find(w => w.name === shownSpecial)?.hasFullscreen ?? false))
 
+                // Events only report changes: a bar started while a special workspace is shown
+                // (a restart after a switch, with the drop-down open) reads the current one from
+                // the monitor's IPC object instead.
+                // (A refresh before Quickshell knows the monitor is lost, hence on monitor too.)
+                Component.onCompleted: if (monitor) Hyprland.refreshMonitors()
+                onMonitorChanged: if (monitor) Hyprland.refreshMonitors()
+                Connections {
+                    target: strip.monitor
+                    function onLastIpcObjectChanged() {
+                        const name = strip.monitor.lastIpcObject?.specialWorkspace?.name;
+                        if (name !== undefined) strip.shownSpecial = name;
+                    }
+                }
+
                 Connections {
                     target: Hyprland
                     // "activespecial>>special:dropterm,eDP-1" (empty name when it closes).
