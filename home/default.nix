@@ -52,6 +52,7 @@
     parallel
     claude-code
     imagemagick
+    opencode
     dhcpcd # Manual DHCP (`sudo dhcpcd <iface>`), e.g. USB Ethernet; the daemon stays off on nixAir (iwd does Wi-Fi DHCP).
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     # Not built for aarch64 (nixAir).
@@ -70,9 +71,6 @@
   };
 
   home.stateVersion = "24.11";
-
-  # OpenCode 2 installs itself here (curl -fsSL https://opencode.ai/v2/install | bash)
-  home.sessionPath = [ "$HOME/.opencode/bin" ];
 
   home.pointerCursor = {
     enable = true;
