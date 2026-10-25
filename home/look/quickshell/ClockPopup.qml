@@ -4,11 +4,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 
-PopupWindow {
+BarPopup {
     id: popup
-
-    property Item anchorItem
-    property bool open: false
+    align: "right"
 
     function toggle() { if (open) close(); else if (!PopupManager.justClosed("clock")) show(); }
     function show() { PopupManager.opened("clock"); calendar.goToday(); visible = true; fadeInDelay.restart(); ClockService.readZones(); }
@@ -23,13 +21,8 @@ PopupWindow {
     // Seconds only while open.
     Binding { target: ClockService; property: "precise"; value: popup.open }
 
-    anchor.item: anchorItem
-    anchor.edges: Edges.Bottom | Edges.Right
-    anchor.gravity: Edges.Bottom | Edges.Left
-    anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-    implicitWidth: 420
-    implicitHeight: card.implicitHeight
+    cardWidth: 420
+    cardHeight: card.implicitHeight
     color: "transparent"
     visible: false
 
@@ -38,12 +31,6 @@ PopupWindow {
     Timer { id: fadeInDelay; interval: 16; onTriggered: { popup.open = true; card.forceActiveFocus(); } }
 
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
-
-    HyprlandFocusGrab {
-        windows: [popup]
-        active: popup.visible
-        onCleared: popup.close()
-    }
 
     Rectangle {
         id: card

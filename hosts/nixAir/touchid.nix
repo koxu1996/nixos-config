@@ -101,6 +101,10 @@ in
     # fprintd turns pam_fprintd on for every PAM service. Log in with the password
     # (once per boot); keep the finger for sudo, su and polkit prompts.
     security.pam.services.login.fprintAuth = false;
+    # The lock screen: password through PAM, the finger through hyprlock's own fprintd
+    # client, side by side (pam_fprintd would make the password wait for the finger).
+    security.pam.services.hyprlock.fprintAuth = false;
+    home-manager.users.andrew.programs.hyprlock.settings.auth."fingerprint:enabled" = true;
 
     # --- persistent state ---------------------------------------------------
     environment.persistence."/persist".directories = [

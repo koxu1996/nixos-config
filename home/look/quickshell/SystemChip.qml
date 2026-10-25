@@ -18,7 +18,7 @@ Item {
         implicitWidth: 18 + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: menu.open || chipMouse.containsMouse ? Theme.chipHover : "transparent"
+        color: menu.open || (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Item {
@@ -26,7 +26,7 @@ Item {
             anchors.centerIn: parent
             width: 18
             height: 18
-            rotation: chipMouse.containsMouse ? 30 : 0
+            rotation: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) ? 30 : 0
             Behavior on rotation { NumberAnimation { duration: Theme.durationSlow; easing.type: Easing.OutCubic } }
 
             IconImage {

@@ -202,7 +202,7 @@ Rectangle {
                 Rectangle {
                     anchors.fill: parent
                     radius: Theme.radiusSmall
-                    color: slotMouse.containsMouse && !slot.active ? Theme.chipHover : "transparent"
+                    color: (slotMouse.containsMouse || PopupManager.hovers(slotMouse)) && !slot.active ? Theme.chipHover : "transparent"
                     Behavior on color { ColorAnimation { duration: Theme.durationFast } }
                 }
 

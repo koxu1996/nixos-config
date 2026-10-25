@@ -1,0 +1,10 @@
+--- a/arch/arm64/boot/dts/apple/t8112-j413.dts	2026-10-24 17:07:23
++++ b/arch/arm64/boot/dts/apple/t8112-j413.dts	2026-10-24 17:07:23
+@@ -68,6 +68,7 @@
+ 		local-mac-address = [00 10 18 00 00 10];
+ 		apple,antenna-sku = "XX";
+ 		brcm,board-type = "apple,hokkaido";
++		brcm,ccode-map-trivial;
+ 	};
+ 
+ 	bluetooth0: bluetooth@0,1 {

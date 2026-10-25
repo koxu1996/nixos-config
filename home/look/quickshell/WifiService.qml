@@ -382,15 +382,26 @@ Singleton {
         if (tailscaleBusy) return;
         tailscaleBusy = true;
         tailscaleError = "";
-        tsToggle.command = ["tailscale", on ? "up" : "down"];
+        tsErrorLine = "";
+        // `up` on a logged-out node prints a login URL and waits for it: open the URL in the
+        // browser, and give up after the timeout so the toggle can't stay busy forever.
+        tsToggle.command = on ? ["tailscale", "up", "--timeout=120s"] : ["tailscale", "down"];
         tsToggle.running = true;
     }
 
+    property string tsErrorLine: ""
+
     Process {
         id: tsToggle
-        stderr: StdioCollector { id: tsStderr }
+        stderr: SplitParser {
+            onRead: line => {
+                const url = (line.match(/https:\/\/login\.tailscale\.com\/\S+/) ?? [])[0];
+                if (url) Qt.openUrlExternally(url);
+                else if (line.trim() !== "" && service.tsErrorLine === "") service.tsErrorLine = line.trim();
+            }
+        }
         onExited: (code, status) => {
-            if (code !== 0) service.tailscaleError = tsStderr.text.trim().split("\n")[0] || `tailscale exited with ${code}`;
+            if (code !== 0) service.tailscaleError = service.tsErrorLine || `tailscale exited with ${code}`;
             service.tailscaleBusy = false;
             service.refreshTailscale();
         }

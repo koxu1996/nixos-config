@@ -80,7 +80,8 @@
   users.mutableUsers = false;
 
   # Root and user accounts.
-  users.users.root.initialPassword = "pass";
+  # Root is locked (no password login, no `su`); admin goes through sudo (wheel).
+  users.users.root.hashedPassword = "!";
   users.users.andrew = {
     isNormalUser = true;
     initialPassword = "pass";
@@ -132,6 +133,8 @@
   # State (/var/lib/tailscale) is persisted in persist.nix so the node identity
   # survives the stateless root rollback.
   services.tailscale.enable = true;
+  # andrew may run `tailscale up/down/login` without sudo (the bar's Tailscale toggle).
+  services.tailscale.extraSetFlags = [ "--operator=andrew" ];
 
   # iOS devices over USB (deploys from Xcode-less toolchains, libimobiledevice). Pairing
   # records live in /var/lib/lockdown (persisted, see persist.nix).
@@ -228,6 +231,11 @@
 
   # Hyperland desktop.
   #programs.hyprland.enable = true;
+
+  # hyprlock's PAM service. home-manager's programs.hyprlock doesn't add one, and without
+  # /etc/pam.d/hyprlock hyprlock falls back to su's stack: fingerprint before the password
+  # on nixAir (a typed password waited for it to time out), u2f on nixPC.
+  security.pam.services.hyprlock = { };
 
   hardware.graphics.enable = true;
 

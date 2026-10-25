@@ -80,6 +80,7 @@
         linux-passkey.nixosModules.default
         ./hosts/nixPC/tpm.nix
         ./modules/base.nix
+        ./modules/ssh.nix # SSH between my machines, Tailscale only.
         ./hosts/nixPC
         # Patched Hyprland (no_screen_share layers hidden from shares) + demo.
         ./hyprland-noscreenshare
@@ -93,6 +94,7 @@
         nixos-apple-silicon.nixosModules.apple-silicon-support
         ./hosts/nixAir/disko.nix
         ./modules/base.nix
+        ./modules/ssh.nix # SSH between my machines, Tailscale only.
         # Hyprland: crop oversized windows at scale 2 instead of squishing them.
         ./hyprland-integer-scale
         # Passkeys in the Secure Enclave (services.linux-passkey in hosts/nixAir).

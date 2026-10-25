@@ -30,6 +30,13 @@ in
 
   hardware.asahi.enable = true;
 
+  # The regulatory database (regulatory.db), so cfg80211.ieee80211_regdom=PL below
+  # actually loads: without it the kernel stays in the world domain "00" and brcmfmac
+  # never hands the firmware a country (it keeps its worldwide "XZ" code; the DT patch
+  # 0001-j413-wifi-ccode-map-trivial lets PL through). Not what hung joins, though:
+  # that was feature_disable, see boot.kernelParams.
+  hardware.wirelessRegulatoryDatabase = true;
+
   # Apple's peripheral firmware (Wi-Fi, webcam, ...) from the ESP the Asahi
   # installer filled. It is non-redistributable and never committed, so nixAir
   # is always built with `--impure`. /mnt/boot/vendorfw: building from the installer.
@@ -53,15 +60,18 @@ in
   boot.extraModprobeConfig = "options hid_apple swap_opt_cmd=1";
 
   # Show the real notch area (1280x832 logical; the bar sits beside it, see
-  # my.look.notchGap), and a brcmfmac Wi-Fi driver quirk (feature_disable).
+  # my.look.notchGap).
+  # No brcmfmac.feature_disable=0x82000 (the Intel-Mac Wi-Fi quirk): on this BCM4387 it
+  # stops association outright (iwd hangs in "connecting") and after a try or two the
+  # firmware stops answering until brcmfmac is reloaded (omarchy#7439; seen here 2026-10-25).
   boot.kernelParams = [
     "appledrm.show_notch=1"
-    "brcmfmac.feature_disable=0x82000"
     # Touch ID: pin the OS identity the enclave was provisioned with (2026-10-21), so a
     # bootloader change cannot orphan enrolled fingerprints. m1n1's apfs-preboot-uuid
     # 38E4E9B9-98B5-49F5-B7DD-471A4BDFCAAC as two big-endian u64 halves (decimal).
     "apple_sep.os_uuid_hi=4099658544154233333" # 0x38E4E9B998B549F5
     "apple_sep.os_uuid_lo=13248823857061546668" # 0xB7DD471A4BDFCAAC
+    "cfg80211.ieee80211_regdom=PL"
   ];
 
   # NixOS snowflake instead of the Asahi logo on the m1n1 boot screen. The

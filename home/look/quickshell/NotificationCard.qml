@@ -3,6 +3,7 @@
 // Below, indented to the text: progress (`value` hint), inline reply, action buttons.
 // Clicking the card invokes the "default" action when the app provides one.
 import QtQuick
+import Quickshell
 import Quickshell.Widgets
 
 Rectangle {
@@ -263,7 +264,22 @@ Rectangle {
                 if (replyInput.text.trim() === "" || !card.n) return;
                 card.n.sendInlineReply(replyInput.text);
                 replyInput.text = "";
+                setReplying(false);
             }
+
+            // A toast window takes keyboard focus only while a reply is typed (Toasts.qml);
+            // the notification centre's popup has its own focus and no `replying`.
+            readonly property bool inToast: { const w = card.QsWindow.window; return !!w && "replying" in w; }
+            property var focusWindow: null // the toast window this card asked for focus
+            function setReplying(on) {
+                const w = on ? card.QsWindow.window : focusWindow;
+                if (!w || !("replying" in w)) return;
+                w.replying = on;
+                focusWindow = on ? w : null;
+            }
+
+            // A toast that expires or is dismissed mid-reply hands keyboard focus back.
+            Component.onDestruction: setReplying(false)
 
             Rectangle {
                 width: parent.width - sendButton.width - parent.spacing
@@ -285,6 +301,25 @@ Rectangle {
                     font.family: Theme.sansFont
                     font.pixelSize: Theme.fontSize
                     onAccepted: parent.parent.send()
+                    Keys.onEscapePressed: event => {
+                        // In the notification centre Escape closes the centre, as before.
+                        if (!parent.parent.inToast) { event.accepted = false; return; }
+                        text = "";
+                        focus = false;
+                        parent.parent.setReplying(false);
+                    }
+                }
+
+                // Clicking the field asks the toast window for keyboard focus first; the press
+                // still goes on to the field.
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.IBeamCursor
+                    onPressed: mouse => {
+                        parent.parent.setReplying(true);
+                        replyInput.forceActiveFocus();
+                        mouse.accepted = false;
+                    }
                 }
 
                 Text {

@@ -6,11 +6,9 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 
-PopupWindow {
+BarPopup {
     id: popup
-
-    property Item anchorItem
-    property bool open: false
+    align: "right"
 
     readonly property int shadowPad: 18
 
@@ -40,21 +38,14 @@ PopupWindow {
         function onCurrentChanged() { if (popup.visible && PopupManager.current !== "tools") popup.close(); }
     }
 
-    // Right-aligned under the chip; the shadow needs room left of and below the card.
-    anchor.item: anchorItem
-    anchor.edges: Edges.Bottom | Edges.Right
-    anchor.gravity: Edges.Bottom | Edges.Left
-    anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-    implicitWidth: card.width + shadowPad
-    implicitHeight: card.height + shadowPad
+    cardWidth: card.width + shadowPad
+    cardHeight: card.height + shadowPad
     color: "transparent"
     visible: false
-    mask: Region { item: card }
 
     // Map the window with the card still transparent and start the fade-in a frame
     // later, so the window's very first frame shows nothing (no stale-frame flash).
-    Timer { id: fadeInDelay; interval: 16; onTriggered: popup.open = true }
+    Timer { id: fadeInDelay; interval: 16; onTriggered: { popup.open = true; card.forceActiveFocus(); } }
 
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
 
@@ -79,6 +70,9 @@ PopupWindow {
         color: Theme.raised
         border.width: Theme.borderWidth
         border.color: Theme.border
+
+        focus: true
+        Keys.onEscapePressed: popup.close()
 
         transformOrigin: Item.TopRight
         opacity: popup.open ? 1 : 0

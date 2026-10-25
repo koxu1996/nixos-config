@@ -129,7 +129,7 @@ Item {
         implicitWidth: chipRow.implicitWidth + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipMouse.containsMouse || popover.open ? Theme.chipHover : "transparent"
+        color: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) || popover.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Row {
@@ -182,10 +182,10 @@ Item {
     }
 
     // ---- Popover -----------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: popover
-
-        property bool open: false
+        anchorItem: chip
+        align: "right"
 
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("volume")) show(); }
         function show() { PopupManager.opened("volume"); visible = true; fadeInDelay.restart(); }
@@ -197,13 +197,8 @@ Item {
             function onCurrentChanged() { if (popover.visible && PopupManager.current !== "volume") popover.close(); }
         }
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 300
-        implicitHeight: card.implicitHeight
+        cardWidth: 300
+        cardHeight: card.implicitHeight
         color: "transparent"
         visible: false
 
@@ -215,12 +210,6 @@ Item {
 
         // Keyboard focus for Escape, and click-outside detection without
         // closing instantly (so the fade-out still plays).
-        HyprlandFocusGrab {
-            windows: [popover]
-            active: popover.visible
-            onCleared: popover.close()
-        }
-
         Rectangle {
             id: card
 

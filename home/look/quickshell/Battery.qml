@@ -21,7 +21,7 @@ Item {
         implicitWidth: row.implicitWidth + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipMouse.containsMouse || root.open ? Theme.chipHover : "transparent"
+        color: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) || root.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Row {
@@ -50,10 +50,11 @@ Item {
     }
 
     // ---- Panel ---------------------------------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: panel
+        anchorItem: chip
+        align: "right"
 
-        property bool open: false
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("battery")) show(); }
         function show() {
             BatteryService.refreshAll();
@@ -67,13 +68,8 @@ Item {
             function onCurrentChanged() { if (panel.visible && PopupManager.current !== "battery") panel.close(); }
         }
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 350
-        implicitHeight: card.implicitHeight
+        cardWidth: 350
+        cardHeight: card.implicitHeight
         color: "transparent"
         visible: false
 
@@ -82,12 +78,6 @@ Item {
         Timer { id: fadeInDelay; interval: 16; onTriggered: { panel.open = true; card.forceActiveFocus(); } }
 
         Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!panel.open) panel.visible = false }
-
-        HyprlandFocusGrab {
-            windows: [panel]
-            active: panel.visible
-            onCleared: panel.close()
-        }
 
         Rectangle {
             id: card

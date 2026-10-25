@@ -14,6 +14,11 @@ Item {
 
     // Popover-local UI state.
     property string expandedSsid: ""
+
+    // Give keyboard focus back to the card (Escape closes the panel) when a password field
+    // goes away; otherwise focus is left on nothing and keys, Escape included, do nothing.
+    // Later, so the row's visibility has updated first.
+    function refocusCard() { Qt.callLater(() => { if (panel.open && expandedSsid === "") card.forceActiveFocus(); }); }
     property string confirmForget: ""
     property bool detailsOpen: false
 
@@ -31,7 +36,7 @@ Item {
         implicitWidth: Theme.barIconSize + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipHover.hovered || panel.open ? Theme.chipHover : "transparent"
+        color: chipHover.hovered || PopupManager.hovers(chipArea) || panel.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         WifiGlyph {
@@ -44,7 +49,8 @@ Item {
         }
 
         HoverHandler { id: chipHover; cursorShape: Qt.PointingHandCursor }
-        TapHandler { onTapped: panel.toggle() }
+        // A MouseArea (not a TapHandler) so an open popup's overlay can pass a click on to it.
+        MouseArea { id: chipArea; anchors.fill: parent; onClicked: panel.toggle() }
     }
 
     // ---- Tooltip ------------------------------------------------------------
@@ -89,10 +95,10 @@ Item {
     }
 
     // ---- Popover -----------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: panel
-
-        property bool open: false
+        anchorItem: chip
+        align: "right"
 
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("wifi")) show(); }
         function show() {
@@ -116,13 +122,8 @@ Item {
 
         readonly property real maxHeight: (root.QsWindow.window?.screen?.height ?? 800) - 32 - 8 - 12
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 360
-        implicitHeight: Math.min(content.implicitHeight + Theme.popupPadding * 2, maxHeight)
+        cardWidth: 360
+        cardHeight: Math.min(content.implicitHeight + Theme.popupPadding * 2, maxHeight)
         color: "transparent"
         visible: false
 
@@ -139,12 +140,6 @@ Item {
                 root.expandedSsid = "";
                 root.confirmForget = "";
             }
-        }
-
-        HyprlandFocusGrab {
-            windows: [panel]
-            active: panel.visible
-            onCleared: panel.close()
         }
 
         Rectangle {
@@ -608,8 +603,15 @@ Item {
                             font.pixelSize: Theme.fontSize
                         }
 
+                        // A ScriptModel keyed by SSID, not the bare array: the service rebuilds the list
+                        // on every poll (2 s, 0.5 s while connecting), and a bare array made the Repeater
+                        // recreate every row, wiping a password being typed. Now rows persist (moving
+                        // as the order changes) and only their data updates.
                         Repeater {
-                            model: root.svc.networks
+                            model: ScriptModel {
+                                values: root.svc.networks
+                                objectProp: "ssid"
+                            }
 
                             delegate: NetworkRow {
                                 required property var modelData
@@ -649,10 +651,10 @@ Item {
                                 width: parent.width
                                 wrapMode: Text.Wrap
                                 text: root.svc.tailscaleError !== "" ? root.svc.tailscaleError
-                                    : root.svc.tailscaleBusy ? "Applying…"
+                                    : root.svc.tailscaleBusy ? (root.svc.tailscaleState === "NeedsLogin" ? "Sign in in the browser…" : "Applying…")
                                     : root.svc.tailscaleUp ? `Running · ${root.svc.tailscaleIp}`
                                     : root.svc.tailscaleState === "" ? "Unavailable"
-                                    : root.svc.tailscaleState === "NeedsLogin" ? "Needs login (tailscale up)"
+                                    : root.svc.tailscaleState === "NeedsLogin" ? "Logged out · switch on to sign in"
                                     : root.svc.tailscaleState
                                 color: root.svc.tailscaleError !== "" ? Theme.error : Theme.textDisabled
                                 font.family: Theme.monoFont
@@ -686,6 +688,7 @@ Item {
         readonly property bool confirming: owner.confirmForget === net.ssid
         readonly property bool secured: net.security !== "open"
         property string error: ""
+        property bool showPassword: false // the eye in the password field
 
         implicitHeight: rowColumn.implicitHeight
         radius: Theme.radiusSmall
@@ -700,7 +703,8 @@ Item {
             }
             error = "";
             password.text = "";
-            if (net.saved) WifiService.switchTo(net.profile);
+            showPassword = false;
+            if (net.saved) WifiService.switchTo(net.ssid);
             else WifiService.join(net.ssid, pw);
             owner.expandedSsid = "";
         }
@@ -708,8 +712,13 @@ Item {
         onExpandedChanged: {
             error = "";
             password.text = "";
+            showPassword = false;
             if (expanded && secured && !net.saved) password.forceActiveFocus();
+            else if (!expanded) owner.refocusCard();
         }
+
+        // The network went out of range while its password field had focus.
+        Component.onDestruction: if (password.activeFocus) owner.refocusCard()
 
         Column {
             id: rowColumn
@@ -837,7 +846,7 @@ Item {
                         danger: true
                         text: "Forget"
                         onClicked: {
-                            WifiService.forget(row.net.profile);
+                            WifiService.forget(row.net.ssid);
                             row.owner.confirmForget = "";
                             row.owner.expandedSsid = "";
                         }
@@ -879,9 +888,9 @@ Item {
                             id: password
                             anchors.fill: parent
                             anchors.leftMargin: 10
-                            anchors.rightMargin: 10
+                            anchors.rightMargin: 10 + eyeButton.width + 4
                             verticalAlignment: TextInput.AlignVCenter
-                            echoMode: TextInput.Password
+                            echoMode: row.showPassword ? TextInput.Normal : TextInput.Password
                             maximumLength: 63
                             clip: true
                             color: Theme.textPrimary
@@ -898,6 +907,34 @@ Item {
                                 color: Theme.textDisabled
                                 font.family: Theme.sansFont
                                 font.pixelSize: Theme.fontSize
+                            }
+                        }
+
+                        // Show / hide the password; typing focus stays in the field.
+                        Item {
+                            id: eyeButton
+                            anchors.right: parent.right
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 20
+                            height: 20
+
+                            AppGlyph {
+                                anchors.centerIn: parent
+                                kind: row.showPassword ? "eyeOff" : "eye"
+                                size: 14
+                                color: eyeMouse.containsMouse ? Theme.textPrimary : Theme.textSecondary
+                            }
+
+                            MouseArea {
+                                id: eyeMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    row.showPassword = !row.showPassword;
+                                    password.forceActiveFocus();
+                                }
                             }
                         }
                     }

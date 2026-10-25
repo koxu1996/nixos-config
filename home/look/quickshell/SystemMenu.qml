@@ -6,11 +6,9 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 
-PopupWindow {
+BarPopup {
     id: popup
-
-    property Item anchorItem
-    property bool open: false
+    align: "left"
 
     // Keyboard/hover highlight over the rows (0 Applications, 1 Reboot, 2 Power off), -1 none.
     property int highlight: -1
@@ -66,29 +64,17 @@ PopupWindow {
         confirming = "";
     }
 
-    anchor.item: anchorItem
-    anchor.edges: Edges.Bottom | Edges.Left
-    anchor.gravity: Edges.Bottom | Edges.Right
-    anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
     // Extra room right and below for the drop shadow; only the card takes input.
-    implicitWidth: card.width + shadowPad
-    implicitHeight: card.height + shadowPad
+    cardWidth: card.width + shadowPad
+    cardHeight: card.height + shadowPad
     color: "transparent"
     visible: false
-    mask: Region { item: card }
 
     // Map the window with the card still transparent and start the fade-in a frame
     // later, so the window's very first frame shows nothing (no stale-frame flash).
     Timer { id: fadeInDelay; interval: 16; onTriggered: { popup.open = true; card.forceActiveFocus(); } }
 
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
-
-    HyprlandFocusGrab {
-        windows: [popup]
-        active: popup.visible
-        onCleared: popup.close()
-    }
 
     RectangularShadow {
         anchors.fill: card

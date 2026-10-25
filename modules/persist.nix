@@ -15,8 +15,9 @@
     files = [
       # machine-id is used by systemd for the journal, if you don't persist this
       # file you won't be able to easily use journalctl to look at journals for
-      # previous boots.
-      #"/etc/machine-id"
+      # previous boots (every boot got a new id and its own /var/log/journal/<id>).
+      # Seed it once per host before switching: sudo install -D -m 444 /etc/machine-id /persist/etc/machine-id
+      "/etc/machine-id"
       # See: https://github.com/nbraud/nixpkgs/blob/6b6b12c27cb9e21d6530b8139591c7696b2dca2f/nixos/doc/manual/administration/nixos-state.section.md
       #"/etc/passwd"
       #"/etc/group"
@@ -67,6 +68,9 @@
         # OpenCode's database: its sessions, and the per-response costs the Zen balance
         # estimate subtracts.
         ".local/share/opencode"
+        # herdr (agent multiplexer): config.toml, saved SSH machines, session layouts and
+        # its server socket and logs, all in one directory.
+        { directory = ".config/herdr"; mode = "0700"; }
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.

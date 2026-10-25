@@ -98,6 +98,28 @@ Item {
         _run: function(command) { Quickshell.execDetached(["bash", "-lc", command]); }
     }
 
+    // The agents panel (Omarchy's KeyboardPanel) passes a click on the bar only to click
+    // targets registered with it. This one covers the whole bar strip, so a click on any
+    // other chip while the panel is open reaches that chip (and opens its popup) instead
+    // of only closing the panel. Registered first, so the panel's own button wins.
+    // triggerPress gets the bar point and event from patch 0007 of the vendored panel.
+    Item {
+        id: barProxy
+        parent: root.QsWindow.window ? root.QsWindow.window.contentItem : root
+        anchors.fill: parent
+        z: -1
+
+        function triggerPress(button, point, mouse) {
+            const win = root.QsWindow.window;
+            if (!point || !mouse || !win) return;
+            const target = PopupManager.areaAt(win.contentItem, point.x, point.y);
+            if (target && (target.acceptedButtons & button)) target.clicked(mouse);
+            else PopupManager.dismiss();
+        }
+
+        Component.onCompleted: api.registerClickTarget(barProxy)
+    }
+
     // Opening another bar popup closes this one.
     Connections {
         target: PopupManager
@@ -112,7 +134,7 @@ Item {
         implicitWidth: plugin.item ? plugin.item.implicitWidth + Theme.barChipPadding : Theme.barChipHeight
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: hover.hovered || (plugin.item && plugin.item.opened) ? Theme.chipHover : "transparent"
+        color: hover.hovered || PopupManager.hovers(chip) || (plugin.item && plugin.item.opened) ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         HoverHandler { id: hover }

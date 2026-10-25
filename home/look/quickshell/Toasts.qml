@@ -43,7 +43,12 @@ Scope {
         anchors { top: true; right: true }
         margins.top: top
         exclusionMode: ExclusionMode.Ignore
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand // inline replies
+        // Keyboard focus only while an inline reply is being typed (NotificationCard sets
+        // `replying`). Any other click on a toast must not take focus: when a layer that had
+        // it goes away, Hyprland hands focus back to the last window, which can be the hidden
+        // drop-down terminal, and pops it up (as the bar used to).
+        property bool replying: false
+        WlrLayershell.keyboardFocus: replying ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
         color: "transparent"
 
         implicitWidth: 360 + 24
@@ -64,7 +69,7 @@ Scope {
         Timer { id: linger; interval: Theme.durationFast + 60 }
         Connections {
             target: window.model
-            function onCountChanged() { if (window.model.count === 0) linger.restart(); }
+            function onCountChanged() { if (window.model.count === 0) { linger.restart(); window.replying = false; } }
         }
 
         mask: Region { item: list }

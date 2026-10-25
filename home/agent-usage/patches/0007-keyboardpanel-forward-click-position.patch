@@ -1,0 +1,28 @@
+--- a/shell/Ui/KeyboardPanel.qml
++++ b/shell/Ui/KeyboardPanel.qml
+@@ -336,11 +336,14 @@
+       return null
+     }
+ 
+-    function forwardBarClick(px, py, button) {
++    function forwardBarClick(px, py, button, mouse) {
+       if (button !== Qt.LeftButton && button !== Qt.RightButton && button !== Qt.MiddleButton) return false
+       var target = pressTargetAt(px, py)
+       if (!target) return false
+-      target.triggerPress(button)
++      // agent-usage: also hand over where on the bar and the event itself, so a host
++      // bar's own widgets (not registered click targets) can be reached; existing
++      // triggerPress(button) implementations ignore the extra arguments.
++      target.triggerPress(button, barPoint(px, py), mouse)
+       return true
+     }
+ 
+@@ -350,7 +353,7 @@
+       // While Exclusive is priming, Hyprland may route a click from another
+       // output here with translated coordinates. Never interpret that as a
+       // click on this output's bar.
+-      if (root.focusPrimed && inBarRegion(mouse.x, mouse.y) && forwardBarClick(mouse.x, mouse.y, mouse.button)) return
++      if (root.focusPrimed && inBarRegion(mouse.x, mouse.y) && forwardBarClick(mouse.x, mouse.y, mouse.button, mouse)) return
+       root.close()
+     }
+   }
