@@ -80,7 +80,8 @@
   users.mutableUsers = false;
 
   # Root and user accounts.
-  users.users.root.initialPassword = "pass";
+  # Root is locked (no password login, no `su`); admin goes through sudo (wheel).
+  users.users.root.hashedPassword = "!";
   users.users.andrew = {
     isNormalUser = true;
     initialPassword = "pass";
