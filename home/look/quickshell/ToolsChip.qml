@@ -13,7 +13,7 @@ Item {
         implicitWidth: Theme.barIconSize + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipMouse.containsMouse || menu.open ? Theme.chipHover : "transparent"
+        color: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) || menu.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         AppGlyph {

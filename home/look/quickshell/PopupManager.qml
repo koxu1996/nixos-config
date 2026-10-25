@@ -20,6 +20,18 @@ Singleton {
     // Close whichever popup is open (each one closes itself when `current` moves off it).
     function dismiss() { current = ""; }
 
+    // Where the pointer is over the bar while a popup's overlay covers it ({ window, x, y }
+    // in bar coordinates, or null): the chips can't see it themselves, so their hover
+    // highlight checks hovers() too. Set by BarPopup.
+    property var barHover: null
+
+    function hovers(item) {
+        const h = barHover;
+        if (!h || !item || !item.visible || item.QsWindow.window !== h.window) return false;
+        const p = item.mapFromItem(h.window.contentItem, h.x, h.y);
+        return p.x >= 0 && p.y >= 0 && p.x < item.width && p.y < item.height;
+    }
+
     function justClosed(name) { return Date.now() - (closedAt[name] ?? 0) < 300; }
 
     // The MouseArea under a point of `item` (in its coordinates) that would get a click

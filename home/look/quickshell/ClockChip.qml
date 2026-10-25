@@ -16,7 +16,7 @@ Item {
         implicitWidth: row.implicitWidth + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: root.active || chipMouse.containsMouse ? Theme.chipHover : "transparent"
+        color: root.active || (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Row {

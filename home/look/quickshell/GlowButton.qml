@@ -16,7 +16,7 @@ Item {
         implicitWidth: icon.implicitWidth + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipMouse.containsMouse || glow.open ? Theme.chipHover : "transparent"
+        color: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) || glow.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         // Sun icon: lime while a colour temperature is applied, dimmed for original colours.

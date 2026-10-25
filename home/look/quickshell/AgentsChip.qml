@@ -134,7 +134,7 @@ Item {
         implicitWidth: plugin.item ? plugin.item.implicitWidth + Theme.barChipPadding : Theme.barChipHeight
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: hover.hovered || (plugin.item && plugin.item.opened) ? Theme.chipHover : "transparent"
+        color: hover.hovered || PopupManager.hovers(chip) || (plugin.item && plugin.item.opened) ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         HoverHandler { id: hover }

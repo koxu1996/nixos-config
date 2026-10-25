@@ -36,7 +36,7 @@ Item {
         implicitWidth: Theme.barIconSize + Theme.barChipPadding * 2
         implicitHeight: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipHover.hovered || panel.open ? Theme.chipHover : "transparent"
+        color: chipHover.hovered || PopupManager.hovers(chipArea) || panel.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         WifiGlyph {
@@ -50,7 +50,7 @@ Item {
 
         HoverHandler { id: chipHover; cursorShape: Qt.PointingHandCursor }
         // A MouseArea (not a TapHandler) so an open popup's overlay can pass a click on to it.
-        MouseArea { anchors.fill: parent; onClicked: panel.toggle() }
+        MouseArea { id: chipArea; anchors.fill: parent; onClicked: panel.toggle() }
     }
 
     // ---- Tooltip ------------------------------------------------------------

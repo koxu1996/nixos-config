@@ -86,6 +86,12 @@ PanelWindow {
         return anchorItem.mapToItem(anchorWindow.contentItem, 0, 0);
     }
 
+    function trackBarHover(px, py) {
+        PopupManager.barHover = open && anchorWindow && py >= 0 && py < barHeight
+            ? { window: anchorWindow, x: px, y: py } : null;
+    }
+    onVisibleChanged: if (!visible) trackBarHover(-1, -1)
+
     // The bar's MouseArea under a point (screen = bar coordinates).
     function barTargetAt(px, py) {
         return anchorWindow ? PopupManager.areaAt(anchorWindow.contentItem, px, py) : null;
@@ -95,6 +101,10 @@ PanelWindow {
         anchors.fill: parent
         enabled: root.open
         acceptedButtons: Qt.AllButtons
+        // The bar's chips are covered, so tell them where the pointer is (hover highlight).
+        hoverEnabled: true
+        onPositionChanged: mouse => root.trackBarHover(mouse.x, mouse.y)
+        onExited: root.trackBarHover(-1, -1)
         // Close first, then pass a click on the bar on: a workspace button or another chip
         // does its thing and the popup goes too. This popup's own chip then just closes
         // it (justClosed keeps its toggle from reopening it).

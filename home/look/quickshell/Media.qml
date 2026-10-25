@@ -41,7 +41,7 @@ Item {
         width: root.compact ? fixedWidth : Math.min(180, fixedWidth + 1 + chipLabel.implicitWidth + 8)
         height: Theme.barChipHeight
         radius: Theme.radiusSmall
-        color: chipMouse.containsMouse || panel.open ? Theme.chipHover : "transparent"
+        color: (chipMouse.containsMouse || PopupManager.hovers(chipMouse)) || panel.open ? Theme.chipHover : "transparent"
         Behavior on color { ColorAnimation { duration: Theme.durationFast } }
 
         Cover {
