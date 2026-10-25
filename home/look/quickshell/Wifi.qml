@@ -686,6 +686,7 @@ Item {
         readonly property bool confirming: owner.confirmForget === net.ssid
         readonly property bool secured: net.security !== "open"
         property string error: ""
+        property bool showPassword: false // the eye in the password field
 
         implicitHeight: rowColumn.implicitHeight
         radius: Theme.radiusSmall
@@ -700,6 +701,7 @@ Item {
             }
             error = "";
             password.text = "";
+            showPassword = false;
             if (net.saved) WifiService.switchTo(net.profile);
             else WifiService.join(net.ssid, pw);
             owner.expandedSsid = "";
@@ -708,6 +710,7 @@ Item {
         onExpandedChanged: {
             error = "";
             password.text = "";
+            showPassword = false;
             if (expanded && secured && !net.saved) password.forceActiveFocus();
         }
 
@@ -879,9 +882,9 @@ Item {
                             id: password
                             anchors.fill: parent
                             anchors.leftMargin: 10
-                            anchors.rightMargin: 10
+                            anchors.rightMargin: 10 + eyeButton.width + 4
                             verticalAlignment: TextInput.AlignVCenter
-                            echoMode: TextInput.Password
+                            echoMode: row.showPassword ? TextInput.Normal : TextInput.Password
                             maximumLength: 63
                             clip: true
                             color: Theme.textPrimary
@@ -898,6 +901,34 @@ Item {
                                 color: Theme.textDisabled
                                 font.family: Theme.sansFont
                                 font.pixelSize: Theme.fontSize
+                            }
+                        }
+
+                        // Show / hide the password; typing focus stays in the field.
+                        Item {
+                            id: eyeButton
+                            anchors.right: parent.right
+                            anchors.rightMargin: 6
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 20
+                            height: 20
+
+                            AppGlyph {
+                                anchors.centerIn: parent
+                                kind: row.showPassword ? "eyeOff" : "eye"
+                                size: 14
+                                color: eyeMouse.containsMouse ? Theme.textPrimary : Theme.textSecondary
+                            }
+
+                            MouseArea {
+                                id: eyeMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    row.showPassword = !row.showPassword;
+                                    password.forceActiveFocus();
+                                }
                             }
                         }
                     }
