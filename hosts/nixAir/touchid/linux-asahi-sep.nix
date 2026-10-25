@@ -100,6 +100,10 @@ let
           name = "apple-sep-key-ioctls";
           patch = ./apple-sep-key-ioctls.patch;
         }
+        {
+          name = "j413-ccode-trivial";
+          patch = ./0001-j413-wifi-ccode-map-trivial.patch;
+        }
       ]
       ++ _kernelPatches;
     };
