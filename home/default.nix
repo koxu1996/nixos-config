@@ -53,6 +53,7 @@
     claude-code
     imagemagick
     opencode
+    (callPackage ./gitkay/package.nix { }) # gitk, but okay: native Wayland history viewer (home/gitkay).
     herdr # Agent multiplexer; persistent server, other machines over SSH (herdr machine add).
     dhcpcd # Manual DHCP (`sudo dhcpcd <iface>`), e.g. USB Ethernet; the daemon stays off on nixAir (iwd does Wi-Fi DHCP).
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
@@ -104,6 +105,7 @@
       };
       shellAliases = {
         lg = "lazygit";
+        gitk = "gitkay"; # Muscle memory: gitkay replaces gitk (plain git, not gitFull).
       };
     };
   };
@@ -181,8 +183,8 @@
       }
     ];
 
-    # We want to have `gitk` tool.
-    package = pkgs.gitFull;
+    # Plain git: gitFull was only here for gitk, which gitkay replaces (home/gitkay).
+    package = pkgs.git;
   };
 
   # GPG + agent so the signing key's passphrase can be entered and cached.
