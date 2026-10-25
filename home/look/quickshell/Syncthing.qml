@@ -119,7 +119,7 @@ Item {
 
                         Text {
                             text: root.svc.headline
-                            color: root.svc.status === "ok" || root.svc.status === "syncing" ? Theme.textPrimary : root.svc.statusColor
+                            color: ["ok", "syncing", "alone"].includes(root.svc.status) ? Theme.textPrimary : root.svc.statusColor
                             font.family: Theme.sansFont
                             font.pixelSize: Theme.fontSizeLarge
                             font.weight: Font.Medium

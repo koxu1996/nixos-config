@@ -264,9 +264,11 @@ Singleton {
         : peersOnline === 0 ? "alone"
         : "ok"
 
+    // "alone" (no other device online) is green like "ok": nothing is wrong, the panel
+    // says who's offline. Grey only when Syncthing itself is off or paused.
     readonly property color statusColor: ({
         offline: Theme.textDisabled, error: Theme.error, syncing: Theme.accent, paused: Theme.textDisabled,
-        attention: Theme.warning, alone: Theme.textSecondary, ok: Theme.accent
+        attention: Theme.warning, alone: Theme.accent, ok: Theme.accent
     })[status]
 
     readonly property string headline: {
