@@ -1,6 +1,6 @@
 // Wifi.qml: Wi-Fi chip (icon only) and popover; state and actions in WifiService.qml.
 // Popover: radio switch, current network (signal, tags, traffic, details), nearby networks
-// with inline connect / join / forget, and a Tailscale switch.
+// with inline connect / join / forget. (Tailscale has its own chip, TailscaleChip.qml.)
 // Checked against Quickshell 0.3.0. Use it as `Wifi {}` in the bar's right-end Row.
 import QtQuick
 import QtQuick.Shapes
@@ -622,55 +622,6 @@ Item {
                         }
                     }
 
-                    // ---- 5. Tailscale ----
-                    Rectangle {
-                        width: parent.width
-                        height: Theme.borderWidth
-                        color: Theme.border
-                    }
-
-                    Item {
-                        width: parent.width
-                        implicitHeight: tsText.implicitHeight
-
-                        Column {
-                            id: tsText
-                            anchors.left: parent.left
-                            anchors.right: tsToggle.left
-                            anchors.rightMargin: 10
-                            spacing: 2
-
-                            Text {
-                                text: "Tailscale"
-                                color: Theme.textPrimary
-                                font.family: Theme.sansFont
-                                font.pixelSize: Theme.fontSize
-                            }
-
-                            Text {
-                                width: parent.width
-                                wrapMode: Text.Wrap
-                                text: root.svc.tailscaleError !== "" ? root.svc.tailscaleError
-                                    : root.svc.tailscaleBusy ? (root.svc.tailscaleState === "NeedsLogin" ? "Sign in in the browser…" : "Applying…")
-                                    : root.svc.tailscaleUp ? `Running · ${root.svc.tailscaleIp}`
-                                    : root.svc.tailscaleState === "" ? "Unavailable"
-                                    : root.svc.tailscaleState === "NeedsLogin" ? "Logged out · switch on to sign in"
-                                    : root.svc.tailscaleState
-                                color: root.svc.tailscaleError !== "" ? Theme.error : Theme.textDisabled
-                                font.family: Theme.monoFont
-                                font.pixelSize: Theme.fontSizeSmall
-                            }
-                        }
-
-                        Toggle {
-                            id: tsToggle
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: root.svc.tailscaleUp
-                            enabled: !root.svc.tailscaleBusy && root.svc.tailscaleState !== ""
-                            onToggled: root.svc.setTailscale(!root.svc.tailscaleUp)
-                        }
-                    }
                 }
             }
         }
