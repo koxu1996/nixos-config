@@ -148,6 +148,12 @@ in
 
           -- No weird slogans on desktop.
           disable_splash_rendering = true,
+
+          -- A window opening behind a fullscreen one stays behind instead of taking focus and
+          -- dropping the fullscreen (default 2). E.g. an agent in the drop-down terminal runs
+          -- `code file`: VS Code opens on the drop-down's special workspace and used to knock
+          -- the terminal out of fullscreen before evict_from_dropterm moved it away.
+          on_focus_under_fullscreen = 0,
         },
 
         -- https://wiki.hyprland.org/Configuring/Variables/#decoration
