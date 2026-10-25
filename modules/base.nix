@@ -133,6 +133,8 @@
   # State (/var/lib/tailscale) is persisted in persist.nix so the node identity
   # survives the stateless root rollback.
   services.tailscale.enable = true;
+  # andrew may run `tailscale up/down/login` without sudo (the bar's Tailscale toggle).
+  services.tailscale.extraSetFlags = [ "--operator=andrew" ];
 
   # iOS devices over USB (deploys from Xcode-less toolchains, libimobiledevice). Pairing
   # records live in /var/lib/lockdown (persisted, see persist.nix).

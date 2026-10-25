@@ -646,10 +646,10 @@ Item {
                                 width: parent.width
                                 wrapMode: Text.Wrap
                                 text: root.svc.tailscaleError !== "" ? root.svc.tailscaleError
-                                    : root.svc.tailscaleBusy ? "Applying…"
+                                    : root.svc.tailscaleBusy ? (root.svc.tailscaleState === "NeedsLogin" ? "Sign in in the browser…" : "Applying…")
                                     : root.svc.tailscaleUp ? `Running · ${root.svc.tailscaleIp}`
                                     : root.svc.tailscaleState === "" ? "Unavailable"
-                                    : root.svc.tailscaleState === "NeedsLogin" ? "Needs login (tailscale up)"
+                                    : root.svc.tailscaleState === "NeedsLogin" ? "Logged out · switch on to sign in"
                                     : root.svc.tailscaleState
                                 color: root.svc.tailscaleError !== "" ? Theme.error : Theme.textDisabled
                                 font.family: Theme.monoFont
