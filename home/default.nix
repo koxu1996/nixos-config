@@ -52,6 +52,7 @@
     parallel
     claude-code
     imagemagick
+    dhcpcd # Manual DHCP (`sudo dhcpcd <iface>`), e.g. USB Ethernet; the daemon stays off on nixAir (iwd does Wi-Fi DHCP).
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     # Not built for aarch64 (nixAir).
     tor-browser
