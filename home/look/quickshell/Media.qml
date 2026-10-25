@@ -112,10 +112,10 @@ Item {
     }
 
     // ---- Panel -------------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: panel
-
-        property bool open: false
+        anchorItem: chip
+        align: "right"
 
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("media")) show(); }
         // Map the window with the card still transparent, and start the fade-in a frame
@@ -137,23 +137,12 @@ Item {
             function onPlayerChanged() { if (!root.player && panel.open) panel.close(); }
         }
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 340
-        implicitHeight: card.implicitHeight
+        cardWidth: 340
+        cardHeight: card.implicitHeight
         color: "transparent"
         visible: false
 
         Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!panel.open) panel.visible = false }
-
-        HyprlandFocusGrab {
-            windows: [panel]
-            active: panel.visible
-            onCleared: panel.close()
-        }
 
         Rectangle {
             id: card

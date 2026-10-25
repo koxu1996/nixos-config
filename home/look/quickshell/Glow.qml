@@ -6,11 +6,9 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 
-PopupWindow {
+BarPopup {
     id: popup
-
-    property Item anchorItem
-    property bool open: false
+    align: "right"
 
     function toggle() { if (open) close(); else if (!PopupManager.justClosed("glow")) show(); }
     function show() { PopupManager.opened("glow"); visible = true; fadeInDelay.restart(); GlowService.refresh(); }
@@ -25,13 +23,8 @@ PopupWindow {
     // Poll the backlight only while the popup is open (brightness keys show up live).
     Binding { target: GlowService; property: "watchBacklight"; value: popup.open && Host.glowBrightness }
 
-    anchor.item: anchorItem
-    anchor.edges: Edges.Bottom | Edges.Right
-    anchor.gravity: Edges.Bottom | Edges.Left
-    anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-    implicitWidth: 420
-    implicitHeight: card.implicitHeight
+    cardWidth: 420
+    cardHeight: card.implicitHeight
     color: "transparent"
     visible: false
 
@@ -42,12 +35,6 @@ PopupWindow {
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
 
     // Escape + click-outside (without closing instantly, so the fade-out plays).
-    HyprlandFocusGrab {
-        windows: [popup]
-        active: popup.visible
-        onCleared: popup.close()
-    }
-
     readonly property string mode: GlowService.mode
     readonly property color lightColor: GlowService.identity ? "#ffffff" : GlowService.kelvinColor(GlowService.temperature)
 

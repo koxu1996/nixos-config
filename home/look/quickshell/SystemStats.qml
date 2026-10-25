@@ -40,10 +40,11 @@ Item {
     }
 
     // ---- Panel -----------------------------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: panel
+        anchorItem: chip
+        align: "right"
 
-        property bool open: false
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("stats")) show(); }
         function show() { PopupManager.opened("stats"); visible = true; fadeInDelay.restart(); }
         function close() { fadeInDelay.stop(); open = false; PopupManager.closed("stats"); hideAfterFade.restart(); }
@@ -59,13 +60,8 @@ Item {
         // Re-read the CPU profile each time the panel opens (it may change elsewhere).
         onOpenChanged: if (open && Host.cpuProfile === "stats") CpuProfileService.readProfile()
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 340
-        implicitHeight: card.implicitHeight
+        cardWidth: 340
+        cardHeight: card.implicitHeight
         color: "transparent"
         visible: false
 
@@ -74,12 +70,6 @@ Item {
         Timer { id: fadeInDelay; interval: 16; onTriggered: { panel.open = true; card.forceActiveFocus(); } }
 
         Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!panel.open) panel.visible = false }
-
-        HyprlandFocusGrab {
-            windows: [panel]
-            active: panel.visible
-            onCleared: panel.close()
-        }
 
         Rectangle {
             id: card

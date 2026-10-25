@@ -39,11 +39,10 @@ ShellRoot {
                 anchors { top: true; left: true; right: true }
                 implicitHeight: 32
                 color: "transparent"
-                // No keyboard focus, except on demand (a click into it) while the Wi-Fi panel is
-                // open, for its password field. Taking focus otherwise made Hyprland hand it back
-                // to the hidden dropdown terminal when a popup closed, which pops that terminal up.
-                WlrLayershell.keyboardFocus: PopupManager.current === "wifi" ? WlrKeyboardFocus.OnDemand
-                                                                             : WlrKeyboardFocus.None
+                // Never takes keyboard focus: popups are their own overlay layers with their own
+                // focus (BarPopup). When the bar took focus, Hyprland handed it back to the hidden
+                // drop-down terminal on close, which popped that terminal up.
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
 
                 Item {
                     id: strip

@@ -44,7 +44,8 @@ Item {
         }
 
         HoverHandler { id: chipHover; cursorShape: Qt.PointingHandCursor }
-        TapHandler { onTapped: panel.toggle() }
+        // A MouseArea (not a TapHandler) so an open popup's overlay can pass a click on to it.
+        MouseArea { anchors.fill: parent; onClicked: panel.toggle() }
     }
 
     // ---- Tooltip ------------------------------------------------------------
@@ -89,10 +90,10 @@ Item {
     }
 
     // ---- Popover -----------------------------------------------------------
-    PopupWindow {
+    BarPopup {
         id: panel
-
-        property bool open: false
+        anchorItem: chip
+        align: "right"
 
         function toggle() { if (open) close(); else if (!PopupManager.justClosed("wifi")) show(); }
         function show() {
@@ -116,13 +117,8 @@ Item {
 
         readonly property real maxHeight: (root.QsWindow.window?.screen?.height ?? 800) - 32 - 8 - 12
 
-        anchor.item: chip
-        anchor.edges: Edges.Bottom | Edges.Right
-        anchor.gravity: Edges.Bottom | Edges.Left
-        anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-        implicitWidth: 360
-        implicitHeight: Math.min(content.implicitHeight + Theme.popupPadding * 2, maxHeight)
+        cardWidth: 360
+        cardHeight: Math.min(content.implicitHeight + Theme.popupPadding * 2, maxHeight)
         color: "transparent"
         visible: false
 
@@ -139,12 +135,6 @@ Item {
                 root.expandedSsid = "";
                 root.confirmForget = "";
             }
-        }
-
-        HyprlandFocusGrab {
-            windows: [panel]
-            active: panel.visible
-            onCleared: panel.close()
         }
 
         Rectangle {

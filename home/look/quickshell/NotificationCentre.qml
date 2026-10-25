@@ -4,11 +4,9 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 
-PopupWindow {
+BarPopup {
     id: popup
-
-    property Item anchorItem
-    property bool open: false
+    align: "right"
 
     function toggle() { if (open) close(); else if (!PopupManager.justClosed("notifications")) show(); }
     function show() { PopupManager.opened("notifications"); visible = true; fadeInDelay.restart(); body.contentY = 0; }
@@ -20,13 +18,8 @@ PopupWindow {
         function onCurrentChanged() { if (popup.visible && PopupManager.current !== "notifications") popup.close(); }
     }
 
-    anchor.item: anchorItem
-    anchor.edges: Edges.Bottom | Edges.Right
-    anchor.gravity: Edges.Bottom | Edges.Left
-    anchor.margins.bottom: -Theme.popupGap // margins resize the anchor rect; negative = below it
-
-    implicitWidth: 400
-    implicitHeight: card.height
+    cardWidth: 400
+    cardHeight: card.height
     color: "transparent"
     visible: false
 
@@ -35,12 +28,6 @@ PopupWindow {
     Timer { id: fadeInDelay; interval: 16; onTriggered: { popup.open = true; card.forceActiveFocus(); } }
 
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
-
-    HyprlandFocusGrab {
-        windows: [popup]
-        active: popup.visible
-        onCleared: popup.close()
-    }
 
     readonly property int maxHeight: 640
     readonly property bool empty: NotificationService.count === 0 && NotificationService.history.length === 0
