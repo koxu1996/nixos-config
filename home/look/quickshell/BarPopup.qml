@@ -95,15 +95,13 @@ PanelWindow {
         anchors.fill: parent
         enabled: root.open
         acceptedButtons: Qt.AllButtons
+        // Close first, then pass a click on the bar on: a workspace button or another chip
+        // does its thing and the popup goes too. This popup's own chip then just closes
+        // it (justClosed keeps its toggle from reopening it).
         onClicked: mouse => {
-            if (mouse.y < root.barHeight) {
-                const target = root.barTargetAt(mouse.x, mouse.y);
-                if (target && (target.acceptedButtons & mouse.button)) {
-                    target.clicked(mouse);
-                    return;
-                }
-            }
+            const target = mouse.y < root.barHeight ? root.barTargetAt(mouse.x, mouse.y) : null;
             PopupManager.dismiss();
+            if (target && (target.acceptedButtons & mouse.button)) target.clicked(mouse);
         }
         onWheel: wheel => {
             const target = wheel.y < root.barHeight ? root.barTargetAt(wheel.x, wheel.y) : null;
@@ -124,6 +122,8 @@ PanelWindow {
         y: Math.round(root.anchorPos.y + anchorH + Theme.popupGap)
         width: root.cardWidth
         height: root.cardHeight
+        // Controls go dead the moment the popup closes, not after its fade-out.
+        enabled: root.open
 
         // Clicks on the card (outside its controls) stay on the card.
         MouseArea {

@@ -45,7 +45,7 @@ BarPopup {
 
     // Map the window with the card still transparent and start the fade-in a frame
     // later, so the window's very first frame shows nothing (no stale-frame flash).
-    Timer { id: fadeInDelay; interval: 16; onTriggered: popup.open = true }
+    Timer { id: fadeInDelay; interval: 16; onTriggered: { popup.open = true; card.forceActiveFocus(); } }
 
     Timer { id: hideAfterFade; interval: Theme.durationNormal; onTriggered: if (!popup.open) popup.visible = false }
 
@@ -70,6 +70,9 @@ BarPopup {
         color: Theme.raised
         border.width: Theme.borderWidth
         border.color: Theme.border
+
+        focus: true
+        Keys.onEscapePressed: popup.close()
 
         transformOrigin: Item.TopRight
         opacity: popup.open ? 1 : 0
