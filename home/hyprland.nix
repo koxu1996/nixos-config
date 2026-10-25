@@ -237,8 +237,10 @@ in
 
       -- https://wiki.hyprland.org/Configuring/Binds/
 
-      -- Exit compositor on mainMod + SHIFT + e.
-      hl.bind(key(mainMod .. " + SHIFT", "e"), hl.dsp.exit())
+      -- Exit compositor on mainMod + SHIFT + Escape. Not the old mainMod + SHIFT + e: that
+      -- position is Alt + > on Dvorak (readline/Emacs "end of buffer"), one slip from
+      -- ending the session.
+      hl.bind(key(mainMod .. " + SHIFT", "Escape"), hl.dsp.exit())
 
       -- Open launcher with mainMod + d.
       hl.bind(key(mainMod, "d"), hl.dsp.exec_cmd(launcher))
@@ -328,13 +330,6 @@ in
       hl.bind(key("", "Print"), hl.dsp.exec_cmd(tools .. "screenshot region"))
       hl.bind(key("SHIFT", "Print"), hl.dsp.exec_cmd(tools .. "screenshot window"))
 
-      -- Volume bindings, allowed to work when screen is locked.
-      local volume = { locked = true, repeating = true }
-      hl.bind(key("SHIFT", "Next"), hl.dsp.exec_cmd("wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"), volume)
-      hl.bind(key("SHIFT", "Prior"), hl.dsp.exec_cmd("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"), volume)
-      hl.bind(key("SHIFT", "Home"), hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"), volume)
-      hl.bind(key("SHIFT", "End"), hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), volume)
-
       -- Media keys: on the MacBook always the J413 DSP speaker sink (never the raw speakers).
       -- wpctl only takes numeric ids, which change across restarts, so look it up by node name.
       -- Hosts without that sink (nixPC) use the default sink.
@@ -343,6 +338,14 @@ in
       hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd(j413 .. [[wpctl set-volume -l 1.0 "$id" 5%+]]), media)
       hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd(j413 .. [[wpctl set-volume "$id" 5%-]]), media)
       hl.bind("XF86AudioMute", hl.dsp.exec_cmd(j413 .. [[wpctl set-mute "$id" toggle]]), { locked = true })
+
+      -- The same on keyboards without media keys: SUPER + PgDn / PgUp / Home, and SUPER + End
+      -- mutes the microphone. SUPER, not SHIFT: Shift + PgUp/PgDn is terminal scrollback and
+      -- Shift + Home/End selects text.
+      hl.bind(key(sup, "Next"), hl.dsp.exec_cmd(j413 .. [[wpctl set-volume -l 1.0 "$id" 5%+]]), media)
+      hl.bind(key(sup, "Prior"), hl.dsp.exec_cmd(j413 .. [[wpctl set-volume "$id" 5%-]]), media)
+      hl.bind(key(sup, "Home"), hl.dsp.exec_cmd(j413 .. [[wpctl set-mute "$id" toggle]]), { locked = true })
+      hl.bind(key(sup, "End"), hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
 
       -- Play/pause, next, previous: through the Quickshell bar (MediaService), so the keys
       -- drive the same player as the media widget (playerctl picks its own).
