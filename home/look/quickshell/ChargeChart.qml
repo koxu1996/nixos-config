@@ -14,7 +14,20 @@ Item {
 
     implicitHeight: 46 + axis.height + 4
 
-    readonly property real now: Date.now() / 1000
+    // The window's right edge. Not a plain `Date.now()` binding, which is evaluated once:
+    // the chart then stayed on the hours after the bar started. Moves on with new data,
+    // each time the panel opens and every minute while it's open.
+    property real now: Date.now() / 1000
+    function refreshNow() { now = Date.now() / 1000; }
+    onPointsChanged: refreshNow()
+    onCurrentChanged: refreshNow()
+
+    Timer {
+        interval: 60000
+        repeat: true
+        running: chart.active
+        onTriggered: chart.refreshNow()
+    }
     // History plus the live value, clipped to the window.
     readonly property var series: {
         const list = points.filter(p => p.t >= now - span);
@@ -37,7 +50,7 @@ Item {
     function yFor(v) { return plot.height - 2 - Math.max(0, Math.min(1, v / 100)) * (plot.height - 4); }
 
     onSeriesChanged: if (active) canvas.requestPaint()
-    onActiveChanged: if (active) canvas.requestPaint()
+    onActiveChanged: if (active) { refreshNow(); canvas.requestPaint(); }
 
     Rectangle {
         id: plot
