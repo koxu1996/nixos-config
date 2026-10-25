@@ -14,6 +14,11 @@ Item {
 
     // Popover-local UI state.
     property string expandedSsid: ""
+
+    // Give keyboard focus back to the card (Escape closes the panel) when a password field
+    // goes away; otherwise focus is left on nothing and keys, Escape included, do nothing.
+    // Later, so the row's visibility has updated first.
+    function refocusCard() { Qt.callLater(() => { if (panel.open && expandedSsid === "") card.forceActiveFocus(); }); }
     property string confirmForget: ""
     property bool detailsOpen: false
 
@@ -709,7 +714,11 @@ Item {
             password.text = "";
             showPassword = false;
             if (expanded && secured && !net.saved) password.forceActiveFocus();
+            else if (!expanded) owner.refocusCard();
         }
+
+        // The network went out of range while its password field had focus.
+        Component.onDestruction: if (password.activeFocus) owner.refocusCard()
 
         Column {
             id: rowColumn
