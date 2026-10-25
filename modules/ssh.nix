@@ -29,13 +29,16 @@ in
 
   users.users.andrew.openssh.authorizedKeys.keys = [ andrewKey ];
 
-  # The other machine by its Tailscale (MagicDNS) name, for ssh and `herdr machine add`.
+  # My machines by name, for ssh and `herdr machine add`: the laptop and the workstation by
+  # their Tailscale (MagicDNS) names, the VPS (not on the tailnet) by its public address.
   programs.ssh.extraConfig = ''
     Host nixPC nixpc
       HostName nixpc
     Host nixAir nixair
       HostName nixair
-    Host nixPC nixpc nixAir nixair
+    Host nixvps
+      HostName 152.53.157.65
+    Host nixPC nixpc nixAir nixair nixvps
       User andrew
       IdentityFile ~/.ssh/id_ed25519
   '';

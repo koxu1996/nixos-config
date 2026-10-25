@@ -297,7 +297,7 @@ Singleton {
     }
 
     onPanelOpenChanged: {
-        if (panelOpen) { scan(); refresh(); refreshTailscale(); }
+        if (panelOpen) { scan(); refresh(); }
         else { rxHistory = []; txHistory = []; }
     }
 
@@ -342,69 +342,6 @@ Singleton {
         const next = list.length >= historyLength ? list.slice(list.length - historyLength + 1) : list.slice();
         next.push(value);
         return next;
-    }
-
-    // ---- Tailscale ----------------------------------------------------------------------
-    property string tailscaleState: "" // "Running", "Stopped", "NeedsLogin", … ("" = unknown)
-    property string tailscaleIp: ""
-    property bool tailscaleBusy: false
-    property string tailscaleError: ""
-    readonly property bool tailscaleUp: tailscaleState === "Running"
-
-    function refreshTailscale() { if (!tsStatus.running) tsStatus.running = true; }
-
-    Timer {
-        interval: 10000
-        repeat: true
-        running: service.panelOpen
-        onTriggered: service.refreshTailscale()
-    }
-
-    Component.onCompleted: refreshTailscale()
-
-    Process {
-        id: tsStatus
-        command: ["tailscale", "status", "--json"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const d = JSON.parse(text);
-                    service.tailscaleState = d.BackendState ?? "";
-                    service.tailscaleIp = (d.Self?.TailscaleIPs ?? []).find(ip => ip.includes(".")) ?? "";
-                } catch (e) {
-                    service.tailscaleState = "";
-                }
-            }
-        }
-    }
-
-    function setTailscale(on) {
-        if (tailscaleBusy) return;
-        tailscaleBusy = true;
-        tailscaleError = "";
-        tsErrorLine = "";
-        // `up` on a logged-out node prints a login URL and waits for it: open the URL in the
-        // browser, and give up after the timeout so the toggle can't stay busy forever.
-        tsToggle.command = on ? ["tailscale", "up", "--timeout=120s"] : ["tailscale", "down"];
-        tsToggle.running = true;
-    }
-
-    property string tsErrorLine: ""
-
-    Process {
-        id: tsToggle
-        stderr: SplitParser {
-            onRead: line => {
-                const url = (line.match(/https:\/\/login\.tailscale\.com\/\S+/) ?? [])[0];
-                if (url) Qt.openUrlExternally(url);
-                else if (line.trim() !== "" && service.tsErrorLine === "") service.tsErrorLine = line.trim();
-            }
-        }
-        onExited: (code, status) => {
-            if (code !== 0) service.tailscaleError = service.tsErrorLine || `tailscale exited with ${code}`;
-            service.tailscaleBusy = false;
-            service.refreshTailscale();
-        }
     }
 
     // ---- Helpers --------------------------------------------------------------------------
