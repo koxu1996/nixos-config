@@ -68,6 +68,9 @@
         # OpenCode's database: its sessions, and the per-response costs the Zen balance
         # estimate subtracts.
         ".local/share/opencode"
+        # herdr (agent multiplexer): config.toml, saved SSH machines, session layouts and
+        # its server socket and logs, all in one directory.
+        { directory = ".config/herdr"; mode = "0700"; }
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.

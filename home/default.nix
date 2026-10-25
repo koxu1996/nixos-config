@@ -53,6 +53,7 @@
     claude-code
     imagemagick
     opencode
+    herdr # Agent multiplexer; persistent server, other machines over SSH (herdr machine add).
     dhcpcd # Manual DHCP (`sudo dhcpcd <iface>`), e.g. USB Ethernet; the daemon stays off on nixAir (iwd does Wi-Fi DHCP).
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     # Not built for aarch64 (nixAir).
