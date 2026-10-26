@@ -12,7 +12,6 @@
     # No welcome / first-run screen: the profile is not persisted, so every boot is a first run.
     (brave.override { commandLineArgs = "--no-first-run"; })
     fzf
-    lazygit
     gh # GitHub CLI.
     pwvucontrol
     keepassxc
@@ -87,6 +86,12 @@
   programs.home-manager.enable = true;
 
   programs = {
+    # No welcome / what's-new popup: its "seen" mark lives in ~/.local/state/lazygit,
+    # which is not persisted, so every boot would show it again.
+    lazygit = {
+      enable = true;
+      settings.disableStartupPopups = true;
+    };
     zsh = {
       enable = true;
       enableCompletion = true;
