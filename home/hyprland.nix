@@ -243,6 +243,10 @@ in
       -- Open launcher with mainMod + d.
       hl.bind(key(mainMod, "d"), hl.dsp.exec_cmd(launcher))
 
+      -- Passwords: the pkee popup (home/pkee.nix) on mainMod + code:33 (QWERTY's P, the letter l
+      -- on Dvorak). --db explicitly: Home Manager's session variables (PKEE_DB) don't reach Hyprland.
+      hl.bind(key(mainMod, "p"), hl.dsp.exec_cmd("${lib.getExe config.programs.pkee.package} --db ${config.programs.pkee.database}"))
+
       -- Drop-down terminal on ` (backtick): Alacritty running tmux session "drop" (so it
       -- survives toggles), on the special workspace "dropterm". Started on first use; the
       -- window rule "dropterm" below puts it there and styles it.
@@ -380,6 +384,15 @@ in
         border_size = 1,
         border_color = "rgb(c5f36a) rgb(2a2f38)",
         no_blur = true,
+      })
+
+      -- pkee popup: a floating, centred launcher rather than a tiled window.
+      hl.window_rule({
+        name = "pkee",
+        match = { class = "pkee" },
+        float = true,
+        size = "720 440",
+        center = true,
       })
 
       -- Keep the demo HUD out of screen shares (needs the patched Hyprland,

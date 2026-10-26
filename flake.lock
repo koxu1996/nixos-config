@@ -206,6 +206,26 @@
         "type": "github"
       }
     },
+    "pkee": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793006252,
+        "narHash": "sha256-nvjwRb5vt6oLe78YnTBjDtLod1NyyN1ooZFIZXchGyw=",
+        "owner": "koxu1996",
+        "repo": "pkee",
+        "rev": "1a7bc21f408c5e3469c5da491e210fb7ad41faa4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "koxu1996",
+        "repo": "pkee",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "clutch": "clutch",
@@ -215,6 +235,7 @@
         "linux-passkey": "linux-passkey",
         "nixos-apple-silicon": "nixos-apple-silicon",
         "nixpkgs": "nixpkgs_2",
+        "pkee": "pkee",
         "tbsm": "tbsm"
       }
     },

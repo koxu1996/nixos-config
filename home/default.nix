@@ -125,6 +125,7 @@
   #programs.command-not-found.enable = true;
 
   imports = [
+    ./pkee.nix
     ./options.nix
     ./look
     ./hyprland.nix

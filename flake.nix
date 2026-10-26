@@ -23,6 +23,9 @@
     # TPM on nixPC, Secure Enclave + fingerprint on nixAir.
     linux-passkey.url = "github:koxu1996/linux-passkey";
     linux-passkey.inputs.nixpkgs.follows = "nixpkgs";
+    # pkee — fingerprint-unlocked KeePass launcher (home/pkee.nix).
+    pkee.url = "github:koxu1996/pkee";
+    pkee.inputs.nixpkgs.follows = "nixpkgs";
     # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
     nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";
     nixos-apple-silicon.inputs.nixpkgs.follows = "nixpkgs";
@@ -30,7 +33,7 @@
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, linux-passkey, ... }@inputs:
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, linux-passkey, pkee, ... }@inputs:
     let
       # One NixOS system per host. `modules` are the host's own modules (they
       # import ./modules/base.nix themselves where order matters); everything
@@ -62,6 +65,7 @@
             home-manager.useUserPackages = true;
             home-manager.backupFileExtension = "hm-backup";
             home-manager.users.andrew = import ./home;
+            home-manager.sharedModules = [ pkee.homeManagerModules.default ];
 
             # Pass extra arguments to home/default.nix
             home-manager.extraSpecialArgs = {

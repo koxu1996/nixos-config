@@ -44,6 +44,7 @@
         ".local/state/zsh" # Persist as directory (not file) to avoid bind mount rename issue.
         ".local/state/syncthing" # Syncthing device key, certs, and DB.
         ".local/share/hyprland" # lastVersion/lastNag - otherwise the update popup reappears after every reboot.
+        { directory = ".local/state/pkee"; mode = "0700"; } # pkee: frecency (which entries I use) and the agent log.
       ] ++ lib.optionals (config.services.linux-passkey.enable or false) [
         # Passkey store (hardware-wrapped keys + hardware-sealed store key) -
         # without it every reboot wipes all passkeys.
