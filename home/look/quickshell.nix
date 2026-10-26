@@ -71,8 +71,9 @@ in
   # the old files, so the running bar kept the previous config until a re-login.
   config.systemd.user.services.quickshell.Unit.X-Restart-Triggers = [ "${cfg.barSource}" ];
 
-  # Tools the bar's scripts call (tools/screenshot.sh: hyprctl comes with Hyprland).
-  config.home.packages = [ pkgs.jq pkgs.grim pkgs.slurp pkgs.wl-clipboard pkgs.libnotify ];
+  # Tools the bar's scripts call (tools/screenshot.sh: hyprctl comes with Hyprland;
+  # tools/share.sh: zenity's file picker, LocalSend from home/default.nix).
+  config.home.packages = [ pkgs.jq pkgs.grim pkgs.slurp pkgs.wl-clipboard pkgs.libnotify pkgs.zenity ];
 
   # Screen colour temperature through Hyprland's CTM protocol (also works on the Asahi
   # display, which has no gamma LUT). No hyprsunset profiles: the bar's Glow owns the
