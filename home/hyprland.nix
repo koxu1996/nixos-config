@@ -262,7 +262,21 @@ in
         hl.exec_cmd("alacritty --class dropterm -o window.opacity=1.0 -e tmux new-session -A -s drop") -- opaque, unlike normal windows (0.96)
         hl.dispatch(hl.dsp.workspace.toggle_special("dropterm"))
       end
-      hl.bind(key("", "grave"), toggle_dropterm)
+      -- Hyprland 0.56 bug (KeybindManager.cpp, the release path): a plain bind also fires on the
+      -- key's *release* when it was pressed with mods that were let go first. So typing ~
+      -- (Shift + this key on Dvorak) and lifting Shift a moment before the key opened the
+      -- drop-down. Shift + key is noted (non_consuming, so ~ still types) and cleared on its
+      -- normal release; the stray release that follows a noted press is ignored.
+      local tilde_pressed = false
+      hl.bind(key("SHIFT", "grave"), function() tilde_pressed = true end, { non_consuming = true })
+      hl.bind(key("SHIFT", "grave"), function() tilde_pressed = false end, { non_consuming = true, release = true })
+      hl.bind(key("", "grave"), function()
+        if tilde_pressed then
+          tilde_pressed = false
+          return
+        end
+        toggle_dropterm()
+      end)
 
       -- While the drop-down is shown its special workspace has focus, so anything started then
       -- (launcher, a link from the terminal, ...) would open there and hide/show with it. Move such
