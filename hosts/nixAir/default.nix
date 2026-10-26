@@ -115,5 +115,14 @@ in
   # Laptop: battery state for the bar and power tools.
   services.upower.enable = true;
 
+  # Flutter apps (LocalSend) draw their icons but no text: Flutter's linux-arm64 engine is
+  # built without fontconfig and only scans /usr/share/fonts, which NixOS lacks. Give it
+  # the system fonts there. Drop with Flutter 3.50 (flutter/flutter#180235; NixOS/nixpkgs#573374).
+  fonts.fontDir.enable = true;
+  systemd.tmpfiles.rules = [
+    "d /usr/share 0755 root root -"
+    "L+ /usr/share/fonts - - - - /run/current-system/sw/share/X11/fonts"
+  ];
+
   home-manager.users.andrew.imports = [ ./home.nix ];
 }
