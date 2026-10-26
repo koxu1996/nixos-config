@@ -12,6 +12,7 @@
     enable = true;
     # `y`: yazi that cds the shell to the folder it was left in.
     enableZshIntegration = true;
+    shellWrapperName = "y";
   };
 
   xdg.configFile."xdg-desktop-portal-termfilechooser/config".text = ''
