@@ -11,7 +11,10 @@
   wayland,
   libxkbcommon,
   libGL,
-  xorg,
+  libx11,
+  libxcursor,
+  libxi,
+  libxrandr,
 }:
 
 rustPlatform.buildRustPackage {
@@ -35,7 +38,7 @@ rustPlatform.buildRustPackage {
   # the fallback), so they have to be findable.
   postFixup = ''
     wrapProgram $out/bin/gitkay \
-      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ wayland libxkbcommon libGL xorg.libX11 xorg.libXcursor xorg.libXi xorg.libXrandr ]}
+      --prefix LD_LIBRARY_PATH : ${lib.makeLibraryPath [ wayland libxkbcommon libGL libx11 libxcursor libxi libxrandr ]}
   '';
 
   meta = {
