@@ -409,6 +409,15 @@ in
         center = true,
       })
 
+      -- File chooser (yazi through termfilechooser, home/yazi.nix): a floating, centred dialog.
+      hl.window_rule({
+        name = "filechooser",
+        match = { class = "filechooser" },
+        float = true,
+        size = "1100 650",
+        center = true,
+      })
+
       -- LocalSend: a floating, centred window, like Omarchy's.
       hl.window_rule({
         name = "localsend",

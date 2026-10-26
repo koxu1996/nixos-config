@@ -215,8 +215,11 @@
     enable = true;
     extraPortals = with pkgs; [
       xdg-desktop-portal-hyprland
-      # File chooser (xdg-desktop-portal-hyprland has none). Without it, browsers fall back
-      # to their in-process GTK dialog, where Enter / double-click on a file did nothing.
+      # File chooser (xdg-desktop-portal-hyprland has none): yazi in a floating terminal,
+      # set up in home/yazi.nix. Without a portal chooser, browsers fall back to their
+      # in-process GTK dialog, where Enter / double-click on a file did nothing.
+      xdg-desktop-portal-termfilechooser
+      # Settings (dark/light, fonts) for apps that ask the portal.
       xdg-desktop-portal-gtk
     ];
     config = {
@@ -224,7 +227,7 @@
         default = [
           "hyprland"
         ];
-        "org.freedesktop.impl.portal.FileChooser" = [ "gtk" ];
+        "org.freedesktop.impl.portal.FileChooser" = [ "termfilechooser" ];
       };
     };
   };

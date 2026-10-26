@@ -133,6 +133,7 @@
     tbsm.homeManagerModules.tbsm
     ./pixma-scan.nix # `pixma-scan <format> <resolution> <output>` scan helper.
     ./nixos-update.nix # `nixos-update`: pull ~/nixos and switch (the snowflake menu's "Update system").
+    ./yazi.nix # yazi, also as the file chooser (Open / Save dialogs) through termfilechooser.
     ./thunderbird.nix # Thunderbird + pre-configured kontakt@brosoft.xyz account.
     ./gpg-tools.nix # `gpg-load` + `tgpg`: KeePass-backed RAM-only GPG keyring.
     ./agent-usage # Omarchy's AI agent usage panel in the bar + OpenCode Zen balance.
