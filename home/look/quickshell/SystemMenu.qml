@@ -1,5 +1,5 @@
-// SystemMenu.qml: the snowflake chip's menu: Applications, then Reboot and Power off behind
-// an inline confirmation. Up/Down move a highlight, Enter activates it, Escape backs out of
+// SystemMenu.qml: the snowflake chip's menu: Applications and Update system, then Reboot and
+// Power off behind an inline confirmation. Up/Down move a highlight, Enter activates it, Escape backs out of
 // the confirmation and then closes. Opened from SystemChip; reset to the plain rows on open.
 import QtQuick
 import QtQuick.Effects
@@ -10,7 +10,8 @@ BarPopup {
     id: popup
     align: "left"
 
-    // Keyboard/hover highlight over the rows (0 Applications, 1 Reboot, 2 Power off), -1 none.
+    // Keyboard/hover highlight over the rows (0 Applications, 1 Update system, 2 Reboot,
+    // 3 Power off), -1 none.
     property int highlight: -1
     // "" for the rows, "reboot" or "poweroff" while confirming.
     property string confirming: ""
@@ -47,8 +48,13 @@ BarPopup {
         if (i === 0) {
             close();
             LauncherService.toggleRequested();
-        } else if (i === 1 || i === 2) {
-            confirming = i === 1 ? "reboot" : "poweroff";
+        } else if (i === 1) {
+            close();
+            // home/nixos-update.nix: pull ~/nixos and switch; the terminal shows the progress.
+            Quickshell.execDetached(["alacritty", "--class", "nixos-update", "--title", "Update system",
+                                     "-e", "nixos-update"]);
+        } else if (i === 2 || i === 3) {
+            confirming = i === 2 ? "reboot" : "poweroff";
             confirmFocus = 0;
         }
     }
@@ -60,7 +66,7 @@ BarPopup {
     }
 
     function cancelConfirm() {
-        highlight = confirming === "reboot" ? 1 : 2;
+        highlight = confirming === "reboot" ? 2 : 3;
         confirming = "";
     }
 
@@ -109,7 +115,7 @@ BarPopup {
                 else return;
             } else {
                 if (event.key === Qt.Key_Escape) popup.close();
-                else if (event.key === Qt.Key_Down) popup.highlight = Math.min(2, popup.highlight + 1);
+                else if (event.key === Qt.Key_Down) popup.highlight = Math.min(3, popup.highlight + 1);
                 else if (event.key === Qt.Key_Up) popup.highlight = Math.max(0, popup.highlight - 1);
                 else if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && popup.highlight >= 0)
                     popup.activate(popup.highlight);
@@ -131,13 +137,21 @@ BarPopup {
             width: parent.width - 12
             spacing: 6
 
-            // ---- 1. Applications ----
+            // ---- 1. Applications, Update system ----
             MenuRow {
                 menu: popup
                 width: parent.width
                 index: 0
                 glyph: "grid"
                 label: "Applications"
+            }
+
+            MenuRow {
+                menu: popup
+                width: parent.width
+                index: 1
+                glyph: "sync"
+                label: "Update system"
             }
 
             // ---- 2. Divider ----
@@ -162,7 +176,7 @@ BarPopup {
                 MenuRow {
                     menu: popup
                     width: parent.width
-                    index: 1
+                    index: 2
                     glyph: "reboot"
                     label: "Reboot"
                     danger: true
@@ -171,7 +185,7 @@ BarPopup {
                 MenuRow {
                     menu: popup
                     width: parent.width
-                    index: 2
+                    index: 3
                     glyph: "power"
                     label: "Power off"
                     danger: true
