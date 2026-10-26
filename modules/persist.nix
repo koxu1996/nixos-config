@@ -60,6 +60,9 @@
         # (projects/), settings, todos. mode 0700 to protect the OAuth token.
         { directory = ".claude"; mode = "0700"; }
         { directory = ".config/clutch"; mode = "0700"; } # clutch HUD config + OpenCode Zen API key.
+        # silk-wallet: Cloudflare API token (cf-token) for the silk-chunks R2 bucket and
+        # chunks.silkmoney.net; R2 upload keys are derived from it.
+        { directory = ".config/silk"; mode = "0700"; }
         # Quickshell bar state: Glow mode/manual values, notifications + do-not-disturb.
         ".local/state/quickshell"
         # Agent usage panel (home/agent-usage): the subscription-account registry and the
