@@ -103,6 +103,11 @@
         ZSH_TMUX_AUTOCONNECT = "false";
         FZF_DEFAULT_COMMAND = "rg";
       };
+      # No tmux inside a herdr pane: herdr spots agents (Claude, …) among the pane's own
+      # processes, and under tmux they run beneath the tmux server instead. Before oh-my-zsh.
+      initContent = lib.mkOrder 550 ''
+        [[ -n $HERDR_ENV ]] && ZSH_TMUX_AUTOSTART=false
+      '';
       shellAliases = {
         lg = "lazygit";
         gitk = "gitkay"; # Muscle memory: gitkay replaces gitk (plain git, not gitFull).
