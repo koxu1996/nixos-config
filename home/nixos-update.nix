@@ -45,8 +45,9 @@ let
 
       step "Rebuilding $host ($(git log -1 --format='%h %s'))"
       sudo -v || fail "sudo failed; nothing rebuilt."
-      # nom: live build progress from nix's JSON log.
-      sudo nixos-rebuild switch --flake "$repo#$host" --impure --log-format internal-json -v |& nom --json \
+      # nom: live build progress from nix's JSON log. No -v: nixos-rebuild-ng would print its
+      # own debug log (every command it runs) with it.
+      sudo nixos-rebuild switch --flake "$repo#$host" --impure --log-format internal-json |& nom --json \
         || fail "Rebuild failed; the running system is unchanged."
 
       finish "\033[1;32m✓ $host is up to date.\033[0m" 0
