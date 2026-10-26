@@ -3,12 +3,21 @@
 # LocalSend, which opens on its Send tab with them selected (a running LocalSend gets them).
 #   clipboard  copied files as themselves, an image as an image file, anything else as .txt
 #   file       pick files      folder  pick a folder      receive  just open LocalSend
+# Picking is yazi in the floating file-chooser terminal (home/yazi.nix): Enter picks (Space
+# marks several); for a folder, go into it and press q, or mark it and press Enter.
 # Clipboard copies go to $XDG_RUNTIME_DIR (gone at logout), so LocalSend can still read them.
 set -euo pipefail
 
 fail() {
     notify-send -a Share -u critical "Share failed" "$1" || true
     exit 1
+}
+
+# choose <title> [cwd file]: yazi's picks, one per line, in $chosen (empty: nothing picked).
+chosen=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/share-pick-XXXXXX")
+trap 'rm -f "$chosen" "$chosen.cwd"' EXIT
+choose() {
+    alacritty --class filechooser --title "$1" -e yazi --chooser-file="$chosen" ${2:+--cwd-file="$chosen.cwd"} "$HOME" || true
 }
 
 paths=()
@@ -36,13 +45,21 @@ clipboard)
     fi
     ;;
 file)
-    # Cancel: exit quietly.
-    picked=$(zenity --file-selection --multiple --separator=$'\n' --title "Share files") || exit 0
-    mapfile -t paths <<<"$picked"
+    choose "Share files"
+    # Cancel (q without picking): exit quietly.
+    [ -s "$chosen" ] || exit 0
+    mapfile -t paths <"$chosen"
     ;;
 folder)
-    picked=$(zenity --file-selection --directory --title "Share a folder") || exit 0
-    paths=("$picked")
+    choose "Share a folder" cwd
+    if [ -s "$chosen" ]; then
+        mapfile -t paths <"$chosen"
+    elif [ -s "$chosen.cwd" ] && [ "$(cat "$chosen.cwd")" != "$HOME" ]; then
+        # Quit inside the folder. Quitting in ~ itself counts as cancel.
+        paths=("$(cat "$chosen.cwd")")
+    else
+        exit 0
+    fi
     ;;
 receive) ;;
 *)
@@ -51,5 +68,6 @@ receive) ;;
     ;;
 esac
 
-# Its own transient unit: LocalSend outlives this script and the bar.
+# Its own transient unit: LocalSend outlives this script and the bar. (exec skips the trap.)
+rm -f "$chosen" "$chosen.cwd"
 exec systemd-run --user --quiet --collect localsend_app "${paths[@]}"
