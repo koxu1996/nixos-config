@@ -409,6 +409,15 @@ in
         center = true,
       })
 
+      -- LocalSend: a floating, centred window, like Omarchy's.
+      hl.window_rule({
+        name = "localsend",
+        match = { class = "(org\\.localsend\\.)?localsend(_app)?" },
+        float = true,
+        size = "1100 700",
+        center = true,
+      })
+
       -- Keep the demo HUD out of screen shares (needs the patched Hyprland,
       -- see hyprland-noscreenshare/; stock Hyprland draws a black box instead).
       hl.layer_rule({

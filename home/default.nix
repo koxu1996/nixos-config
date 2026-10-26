@@ -13,6 +13,7 @@
     (brave.override { commandLineArgs = "--no-first-run"; })
     fzf
     gh # GitHub CLI.
+    localsend # AirDrop-like sharing with phones and other computers on the LAN (port 53317; the firewall is off).
     pwvucontrol
     keepassxc
     xeyes
