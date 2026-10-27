@@ -63,6 +63,9 @@
         # silk-wallet: Cloudflare API token (cf-token) for the silk-chunks R2 bucket and
         # chunks.silkmoney.net; R2 upload keys are derived from it.
         { directory = ".config/silk"; mode = "0700"; }
+        # xcross (Flutter iOS builds from Linux): Apple ID session, signing
+        # certificates and the Darwin SDK (~900 MB, built from an Xcode.app/.xip).
+        { directory = ".config/xcross"; mode = "0700"; }
         # Quickshell bar state: Glow mode/manual values, notifications + do-not-disturb.
         ".local/state/quickshell"
         # Agent usage panel (home/agent-usage): the subscription-account registry and the
