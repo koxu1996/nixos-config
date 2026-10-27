@@ -1,6 +1,6 @@
 // Quickshell bar for Hyprland (the whole top bar; no waybar under Hyprland).
 // Left: system menu (snowflake), workspace selector. Centre: kept free for the notch.
-// Right end: now playing, CPU/memory stats, speaker volume, Glow, Syncthing, Tailscale, Wi-Fi + battery (where the host has them, Host.qml), AI agent usage, tools, clock, notifications. Toasts: top-right below the bar.
+// Right end: Touch ID (only while a fingerprint check waits), now playing, CPU/memory stats, speaker volume, Glow, Syncthing, Tailscale, Wi-Fi + battery (where the host has them, Host.qml), AI agent usage, tools, clock, notifications. Toasts: top-right below the bar.
 // One set per screen. Started by the quickshell user service (hyprland-session.target).
 import QtQuick
 import Quickshell
@@ -113,6 +113,8 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
+                    // Only while a fingerprint check waits for a finger (sudo, passkeys).
+                    FingerprintChip {}
                     Media { compact: true } // cover + equaliser
                     SystemStats {}
                     Volume {}
