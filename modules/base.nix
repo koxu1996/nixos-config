@@ -232,6 +232,11 @@
     };
   };
 
+  # extra-container: declarative NixOS containers (systemd-nspawn) without a host rebuild:
+  # `sudo extra-container create --start <<< '{ containers.x = …; }'`, or from a flake. On
+  # nixAir their state (/var/lib/nixos-containers, /etc/systemd-mutable) is gone at reboot.
+  programs.extra-container.enable = true;
+
   # Hyperland desktop.
   #programs.hyprland.enable = true;
 
