@@ -48,9 +48,15 @@ Item {
             color: root.svc.connected || root.svc.connecting ? Theme.accent : Theme.textDisabled
         }
 
-        HoverHandler { id: chipHover; cursorShape: Qt.PointingHandCursor }
+        HoverHandler { id: chipHover }
         // A MouseArea (not a TapHandler) so an open popup's overlay can pass a click on to it.
-        MouseArea { id: chipArea; anchors.fill: parent; onClicked: panel.toggle() }
+        // The cursor goes here too: this item sits above the HoverHandler, so it decides the shape.
+        MouseArea {
+            id: chipArea
+            anchors.fill: parent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: panel.toggle()
+        }
     }
 
     // ---- Tooltip ------------------------------------------------------------
