@@ -11,6 +11,7 @@
   fetchurl,
   autoPatchelfHook,
   makeWrapper,
+  nodejs,
 }:
 
 let
@@ -41,9 +42,12 @@ stdenv.mkDerivation {
     find node_modules -name '*musl*' -prune -exec rm -rf {} +
     mkdir -p $out/lib/happier $out/bin
     cp -r . $out/lib/happier
-    # Updates come from this file, not `happier self update`.
+    # Updates come from this file, not `happier self update`. The node it runs hooks and
+    # JS-based agents with: without one it downloads a generic Linux build into
+    # ~/.happier/tools, which can't start on NixOS.
     makeWrapper $out/lib/happier/happier $out/bin/happier \
-      --set-default HAPPIER_CLI_UPDATE_CHECK 0
+      --set-default HAPPIER_CLI_UPDATE_CHECK 0 \
+      --set-default HAPPIER_JS_RUNTIME_PATH ${lib.getExe nodejs}
     runHook postInstall
   '';
 
