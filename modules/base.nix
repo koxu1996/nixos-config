@@ -168,7 +168,13 @@
   system.stateVersion = "24.11"; # Did you read the comment?
 
   # Enable the Flakes feature and the accompanying new nix command-line tool.
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  nix.settings.experimental-features = [ "nix-command" "flakes" "auto-allocate-uids" "cgroups" ];
+  # NixOS tests with `containers = { … }` (systemd-nspawn instead of QEMU) run inside the build
+  # sandbox: the build gets its own UID range and cgroup, and the test asks for the uid-range
+  # feature. /dev/net lets containers and VMs share a network (and gives tests /dev/net/tun).
+  nix.settings.auto-allocate-uids = true;
+  nix.settings.extra-system-features = [ "uid-range" ];
+  nix.settings.extra-sandbox-paths = [ "/dev/net" ];
   # Flakes only: no channels. Drops root's (never created) channels dir from NIX_PATH, which
   # made every <nixpkgs> lookup warn; nixpkgs=flake:nixpkgs stays.
   nix.channel.enable = false;
