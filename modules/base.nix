@@ -24,6 +24,11 @@
   # Clear old temporary files on boot.
   boot.tmp.cleanOnBoot = true;
 
+  # Compressed swap in RAM (zstd, up to half of RAM): no disk swap on either host, and swap
+  # on ZFS can deadlock under memory pressure. Idle pages compress ~3x, so memory pressure
+  # means swapping instead of a stall while the kernel drops file cache.
+  zramSwap.enable = true;
+
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
