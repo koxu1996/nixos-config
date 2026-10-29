@@ -101,6 +101,13 @@ let
           patch = ./apple-sep-key-ioctls.patch;
         }
         {
+          # The host-state store (/var/lib/aurora-sep-host-state.bin, a symlink into
+          # /persist) opens its file per operation instead of holding it read-write for
+          # the driver's lifetime, which kept /persist from unmounting at poweroff.
+          name = "apple-sep-store-per-op-open";
+          patch = ./apple-sep-store-per-op-open.patch;
+        }
+        {
           name = "j413-ccode-trivial";
           patch = ./0001-j413-wifi-ccode-map-trivial.patch;
         }
