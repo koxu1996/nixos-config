@@ -2,8 +2,9 @@
 //
 // Every second: CPU total + per core (/proc/stat deltas), memory (MemTotal - MemAvailable,
 // /proc/meminfo) and a temperature sensor picked by its hwmon label. 300-sample ring
-// buffers (5 min) shared by the chip sparklines and the panel charts. Disk: `df -B1 /`
-// every 60 s.
+// buffers (5 min) shared by the chip sparklines and the panel charts. Disk, every 60 s:
+// the pool / lives on when it is ZFS (both hosts: / is a small impermanent dataset, so
+// `df /` would only see that), otherwise `df -B1 /`.
 //
 // The machine (core layout, temperature and power sensor labels) comes from Host.qml
 // (my.look.machine in the host's config).
@@ -184,7 +185,15 @@ Singleton {
 
     Process {
         id: diskReader
-        command: ["df", "-B1", "--output=size,used,avail", "/"]
+        // Prints "size used avail" in bytes. For ZFS: the pool's root dataset, whose used
+        // counts every dataset and snapshot; size = used + avail, as df reports it.
+        command: ["sh", "-c", `
+            src=$(findmnt -no SOURCE,FSTYPE / | awk '$2 == "zfs" { print $1 }')
+            if [ -n "$src" ]; then
+                zfs list -Hp -o used,avail "\${src%%/*}" | awk '{ print $1 + $2, $1, $2 }'
+            else
+                df -B1 --output=size,used,avail /
+            fi`]
         stdout: StdioCollector {
             onStreamFinished: {
                 const f = text.trim().split("\n").pop().trim().split(/\s+/).map(Number);

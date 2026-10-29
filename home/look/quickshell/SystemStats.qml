@@ -262,7 +262,7 @@ Item {
                 Section {
                     id: diskSection
                     readonly property real used: StatsService.diskSize > 0 ? StatsService.diskUsed / (StatsService.diskUsed + StatsService.diskAvail) : 0
-                    label: "Disk /"
+                    label: "Disk"
                     value: StatsService.diskSize > 0
                         ? `${StatsService.bytes(StatsService.diskUsed)} / ${StatsService.bytes(StatsService.diskSize)}` : "–"
 
