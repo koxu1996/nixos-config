@@ -16,6 +16,8 @@
       ./printing.nix
       # CPU profile switch for the bar (script per host).
       ./cpu-profile.nix
+      # TEMPORARY: saves the final shutdown log to /boot (why /persist fails to unmount).
+      ./shutdown-log.nix
     ];
 
   # Use the systemd-boot EFI boot loader.
