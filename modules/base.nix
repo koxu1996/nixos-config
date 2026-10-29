@@ -28,6 +28,12 @@
   # on ZFS can deadlock under memory pressure. Idle pages compress ~3x, so memory pressure
   # means swapping instead of a stall while the kernel drops file cache.
   zramSwap.enable = true;
+  # Kill the biggest process when both RAM and swap (zram) drop below 10%, before the kernel
+  # OOM killer (which only acts after a stall). Each kill shows a desktop notification.
+  services.earlyoom = {
+    enable = true;
+    enableNotifications = true;
+  };
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
