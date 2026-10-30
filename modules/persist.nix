@@ -79,9 +79,6 @@
         { directory = ".config/herdr"; mode = "0700"; }
         # herdr's saved SSH machines (client/endpoints.json) and agent detection state.
         { directory = ".local/state/herdr"; mode = "0700"; }
-        # Happier (home/happier.nix): relay profiles, the machine's keys and account
-        # credentials, session state and logs.
-        { directory = ".happier"; mode = "0700"; }
       ];
       files = [
         ".claude.json" # Claude Code: account info + per-project prompt history.
