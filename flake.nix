@@ -115,6 +115,18 @@
       ];
     };
 
+    # nuc: headless home server (Intel NUC). No desktop, so not mkHost.
+    # Installed with nixos-anywhere (hosts/nuc/README.md).
+    nixosConfigurations.nuc = nixpkgs.lib.nixosSystem {
+      modules = [
+        { nixpkgs.hostPlatform = "x86_64-linux"; }
+        impermanence.nixosModules.impermanence
+        disko.nixosModules.disko
+        ./modules/ssh.nix
+        ./hosts/nuc
+      ];
+    };
+
     # Installer for nixAir: nixos-apple-silicon's installer ISO plus ZFS, on the
     # same nixpkgs (so the same Asahi kernel and ZFS) as nixAir itself. The
     # official ISO has ZFS switched off. Build:
