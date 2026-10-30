@@ -15,9 +15,9 @@
     # Disko - declarative disk partitioning / ZFS layout.
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
-    # clutch HUD — private GitLab repo (app source stays private; only the glue
+    # clutch HUD — private GitHub repo (app source stays private; only the glue
     # in this public config + the hyprland-noscreenshare patch are public).
-    clutch.url = "git+ssh://git@gitlab.com/andrzej1_1/clutch";
+    clutch.url = "git+ssh://git@github.com/koxu1996/clutch";
     clutch.inputs.nixpkgs.follows = "nixpkgs";
     # linux-passkey (ex tpm2-passkey) — hardware-backed FIDO2 passkey authenticator:
     # TPM on nixPC, Secure Enclave + fingerprint on nixAir.

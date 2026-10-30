@@ -13,11 +13,11 @@
         "rev": "81240789b0f4291c5b12ef487bd143ebeb6d62b7",
         "revCount": 119,
         "type": "git",
-        "url": "ssh://git@gitlab.com/andrzej1_1/clutch"
+        "url": "ssh://git@github.com/koxu1996/clutch"
       },
       "original": {
         "type": "git",
-        "url": "ssh://git@gitlab.com/andrzej1_1/clutch"
+        "url": "ssh://git@github.com/koxu1996/clutch"
       }
     },
     "disko": {
