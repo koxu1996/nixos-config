@@ -97,7 +97,8 @@
   users.users.root.hashedPassword = "!";
   users.users.andrew = {
     isNormalUser = true;
-    initialPassword = "pass";
+    # yescrypt hash from the sops secret (modules/secrets.nix); edit with `nix-secrets`.
+    hashedPasswordFile = config.sops.secrets.andrew-password.path;
     extraGroups = [
       "wheel" # Enable ‘sudo’ for the user.
       "docker"

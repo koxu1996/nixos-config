@@ -12,6 +12,10 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     # Impermanence.
     impermanence.url = "github:nix-community/impermanence";
+    # sops-nix - decrypts secrets at activation. The encrypted file is not in this
+    # repo: it lives in ~/Sync/nix-secrets (see modules/secrets.nix).
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     # Disko - declarative disk partitioning / ZFS layout.
     disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
@@ -33,7 +37,7 @@
     #hypr-dynamic-cursors
   };
 
-  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, nixos-apple-silicon, clutch, linux-passkey, pkee, ... }@inputs:
+  outputs = { self, nixpkgs, tbsm, home-manager, impermanence, disko, sops-nix, nixos-apple-silicon, clutch, linux-passkey, pkee, ... }@inputs:
     let
       # One NixOS system per host. `modules` are the host's own modules (they
       # import ./modules/base.nix themselves where order matters); everything
@@ -43,6 +47,8 @@
           { nixpkgs.hostPlatform = system; }
           impermanence.nixosModules.impermanence
           disko.nixosModules.disko
+          sops-nix.nixosModules.sops
+          ./modules/secrets.nix
         ] ++ modules ++ [
           tbsm.nixosModules.tbsm
           {
