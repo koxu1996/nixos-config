@@ -104,6 +104,9 @@ let
           # The host-state store (/var/lib/aurora-sep-host-state.bin, a symlink into
           # /persist) opens its file per operation instead of holding it read-write for
           # the driver's lifetime, which kept /persist from unmounting at poweroff.
+          # Upstreamed (rewritten for integration/aurora's newer store.rs):
+          # https://github.com/aurora-silicon/linux/pull/583 - drop this patch once the
+          # pinned rev includes it.
           name = "apple-sep-store-per-op-open";
           patch = ./apple-sep-store-per-op-open.patch;
         }
