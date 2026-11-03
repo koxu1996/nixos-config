@@ -93,6 +93,13 @@ in
 
   my.zfs.pool = "mpool";
 
+  # The power button is also the Touch ID key: a press meant for the fingerprint must not
+  # power off. Holding it still forces the hardware off. Shutdown goes through the bar menu.
+  services.logind.settings.Login = {
+    HandlePowerKey = "ignore";
+    HandlePowerKeyLongPress = "ignore";
+  };
+
   # Hostname.
   networking.hostName = "nixAir";
   networking.hostId = "a35dc981"; # Required by ZFS.
