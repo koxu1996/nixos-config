@@ -22,8 +22,11 @@ the Syncthing spinner stuck on offline peers, and the Wi-Fi connect-step pulse w
 - Gate every `loops: Animation.Infinite` on a condition that is false whenever it cannot be
   seen: include the popup/row's visibility (e.g. `running: open && svc.connecting`), not only
   the state it shows. A state like "step == current" stays true after the flow ends.
-- Hidden popups shouldn't keep live content: a Repeater re-run by a 3 s poll animates rows
-  nobody sees. Prefer `Loader { active: popup.visible }` for popup bodies.
+- Hidden popups shouldn't keep live content: a `Behavior` on data that updates by itself
+  animates in a closed popup too (System Stats' core bars on the 1 s sample: ~20 frames/s).
+  Put popup bodies in `Loader { active: panel.visible }`, as Wifi.qml and SystemStats.qml do.
+  When `--animations` is clean but the check fails, bisect by switching off one service timer
+  per copy: the one whose removal drops the frames feeds the animating item.
 
 ## Finding short bursts (qmlprofiler)
 
