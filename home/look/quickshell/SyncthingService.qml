@@ -250,7 +250,7 @@ Singleton {
 
     // Pulling (this machine downloads) or pushing (a connected device is behind).
     readonly property bool pulling: folderRows.some(f => f.state.startsWith("sync"))
-    readonly property bool pushing: deviceRows.some(d => d.completion >= 0 && d.completion < 100)
+    readonly property bool pushing: deviceRows.some(d => d.connected && d.completion >= 0 && d.completion < 100)
     readonly property real totalBytes: folderRows.reduce((n, f) => n + f.globalBytes, 0)
     readonly property real needBytes: folderRows.reduce((n, f) => n + f.needBytes, 0)
     readonly property int localCompletion: totalBytes > 0 ? Math.floor(100 * (totalBytes - needBytes) / totalBytes) : 100
