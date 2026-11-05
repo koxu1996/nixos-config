@@ -371,7 +371,9 @@ Item {
                                         required property int index
                                         required property string modelData
                                         readonly property bool done: index < root.svc.connectStep
-                                        readonly property bool active: index === root.svc.connectStep
+                                        // Gated on connecting: connectStep stays 2 while connected, and the
+                                        // pulse below would otherwise run forever in the hidden row.
+                                        readonly property bool active: current.mode === "connecting" && index === root.svc.connectStep
 
                                         width: parent.width / 3
                                         spacing: 6
