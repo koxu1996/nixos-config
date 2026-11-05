@@ -56,6 +56,11 @@
     (callPackage ./gitkay/package.nix { }) # gitk, but okay: native Wayland history viewer (home/gitkay).
     herdr # Agent multiplexer; persistent server, other machines over SSH (herdr machine add).
     dhcpcd # Manual DHCP (`sudo dhcpcd <iface>`), e.g. USB Ethernet; the daemon stays off on nixAir (iwd does Wi-Fi DHCP).
+    # Port knocking client: `knock HOST PORT1 PORT2 ...` (ports tried in order, 1 s timeout each).
+    (writeShellScriptBin "knock" ''
+      host=$1; shift
+      exec ${netcat-openbsd}/bin/nc -z -w1 "$host" "$@"
+    '')
   ] ++ lib.optionals pkgs.stdenv.hostPlatform.isx86_64 [
     # Not built for aarch64 (nixAir).
     tor-browser
