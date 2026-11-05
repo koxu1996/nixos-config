@@ -18,7 +18,7 @@ Item {
     // Give keyboard focus back to the card (Escape closes the panel) when a password field
     // goes away; otherwise focus is left on nothing and keys, Escape included, do nothing.
     // Later, so the row's visibility has updated first.
-    function refocusCard() { Qt.callLater(() => { if (panel.open && expandedSsid === "") card.forceActiveFocus(); }); }
+    function refocusCard() { Qt.callLater(() => { if (panel.open && expandedSsid === "") body.item?.forceActiveFocus(); }); }
     property string confirmForget: ""
     property bool detailsOpen: false
 
@@ -129,13 +129,13 @@ Item {
         readonly property real maxHeight: (root.QsWindow.window?.screen?.height ?? 800) - 32 - 8 - 12
 
         cardWidth: 360
-        cardHeight: Math.min(content.implicitHeight + Theme.popupPadding * 2, maxHeight)
+        cardHeight: Math.min((body.item?.contentHeight ?? 0) + Theme.popupPadding * 2, maxHeight)
         color: "transparent"
         visible: false
 
         // Map the window with the card still transparent and start the fade-in a frame
         // later, so the window's very first frame shows nothing (no stale-frame flash).
-        Timer { id: fadeInDelay; interval: 16; onTriggered: { panel.open = true; card.forceActiveFocus(); } }
+        Timer { id: fadeInDelay; interval: 16; onTriggered: { panel.open = true; body.item?.forceActiveFocus(); } }
 
         Timer {
             id: hideAfterFade
@@ -148,488 +148,499 @@ Item {
             }
         }
 
-        Rectangle {
-            id: card
+        // The card exists only while the popup is mapped. Closed, its Repeaters (networks,
+        // connect steps) would still re-run on every poll, and their animations keep the bar
+        // rendering frames nobody sees (see CLAUDE.md).
+        Loader {
+            id: body
+            anchors.fill: parent
+            active: panel.visible
+            sourceComponent: Component {
+                Rectangle {
+                    id: card
+                    readonly property real contentHeight: content.implicitHeight
 
-            width: parent.width
-            height: parent.height
-            radius: Theme.radiusLarge
-            color: Theme.raised
-            border.width: Theme.borderWidth
-            border.color: Theme.border
-
-            focus: true
-            Keys.onEscapePressed: panel.close()
-
-            transformOrigin: Item.TopRight
-            opacity: panel.open ? 1 : 0
-            scale: panel.open ? 1 : 0.94
-            Behavior on opacity { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
-            Behavior on scale { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
-
-            Flickable {
-                anchors.fill: parent
-                anchors.margins: Theme.popupPadding
-                contentWidth: width
-                contentHeight: content.implicitHeight
-                interactive: contentHeight > height
-                boundsBehavior: Flickable.StopAtBounds
-                clip: true
-
-                Column {
-                    id: content
                     width: parent.width
-                    spacing: Theme.popupSpacing
+                    height: parent.height
+                    radius: Theme.radiusLarge
+                    color: Theme.raised
+                    border.width: Theme.borderWidth
+                    border.color: Theme.border
 
-                    // ---- 1. Header ----
-                    Item {
-                        width: parent.width
-                        implicitHeight: headerText.implicitHeight
+                    focus: true
+                    Keys.onEscapePressed: panel.close()
+
+                    transformOrigin: Item.TopRight
+                    opacity: panel.open ? 1 : 0
+                    scale: panel.open ? 1 : 0.94
+                    Behavior on opacity { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
+                    Behavior on scale { NumberAnimation { duration: Theme.durationNormal; easing.type: Easing.OutCubic } }
+
+                    Flickable {
+                        anchors.fill: parent
+                        anchors.margins: Theme.popupPadding
+                        contentWidth: width
+                        contentHeight: content.implicitHeight
+                        interactive: contentHeight > height
+                        boundsBehavior: Flickable.StopAtBounds
+                        clip: true
 
                         Column {
-                            id: headerText
-                            spacing: 2
-
-                            Text {
-                                text: "Wi-Fi"
-                                color: Theme.textPrimary
-                                font.family: Theme.sansFont
-                                font.pixelSize: Theme.fontSizeLarge
-                            }
-
-                            Text {
-                                text: [root.svc.iface, root.svc.model].filter(x => x).join(" · ")
-                                color: Theme.textDisabled
-                                font.family: Theme.monoFont
-                                font.pixelSize: Theme.fontSizeSmall
-                            }
-                        }
-
-                        Toggle {
-                            anchors.right: parent.right
-                            anchors.verticalCenter: parent.verticalCenter
-                            checked: root.svc.radioOn
-                            enabled: !root.svc.hardBlocked
-                            onToggled: root.svc.setRadio(!root.svc.radioOn)
-                        }
-                    }
-
-                    Text {
-                        visible: root.svc.hardBlocked
-                        width: parent.width
-                        wrapMode: Text.Wrap
-                        text: "Blocked by a hardware switch; it can't be turned on from here."
-                        color: Theme.warning
-                        font.family: Theme.sansFont
-                        font.pixelSize: Theme.fontSizeSmall
-                    }
-
-                    // ---- 2. Radio off ----
-                    Column {
-                        visible: !root.svc.radioOn
-                        width: parent.width
-                        topPadding: 10
-                        bottomPadding: 10
-                        spacing: 8
-
-                        WifiGlyph {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            size: 40
-                            off: true
-                            color: Theme.textDisabled
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            topPadding: 4
-                            text: "Wi-Fi is off"
-                            color: Theme.textPrimary
-                            font.family: Theme.sansFont
-                            font.pixelSize: Theme.fontSizeTitle
-                        }
-
-                        Text {
+                            id: content
                             width: parent.width
-                            horizontalAlignment: Text.AlignHCenter
-                            wrapMode: Text.Wrap
-                            text: "Turn it on and iwd reconnects to a saved network."
-                            color: Theme.textDisabled
-                            font.family: Theme.sansFont
-                            font.pixelSize: Theme.fontSize
-                        }
-                    }
+                            spacing: Theme.popupSpacing
 
-                    // ---- 3. Current network ----
-                    Rectangle {
-                        id: current
-
-                        readonly property string mode: root.svc.connecting ? "connecting"
-                                                     : root.svc.connected ? "connected" : "disconnected"
-
-                        visible: root.svc.radioOn
-                        width: parent.width
-                        implicitHeight: currentContent.implicitHeight + 24
-                        radius: Theme.radius
-                        color: mode === "connected" ? Theme.alpha(Theme.accent, 0.05) : Theme.inset
-                        border.width: Theme.borderWidth
-                        border.color: mode === "connected" ? Theme.alpha(Theme.accent, 0.14) : Theme.borderSubtle
-
-                        Column {
-                            id: currentContent
-                            x: 12
-                            y: 12
-                            width: parent.width - 24
-                            spacing: 12
-
-                            // Title row (connected and connecting).
+                            // ---- 1. Header ----
                             Item {
-                                visible: current.mode !== "disconnected"
                                 width: parent.width
-                                implicitHeight: 34
-
-                                Rectangle {
-                                    id: tile
-                                    width: 34
-                                    height: 34
-                                    radius: Theme.radiusSmall
-                                    color: current.mode === "connected" ? Theme.accentBg : Theme.alpha(Theme.warning, 0.12)
-
-                                    WifiGlyph {
-                                        anchors.centerIn: parent
-                                        level: current.mode === "connected" ? root.svc.level : 4
-                                        busy: current.mode === "connecting"
-                                        color: current.mode === "connected" ? Theme.accent : Theme.warning
-                                    }
-                                }
+                                implicitHeight: headerText.implicitHeight
 
                                 Column {
-                                    anchors.left: tile.right
-                                    anchors.leftMargin: 10
-                                    anchors.right: signalCol.left
-                                    anchors.rightMargin: 8
-                                    anchors.verticalCenter: parent.verticalCenter
+                                    id: headerText
                                     spacing: 2
 
                                     Text {
-                                        width: parent.width
-                                        elide: Text.ElideRight
-                                        text: current.mode === "connected" ? root.svc.ssid : root.svc.connectingSsid
+                                        text: "Wi-Fi"
                                         color: Theme.textPrimary
                                         font.family: Theme.sansFont
                                         font.pixelSize: Theme.fontSizeLarge
-                                        font.weight: Font.Medium
                                     }
 
                                     Text {
-                                        width: parent.width
-                                        elide: Text.ElideRight
-                                        text: current.mode === "connected"
-                                            ? (root.svc.profile ? "iwd · saved network" : "iwd · not saved")
-                                            : "Connecting…"
-                                        color: current.mode === "connected" ? Theme.textDisabled : Theme.warning
-                                        font.family: current.mode === "connected" ? Theme.monoFont : Theme.sansFont
+                                        text: [root.svc.iface, root.svc.model].filter(x => x).join(" · ")
+                                        color: Theme.textDisabled
+                                        font.family: Theme.monoFont
                                         font.pixelSize: Theme.fontSizeSmall
                                     }
                                 }
 
-                                Column {
-                                    id: signalCol
-                                    visible: current.mode === "connected"
+                                Toggle {
                                     anchors.right: parent.right
                                     anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 2
+                                    checked: root.svc.radioOn
+                                    enabled: !root.svc.hardBlocked
+                                    onToggled: root.svc.setRadio(!root.svc.radioOn)
+                                }
+                            }
 
+                            Text {
+                                visible: root.svc.hardBlocked
+                                width: parent.width
+                                wrapMode: Text.Wrap
+                                text: "Blocked by a hardware switch; it can't be turned on from here."
+                                color: Theme.warning
+                                font.family: Theme.sansFont
+                                font.pixelSize: Theme.fontSizeSmall
+                            }
+
+                            // ---- 2. Radio off ----
+                            Column {
+                                visible: !root.svc.radioOn
+                                width: parent.width
+                                topPadding: 10
+                                bottomPadding: 10
+                                spacing: 8
+
+                                WifiGlyph {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    size: 40
+                                    off: true
+                                    color: Theme.textDisabled
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    topPadding: 4
+                                    text: "Wi-Fi is off"
+                                    color: Theme.textPrimary
+                                    font.family: Theme.sansFont
+                                    font.pixelSize: Theme.fontSizeTitle
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.Wrap
+                                    text: "Turn it on and iwd reconnects to a saved network."
+                                    color: Theme.textDisabled
+                                    font.family: Theme.sansFont
+                                    font.pixelSize: Theme.fontSize
+                                }
+                            }
+
+                            // ---- 3. Current network ----
+                            Rectangle {
+                                id: current
+
+                                readonly property string mode: root.svc.connecting ? "connecting"
+                                                             : root.svc.connected ? "connected" : "disconnected"
+
+                                visible: root.svc.radioOn
+                                width: parent.width
+                                implicitHeight: currentContent.implicitHeight + 24
+                                radius: Theme.radius
+                                color: mode === "connected" ? Theme.alpha(Theme.accent, 0.05) : Theme.inset
+                                border.width: Theme.borderWidth
+                                border.color: mode === "connected" ? Theme.alpha(Theme.accent, 0.14) : Theme.borderSubtle
+
+                                Column {
+                                    id: currentContent
+                                    x: 12
+                                    y: 12
+                                    width: parent.width - 24
+                                    spacing: 12
+
+                                    // Title row (connected and connecting).
+                                    Item {
+                                        visible: current.mode !== "disconnected"
+                                        width: parent.width
+                                        implicitHeight: 34
+
+                                        Rectangle {
+                                            id: tile
+                                            width: 34
+                                            height: 34
+                                            radius: Theme.radiusSmall
+                                            color: current.mode === "connected" ? Theme.accentBg : Theme.alpha(Theme.warning, 0.12)
+
+                                            WifiGlyph {
+                                                anchors.centerIn: parent
+                                                level: current.mode === "connected" ? root.svc.level : 4
+                                                busy: current.mode === "connecting"
+                                                color: current.mode === "connected" ? Theme.accent : Theme.warning
+                                            }
+                                        }
+
+                                        Column {
+                                            anchors.left: tile.right
+                                            anchors.leftMargin: 10
+                                            anchors.right: signalCol.left
+                                            anchors.rightMargin: 8
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 2
+
+                                            Text {
+                                                width: parent.width
+                                                elide: Text.ElideRight
+                                                text: current.mode === "connected" ? root.svc.ssid : root.svc.connectingSsid
+                                                color: Theme.textPrimary
+                                                font.family: Theme.sansFont
+                                                font.pixelSize: Theme.fontSizeLarge
+                                                font.weight: Font.Medium
+                                            }
+
+                                            Text {
+                                                width: parent.width
+                                                elide: Text.ElideRight
+                                                text: current.mode === "connected"
+                                                    ? (root.svc.profile ? "iwd · saved network" : "iwd · not saved")
+                                                    : "Connecting…"
+                                                color: current.mode === "connected" ? Theme.textDisabled : Theme.warning
+                                                font.family: current.mode === "connected" ? Theme.monoFont : Theme.sansFont
+                                                font.pixelSize: Theme.fontSizeSmall
+                                            }
+                                        }
+
+                                        Column {
+                                            id: signalCol
+                                            visible: current.mode === "connected"
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 2
+
+                                            Text {
+                                                anchors.right: parent.right
+                                                text: `${root.svc.rssi} dBm`
+                                                color: Theme.textPrimary
+                                                font.family: Theme.monoFont
+                                                font.pixelSize: Theme.fontSize
+                                                font.features: { "tnum": 1 }
+                                            }
+
+                                            Text {
+                                                anchors.right: parent.right
+                                                text: root.svc.quality
+                                                color: root.qualityColor(root.svc.quality)
+                                                font.family: Theme.sansFont
+                                                font.pixelSize: Theme.fontSizeSmall
+                                            }
+                                        }
+                                    }
+
+                                    // Connecting: three steps.
+                                    Row {
+                                        visible: current.mode === "connecting"
+                                        width: parent.width
+
+                                        Repeater {
+                                            model: ["Associating", "Checking password", "Getting address"]
+
+                                            delegate: Row {
+                                                id: step
+                                                required property int index
+                                                required property string modelData
+                                                readonly property bool done: index < root.svc.connectStep
+                                                // Gated on connecting: connectStep stays 2 while connected, and the
+                                                // pulse below would otherwise run forever in the hidden row.
+                                                readonly property bool active: current.mode === "connecting" && index === root.svc.connectStep
+
+                                                width: parent.width / 3
+                                                spacing: 6
+
+                                                Rectangle {
+                                                    id: stepDot
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 7
+                                                    height: 7
+                                                    radius: 3.5
+                                                    color: step.done ? Theme.accent : step.active ? Theme.warning : Theme.textFaint
+
+                                                    SequentialAnimation on opacity {
+                                                        running: step.active
+                                                        loops: Animation.Infinite
+                                                        NumberAnimation { to: 0.35; duration: 500; easing.type: Easing.InOutSine }
+                                                        NumberAnimation { to: 1; duration: 500; easing.type: Easing.InOutSine }
+                                                        onRunningChanged: if (!running) stepDot.opacity = 1
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: step.modelData
+                                                    color: step.done || step.active ? Theme.textSecondary : Theme.textDisabled
+                                                    font.family: Theme.sansFont
+                                                    font.pixelSize: Theme.fontSizeSmall
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Connected: tags.
+                                    Flow {
+                                        visible: current.mode === "connected"
+                                        width: parent.width
+                                        spacing: 6
+
+                                        Repeater {
+                                            model: current.mode !== "connected" ? [] : [
+                                                root.svc.freq ? `${(root.svc.freq / 1000).toFixed(1)} GHz · ch ${root.svc.channel}`
+                                                    + (root.svc.width ? ` · ${root.svc.width}` : "") : "",
+                                                root.svc.wifiGeneration ? `Wi-Fi ${root.svc.wifiGeneration}` : "",
+                                                root.svc.security,
+                                                root.svc.linkSpeed ? `${root.svc.linkSpeed} Mb/s link` : "",
+                                            ].filter(t => t)
+
+                                            delegate: Pill { required property string modelData; text: modelData }
+                                        }
+                                    }
+
+                                    // Connected: traffic.
+                                    Row {
+                                        visible: current.mode === "connected"
+                                        width: parent.width
+                                        spacing: 10
+
+                                        Rate {
+                                            width: (parent.width - parent.spacing) / 2
+                                            label: "Down"
+                                            rate: root.svc.rxRate
+                                            values: root.svc.rxHistory
+                                            lineColor: Theme.accent
+                                        }
+
+                                        Rate {
+                                            width: (parent.width - parent.spacing) / 2
+                                            label: "Up"
+                                            rate: root.svc.txRate
+                                            values: root.svc.txHistory
+                                            lineColor: Theme.textSecondary
+                                        }
+                                    }
+
+                                    // Connected: details.
+                                    Column {
+                                        visible: current.mode === "connected"
+                                        width: parent.width
+                                        spacing: 8
+
+                                        Row {
+                                            spacing: 4
+
+                                            AppGlyph {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                kind: "chevronRight"
+                                                size: 12
+                                                color: Theme.textSecondary
+                                                rotation: root.detailsOpen ? 90 : 0
+                                                Behavior on rotation { NumberAnimation { duration: Theme.durationFast } }
+                                            }
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: "Details"
+                                                color: Theme.textSecondary
+                                                font.family: Theme.sansFont
+                                                font.pixelSize: Theme.fontSize
+                                            }
+
+                                            HoverHandler { cursorShape: Qt.PointingHandCursor }
+                                            TapHandler { onTapped: root.detailsOpen = !root.detailsOpen }
+                                        }
+
+                                        Column {
+                                            visible: root.detailsOpen
+                                            width: parent.width
+                                            spacing: 4
+
+                                            Repeater {
+                                                model: [
+                                                    ["IPv4", root.svc.ipv4],
+                                                    ["IPv6", root.svc.ipv6],
+                                                    ["Gateway", root.svc.gateway],
+                                                    ["DNS", root.svc.dns],
+                                                    ["BSSID", root.svc.bssid],
+                                                    ["Online", root.svc.onlineState],
+                                                ]
+
+                                                delegate: Row {
+                                                    required property var modelData
+                                                    width: parent.width
+                                                    spacing: 8
+
+                                                    Text {
+                                                        width: 64
+                                                        text: modelData[0]
+                                                        color: Theme.textDisabled
+                                                        font.family: Theme.monoFont
+                                                        font.pixelSize: Theme.fontSizeSmall
+                                                    }
+
+                                                    Text {
+                                                        width: parent.width - 72
+                                                        wrapMode: Text.WrapAnywhere
+                                                        text: modelData[1] || "—"
+                                                        color: Theme.textSecondary
+                                                        font.family: Theme.monoFont
+                                                        font.pixelSize: Theme.fontSizeSmall
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Disconnected.
                                     Text {
-                                        anchors.right: parent.right
-                                        text: `${root.svc.rssi} dBm`
-                                        color: Theme.textPrimary
-                                        font.family: Theme.monoFont
+                                        visible: current.mode === "disconnected"
+                                        width: parent.width
+                                        elide: Text.ElideRight
+                                        text: "Not connected" + (root.svc.lastSsid ? ` · Last: ${root.svc.lastSsid}` : "")
+                                        color: Theme.textSecondary
+                                        font.family: Theme.sansFont
                                         font.pixelSize: Theme.fontSize
-                                        font.features: { "tnum": 1 }
                                     }
 
                                     Text {
-                                        anchors.right: parent.right
-                                        text: root.svc.quality
-                                        color: root.qualityColor(root.svc.quality)
+                                        visible: root.svc.failure !== ""
+                                        width: parent.width
+                                        wrapMode: Text.Wrap
+                                        text: root.svc.failure
+                                        color: Theme.error
                                         font.family: Theme.sansFont
-                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.pixelSize: Theme.fontSize
+                                    }
+
+                                    ActionButton {
+                                        visible: current.mode === "connected"
+                                        text: "Disconnect"
+                                        onClicked: root.svc.disconnect()
+                                    }
+
+                                    ActionButton {
+                                        visible: current.mode === "disconnected" && (root.svc.profile !== "" || root.svc.lastProfile !== "")
+                                        primary: true
+                                        text: "Reconnect"
+                                        onClicked: root.svc.reconnect()
                                     }
                                 }
                             }
 
-                            // Connecting: three steps.
-                            Row {
-                                visible: current.mode === "connecting"
+                            // ---- 4. Networks ----
+                            Column {
+                                visible: root.svc.radioOn
                                 width: parent.width
+                                spacing: 6
 
-                                Repeater {
-                                    model: ["Associating", "Checking password", "Getting address"]
+                                Item {
+                                    width: parent.width
+                                    implicitHeight: 22
 
-                                    delegate: Row {
-                                        id: step
-                                        required property int index
-                                        required property string modelData
-                                        readonly property bool done: index < root.svc.connectStep
-                                        // Gated on connecting: connectStep stays 2 while connected, and the
-                                        // pulse below would otherwise run forever in the hidden row.
-                                        readonly property bool active: current.mode === "connecting" && index === root.svc.connectStep
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 8
 
-                                        width: parent.width / 3
-                                        spacing: 6
-
-                                        Rectangle {
-                                            id: stepDot
+                                        Text {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            width: 7
-                                            height: 7
-                                            radius: 3.5
-                                            color: step.done ? Theme.accent : step.active ? Theme.warning : Theme.textFaint
+                                            text: "NETWORKS"
+                                            color: Theme.textDisabled
+                                            font.family: Theme.sansFont
+                                            font.pixelSize: Theme.fontSizeSmall
+                                            font.letterSpacing: 0.8
+                                        }
 
-                                            SequentialAnimation on opacity {
-                                                running: step.active
-                                                loops: Animation.Infinite
-                                                NumberAnimation { to: 0.35; duration: 500; easing.type: Easing.InOutSine }
-                                                NumberAnimation { to: 1; duration: 500; easing.type: Easing.InOutSine }
-                                                onRunningChanged: if (!running) stepDot.opacity = 1
-                                            }
+                                        Spinner {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            visible: root.svc.scanning
                                         }
 
                                         Text {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: step.modelData
-                                            color: step.done || step.active ? Theme.textSecondary : Theme.textDisabled
+                                            visible: root.svc.scanning
+                                            text: "Scanning…"
+                                            color: Theme.textDisabled
                                             font.family: Theme.sansFont
                                             font.pixelSize: Theme.fontSizeSmall
                                         }
                                     }
+
+                                    ActionButton {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        small: true
+                                        enabled: !root.svc.scanning
+                                        text: "Scan"
+                                        onClicked: root.svc.scan()
+                                    }
                                 }
-                            }
 
-                            // Connected: tags.
-                            Flow {
-                                visible: current.mode === "connected"
-                                width: parent.width
-                                spacing: 6
+                                Text {
+                                    visible: !root.svc.scanning && root.svc.networks.length === 0
+                                    text: "No other networks found"
+                                    color: Theme.textDisabled
+                                    font.family: Theme.sansFont
+                                    font.pixelSize: Theme.fontSize
+                                }
 
+                                // A ScriptModel keyed by SSID, not the bare array: the service rebuilds the list
+                                // on every poll (2 s, 0.5 s while connecting), and a bare array made the Repeater
+                                // recreate every row, wiping a password being typed. Now rows persist (moving
+                                // as the order changes) and only their data updates.
                                 Repeater {
-                                    model: current.mode !== "connected" ? [] : [
-                                        root.svc.freq ? `${(root.svc.freq / 1000).toFixed(1)} GHz · ch ${root.svc.channel}`
-                                            + (root.svc.width ? ` · ${root.svc.width}` : "") : "",
-                                        root.svc.wifiGeneration ? `Wi-Fi ${root.svc.wifiGeneration}` : "",
-                                        root.svc.security,
-                                        root.svc.linkSpeed ? `${root.svc.linkSpeed} Mb/s link` : "",
-                                    ].filter(t => t)
-
-                                    delegate: Pill { required property string modelData; text: modelData }
-                                }
-                            }
-
-                            // Connected: traffic.
-                            Row {
-                                visible: current.mode === "connected"
-                                width: parent.width
-                                spacing: 10
-
-                                Rate {
-                                    width: (parent.width - parent.spacing) / 2
-                                    label: "Down"
-                                    rate: root.svc.rxRate
-                                    values: root.svc.rxHistory
-                                    lineColor: Theme.accent
-                                }
-
-                                Rate {
-                                    width: (parent.width - parent.spacing) / 2
-                                    label: "Up"
-                                    rate: root.svc.txRate
-                                    values: root.svc.txHistory
-                                    lineColor: Theme.textSecondary
-                                }
-                            }
-
-                            // Connected: details.
-                            Column {
-                                visible: current.mode === "connected"
-                                width: parent.width
-                                spacing: 8
-
-                                Row {
-                                    spacing: 4
-
-                                    AppGlyph {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        kind: "chevronRight"
-                                        size: 12
-                                        color: Theme.textSecondary
-                                        rotation: root.detailsOpen ? 90 : 0
-                                        Behavior on rotation { NumberAnimation { duration: Theme.durationFast } }
+                                    model: ScriptModel {
+                                        values: root.svc.networks
+                                        objectProp: "ssid"
                                     }
 
-                                    Text {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: "Details"
-                                        color: Theme.textSecondary
-                                        font.family: Theme.sansFont
-                                        font.pixelSize: Theme.fontSize
-                                    }
-
-                                    HoverHandler { cursorShape: Qt.PointingHandCursor }
-                                    TapHandler { onTapped: root.detailsOpen = !root.detailsOpen }
-                                }
-
-                                Column {
-                                    visible: root.detailsOpen
-                                    width: parent.width
-                                    spacing: 4
-
-                                    Repeater {
-                                        model: [
-                                            ["IPv4", root.svc.ipv4],
-                                            ["IPv6", root.svc.ipv6],
-                                            ["Gateway", root.svc.gateway],
-                                            ["DNS", root.svc.dns],
-                                            ["BSSID", root.svc.bssid],
-                                            ["Online", root.svc.onlineState],
-                                        ]
-
-                                        delegate: Row {
-                                            required property var modelData
-                                            width: parent.width
-                                            spacing: 8
-
-                                            Text {
-                                                width: 64
-                                                text: modelData[0]
-                                                color: Theme.textDisabled
-                                                font.family: Theme.monoFont
-                                                font.pixelSize: Theme.fontSizeSmall
-                                            }
-
-                                            Text {
-                                                width: parent.width - 72
-                                                wrapMode: Text.WrapAnywhere
-                                                text: modelData[1] || "—"
-                                                color: Theme.textSecondary
-                                                font.family: Theme.monoFont
-                                                font.pixelSize: Theme.fontSizeSmall
-                                            }
-                                        }
+                                    delegate: NetworkRow {
+                                        required property var modelData
+                                        width: parent.width
+                                        net: modelData
+                                        owner: root
                                     }
                                 }
                             }
 
-                            // Disconnected.
-                            Text {
-                                visible: current.mode === "disconnected"
-                                width: parent.width
-                                elide: Text.ElideRight
-                                text: "Not connected" + (root.svc.lastSsid ? ` · Last: ${root.svc.lastSsid}` : "")
-                                color: Theme.textSecondary
-                                font.family: Theme.sansFont
-                                font.pixelSize: Theme.fontSize
-                            }
-
-                            Text {
-                                visible: root.svc.failure !== ""
-                                width: parent.width
-                                wrapMode: Text.Wrap
-                                text: root.svc.failure
-                                color: Theme.error
-                                font.family: Theme.sansFont
-                                font.pixelSize: Theme.fontSize
-                            }
-
-                            ActionButton {
-                                visible: current.mode === "connected"
-                                text: "Disconnect"
-                                onClicked: root.svc.disconnect()
-                            }
-
-                            ActionButton {
-                                visible: current.mode === "disconnected" && (root.svc.profile !== "" || root.svc.lastProfile !== "")
-                                primary: true
-                                text: "Reconnect"
-                                onClicked: root.svc.reconnect()
-                            }
                         }
                     }
-
-                    // ---- 4. Networks ----
-                    Column {
-                        visible: root.svc.radioOn
-                        width: parent.width
-                        spacing: 6
-
-                        Item {
-                            width: parent.width
-                            implicitHeight: 22
-
-                            Row {
-                                anchors.verticalCenter: parent.verticalCenter
-                                spacing: 8
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    text: "NETWORKS"
-                                    color: Theme.textDisabled
-                                    font.family: Theme.sansFont
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    font.letterSpacing: 0.8
-                                }
-
-                                Spinner {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: root.svc.scanning
-                                }
-
-                                Text {
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    visible: root.svc.scanning
-                                    text: "Scanning…"
-                                    color: Theme.textDisabled
-                                    font.family: Theme.sansFont
-                                    font.pixelSize: Theme.fontSizeSmall
-                                }
-                            }
-
-                            ActionButton {
-                                anchors.right: parent.right
-                                anchors.verticalCenter: parent.verticalCenter
-                                small: true
-                                enabled: !root.svc.scanning
-                                text: "Scan"
-                                onClicked: root.svc.scan()
-                            }
-                        }
-
-                        Text {
-                            visible: !root.svc.scanning && root.svc.networks.length === 0
-                            text: "No other networks found"
-                            color: Theme.textDisabled
-                            font.family: Theme.sansFont
-                            font.pixelSize: Theme.fontSize
-                        }
-
-                        // A ScriptModel keyed by SSID, not the bare array: the service rebuilds the list
-                        // on every poll (2 s, 0.5 s while connecting), and a bare array made the Repeater
-                        // recreate every row, wiping a password being typed. Now rows persist (moving
-                        // as the order changes) and only their data updates.
-                        Repeater {
-                            model: ScriptModel {
-                                values: root.svc.networks
-                                objectProp: "ssid"
-                            }
-
-                            delegate: NetworkRow {
-                                required property var modelData
-                                width: parent.width
-                                net: modelData
-                                owner: root
-                            }
-                        }
-                    }
-
                 }
             }
         }
