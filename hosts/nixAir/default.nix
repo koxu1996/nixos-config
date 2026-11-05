@@ -114,6 +114,15 @@ in
     # iwd's default is systemd-resolved, which isn't running here; NixOS
     # manages /etc/resolv.conf with resolvconf (openresolv).
     settings.Network.NameResolvingService = "resolvconf";
+    # IPv6 is left to the kernel: iwd follows the RA "managed" flag over a usable
+    # SLAAC prefix and has no privacy addresses. DNS stays on IPv4 (DHCP).
+    settings.Network.EnableIPv6 = false;
+  };
+  # Kernel SLAAC on wlan0, with a stable address from a random secret instead of
+  # the MAC (temporary addresses are on by default via networking.tempAddresses).
+  boot.kernel.sysctl = {
+    "net.ipv6.conf.wlan0.accept_ra" = 1;
+    "net.ipv6.conf.wlan0.addr_gen_mode" = 3;
   };
   environment.persistence."/persist".directories = [
     "/var/lib/iwd" # Known networks + passphrases.
