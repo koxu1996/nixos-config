@@ -45,6 +45,9 @@
   networking.hosts = {
     # Block direct access to the official Rust crates.
     #"127.0.0.1" = ["static.crates.io" "index.crates.io"];
+    # Home router (MikroTik). Web UI: https://mikro.tik:8443/, reachable only after
+    # a port knock (`knock mikro.tik ...`; the sequence is kept out of the repo).
+    "192.168.1.1" = [ "mikro.tik" ];
   };
 
   # Timezone.
