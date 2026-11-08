@@ -17,6 +17,7 @@
     pwvucontrol
     keepassxc
     xeyes
+    cool-retro-term # CRT-style terminal emulator.
     libnotify
     hack-font
     signal-desktop
