@@ -127,6 +127,12 @@
       ];
     };
 
+    # nixvps: VPS with the RKE2 cluster and cocoon. Deployed remotely
+    # (hosts/nixvps/default.nix).
+    nixosConfigurations.nixvps = nixpkgs.lib.nixosSystem {
+      modules = [ ./hosts/nixvps ];
+    };
+
     # Installer for nixAir: nixos-apple-silicon's installer ISO plus ZFS, on the
     # same nixpkgs (so the same Asahi kernel and ZFS) as nixAir itself. The
     # official ISO has ZFS switched off. Build:
