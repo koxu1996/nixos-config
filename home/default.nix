@@ -68,6 +68,28 @@
     bazecor
   ];
 
+  # LibreWolf: Firefox with privacy defaults (uBlock Origin built in, no telemetry).
+  # Profile in ~/.librewolf, deliberately not persisted: wiped on every boot.
+  programs.librewolf = {
+    enable = true;
+    # Google as the default search (LibreWolf ships DuckDuckGo). Defined here in full, as
+    # LibreWolf may drop Google from its built-in engines; force: the search settings file
+    # is overwritten on each switch.
+    profiles.default.search = {
+      force = true;
+      default = "google";
+      engines.google = {
+        name = "Google";
+        urls = [{
+          template = "https://www.google.com/search";
+          params = [{ name = "q"; value = "{searchTerms}"; }];
+        }];
+        icon = "https://www.google.com/favicon.ico";
+        definedAliases = [ "@g" ];
+      };
+    };
+  };
+
   programs.vscode = {
     enable = true;
     package = pkgs.vscode.fhs; # FHS required for CodeLLDB.
