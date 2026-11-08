@@ -50,7 +50,6 @@
     deno
     zed-editor
     parallel
-    just # Command runner (justfiles).
     claude-code
     imagemagick
     opencode
