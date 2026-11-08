@@ -1,9 +1,9 @@
 # nixos-update — pull ~/nixos and switch this machine to it; the snowflake menu's
 # "Update system" runs it in a terminal (home/look/quickshell/SystemMenu.qml).
 #
-# Local changes (the per-host password line in modules/base.nix) are stashed around the
-# pull and put back before the build, so they still end up in the system. The flake output
-# is this machine's hostname (nixAir / nixPC), baked in at build time.
+# Local changes stay in the working tree and end up in the system (git refuses the pull
+# only if they touch files it changes). The flake output is this machine's hostname
+# (nixAir / nixPC), baked in at build time.
 { osConfig, pkgs, ... }:
 
 let
@@ -25,29 +25,15 @@ let
 
       cd "$repo"
 
-      stashed=0
-      if ! git diff --quiet || ! git diff --cached --quiet; then
-        step "Stashing local changes"
-        git status --short --untracked-files=no
-        git stash push -m "nixos-update $(date -Is)" || fail "Couldn't stash local changes."
-        stashed=1
-      fi
-
       step "Pulling $(git remote get-url origin)"
-      pulled=1
-      git pull --ff-only || pulled=0
-
-      if [ "$stashed" = 1 ]; then
-        step "Restoring local changes"
-        git stash pop || fail "Restoring local changes conflicted; they are still in \`git stash list\`."
-      fi
-      [ "$pulled" = 1 ] || fail "Pull failed (local commits not on GitLab?); nothing rebuilt."
+      git pull --ff-only \
+        || fail "Pull failed (diverged from origin, or local changes in the files it updates); nothing rebuilt."
 
       step "Rebuilding $host ($(git log -1 --format='%h %s'))"
-      sudo -v || fail "sudo failed; nothing rebuilt."
+      # --sudo: builds as andrew, sudo only for the activation (it asks for the password then).
       # nom: live build progress from nix's JSON log. No -v: nixos-rebuild-ng would print its
       # own debug log (every command it runs) with it.
-      sudo nixos-rebuild switch --flake "$repo#$host" --impure --log-format internal-json |& nom --json \
+      nixos-rebuild switch --sudo --flake "$repo#$host" --impure --log-format internal-json |& nom --json \
         || fail "Rebuild failed; the running system is unchanged."
 
       finish "\033[1;32m✓ $host is up to date.\033[0m" 0
