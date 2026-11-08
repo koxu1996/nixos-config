@@ -140,5 +140,25 @@ in
     "L+ /usr/share/fonts - - - - /run/current-system/sw/share/X11/fonts"
   ];
 
+  environment.systemPackages = [
+    # Tor Browser: nixpkgs' package (15.0.26, x86 only) on the official linux-aarch64
+    # build that 16.0 added. Tarball checked against the Tor Browser Developers key
+    # (EF6E 286D DA85 EA2A 4BA7  DE68 4E2C 6E87 9329 8290) before pinning; drop this
+    # once nixpkgs ships aarch64 itself.
+    (pkgs.tor-browser.overrideAttrs (old: rec {
+      version = "16.0";
+      src = pkgs.fetchurl {
+        urls = map (m: "${m}/${version}/tor-browser-linux-aarch64-${version}.tar.xz") [
+          "https://dist.torproject.org/torbrowser"
+          "https://archive.torproject.org/tor-package-archive/torbrowser"
+        ];
+        hash = "sha256-HMUMziBz1IyIKZSX54bVH299ZtXPONMuMAd3LWwUanc=";
+      };
+      # 16.0 moved torrc-defaults and the geoip files next to tor.
+      buildPhase = builtins.replaceStrings [ "TorBrowser/Data/Tor/" ] [ "TorBrowser/Tor/" ] old.buildPhase;
+      meta = old.meta // { platforms = [ "aarch64-linux" ]; };
+    }))
+  ];
+
   home-manager.users.andrew.imports = [ ./home.nix ];
 }
