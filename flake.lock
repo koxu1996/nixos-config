@@ -123,11 +123,11 @@
         "opensk": "opensk"
       },
       "locked": {
-        "lastModified": 1792768372,
-        "narHash": "sha256-JHdBSvh1CKRR/E04VzJgwcTsvBziWNbFt3euP0xKt4s=",
+        "lastModified": 1794215017,
+        "narHash": "sha256-6mIAT+T/tZ8HV4sxpxpn70XA4KjlyBxWVtBYtwiObjg=",
         "owner": "koxu1996",
         "repo": "linux-passkey",
-        "rev": "8c686187f0d1bc013418d16a9614f4713d373d40",
+        "rev": "0efd1daca3a783c7ab9d949d43730804f97810fe",
         "type": "github"
       },
       "original": {
