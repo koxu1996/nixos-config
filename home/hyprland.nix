@@ -6,8 +6,23 @@
 let
   # Fullscreen: on a notched panel (my.look.notchGap > 0) keep the bar row beside the notch;
   # elsewhere (the workstation: games, gamescope) real fullscreen.
+  # The focused window, if it is actually on screen. Closing the drop-down terminal hides its
+  # special workspace without a new focus event, so the hidden dropterm stays the "active"
+  # window on an empty workspace, and mainMod + f would toggle fullscreen on it (flashing the
+  # bar's fullscreen strip, and leaving the drop-down fullscreen next time it opens).
+  shownActiveWindow = ''
+    local function shown_active_window()
+      local w = hl.get_active_window()
+      local ws = w and w.workspace
+      local mon = w and w.monitor
+      if not (ws and mon) then return nil end
+      local onscreen = ws.special and mon.active_special_workspace or mon.active_workspace
+      if not (onscreen and onscreen.id == ws.id) then return nil end
+      return w
+    end
+  '';
   fullscreen =
-    if config.my.look.notchGap > 0 then ''
+    shownActiveWindow + (if config.my.look.notchGap > 0 then ''
       -- Fullscreen that keeps the top bar (it sits beside the MacBook notch): a window that
       -- goes fullscreen (mainMod + f, or the app itself, e.g. video) is laid out maximized,
       -- below the bar's reserved 32 px, while the app is still told it is fullscreen.
@@ -31,7 +46,7 @@ let
 
       -- mainMod + f toggles it; a window in that state (internal 1) goes back to normal.
       hl.bind(key(mainMod, "f"), function()
-        local w = hl.get_active_window()
+        local w = shown_active_window()
         if not w then return end
         if w.fullscreen ~= 0 then
           hl.dispatch(hl.dsp.window.fullscreen_state({ internal = 0, client = 0, action = "set", window = w }))
@@ -41,8 +56,11 @@ let
       end)
     '' else ''
       -- Make the current focus fullscreen with mainMod + f.
-      hl.bind(key(mainMod, "f"), hl.dsp.window.fullscreen())
-    '';
+      hl.bind(key(mainMod, "f"), function()
+        local w = shown_active_window()
+        if w then hl.dispatch(hl.dsp.window.fullscreen({ window = w })) end
+      end)
+    '');
 in
 {
   wayland.windowManager.hyprland = {
