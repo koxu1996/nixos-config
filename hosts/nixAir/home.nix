@@ -24,7 +24,7 @@
   };
 
   # Wallpaper from the repo.
-  my.wallpaper = "${../../wallpapers/space1.jpg}";
+  my.wallpaper = "${../../wallpapers/violet-sunset-kraken.jpg}";
 
   wayland.windowManager.hyprland.extraConfig = lib.mkAfter ''
     -- Built-in Retina panel (2560x1664, with the notch 2560x1728) needs 2x scaling;
