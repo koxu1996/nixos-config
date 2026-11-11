@@ -10,6 +10,8 @@ let
   # special workspace without a new focus event, so the hidden dropterm stays the "active"
   # window on an empty workspace, and mainMod + f would toggle fullscreen on it (flashing the
   # bar's fullscreen strip, and leaving the drop-down fullscreen next time it opens).
+  # Approval dialogs (the linux-passkey dialog, pinentry) are left alone too: they can't
+  # resize, so a fullscreen one sits in the top-left corner over an undrawn, flickering screen.
   shownActiveWindow = ''
     local function shown_active_window()
       local w = hl.get_active_window()
@@ -18,6 +20,9 @@ let
       if not (ws and mon) then return nil end
       local onscreen = ws.special and mon.active_special_workspace or mon.active_workspace
       if not (onscreen and onscreen.id == ws.id) then return nil end
+      if w.class == "io.github.koxu1996.LinuxPasskey.Dialog" or (w.class and w.class:find("pinentry")) then
+        return nil
+      end
       return w
     end
   '';
@@ -416,6 +421,15 @@ in
         border_size = 1,
         border_color = "rgb(c5f36a) rgb(2a2f38)",
         no_blur = true,
+      })
+
+      -- linux-passkey approval dialog: floating and centred.
+      hl.window_rule({
+        name = "passkey-dialog",
+        match = { class = "io\\.github\\.koxu1996\\.LinuxPasskey\\.Dialog" },
+        float = true,
+        center = true,
+        no_anim = true,
       })
 
       -- pkee popup: a floating, centred launcher rather than a tiled window.
