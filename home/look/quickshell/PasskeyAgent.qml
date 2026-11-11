@@ -32,7 +32,9 @@ Singleton {
     readonly property bool open: ask !== null
 
     SocketServer {
-        active: true
+        // The bar service only (quickshell.nix), never a test copy, which would take the
+        // socket over and leave it dead once it exits.
+        active: Quickshell.env("LINUX_PASSKEY_AGENT") === "1"
         path: Quickshell.env("XDG_RUNTIME_DIR") + "/linux-passkey-agent.sock"
         handler: Socket {
             id: socket

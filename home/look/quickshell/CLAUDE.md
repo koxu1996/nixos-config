@@ -45,4 +45,7 @@ with `quickshell -p <copy> --debug 3768`, then:
 Running a copy of the bar (`quickshell -p <copy>`): neutralise GlowService's hyprsunset and
 brightnessctl calls first (a second instance resets the screen colour), pause the real bar
 instead of running both, and delete the copy's `~/.local/state/quickshell/by-shell/<id>`
-afterwards. `dev/idle-check.sh --animations` does all of this.
+afterwards. `dev/idle-check.sh --animations` does all of this. A copy doesn't answer
+linux-passkey approvals (PasskeyAgent listens only with `LINUX_PASSKEY_AGENT=1`, which only
+the service sets); to test the agent in a copy, start it with that variable and restart the
+real bar afterwards (`systemctl --user restart quickshell`), as the copy took its socket.

@@ -64,6 +64,9 @@ in
   # a user service only gets a minimal one. pkexec is a setuid wrapper in /run/wrappers.
   config.systemd.user.services.quickshell.Service.Environment = [
     "PATH=/run/wrappers/bin:/etc/profiles/per-user/${config.home.username}/bin:/run/current-system/sw/bin"
+    # Only this bar answers linux-passkey approvals (PasskeyAgent.qml): a test copy taking the
+    # socket over would leave it dead for the real bar once the copy exits.
+    "LINUX_PASSKEY_AGENT=1"
   ];
 
   # Restart the bar when its QML changes. Quickshell only hot-reloads files it watches,
