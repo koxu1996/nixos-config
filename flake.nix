@@ -75,7 +75,7 @@
 
             # Pass extra arguments to home/default.nix
             home-manager.extraSpecialArgs = {
-              inherit tbsm clutch;
+              inherit tbsm clutch linux-passkey;
             };
           }
         ];

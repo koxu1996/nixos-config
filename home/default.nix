@@ -1,5 +1,11 @@
-{ config, lib, pkgs, nixpkgs, tbsm, ... }:
+{ config, lib, pkgs, nixpkgs, tbsm, linux-passkey, ... }:
 
+let
+  # linux-passkey's browser extension: passkeys go to the daemon over D-Bus
+  # (native messaging host), as a built-in authenticator instead of a USB key.
+  passkey = linux-passkey.packages.${pkgs.stdenv.hostPlatform.system};
+  passkeyHost = "io.github.koxu1996.linux_passkey.json";
+in
 {
   home.username = "andrew";
   home.homeDirectory = "/home/andrew";
@@ -10,7 +16,8 @@
     hyprpaper
     firefox
     # No welcome / first-run screen: the profile is not persisted, so every boot is a first run.
-    (brave.override { commandLineArgs = "--no-first-run"; })
+    # --load-extension: the linux-passkey extension (unpacked, fixed id).
+    (brave.override { commandLineArgs = "--no-first-run --load-extension=${passkey.browser-extension}/chromium"; })
     fzf
     gh # GitHub CLI.
     localsend # AirDrop-like sharing with phones and other computers on the LAN (port 53317; the firewall is off).
@@ -68,10 +75,22 @@
     bazecor
   ];
 
+  # The extension's native messaging host for Brave.
+  home.file.".config/BraveSoftware/Brave-Browser/NativeMessagingHosts/${passkeyHost}".source =
+    "${passkey.default}/etc/chromium/native-messaging-hosts/${passkeyHost}";
+
   # LibreWolf: Firefox with privacy defaults (uBlock Origin built in, no telemetry).
   # Profile in ~/.librewolf, deliberately not persisted: wiped on every boot.
   programs.librewolf = {
     enable = true;
+    # linux-passkey extension: force-installed by policy (so it comes back after the
+    # wipe, with its site access granted), unsigned, hence no signature check.
+    nativeMessagingHosts = [ passkey.default ];
+    policies.ExtensionSettings."linux-passkey@koxu1996" = {
+      installation_mode = "force_installed";
+      install_url = "file://${passkey.browser-extension}/linux-passkey.xpi";
+    };
+    settings."xpinstall.signatures.required" = false;
     # Google as the default search (LibreWolf ships DuckDuckGo). Defined here in full, as
     # LibreWolf may drop Google from its built-in engines; force: the search settings file
     # is overwritten on each switch.
