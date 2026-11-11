@@ -299,11 +299,11 @@ in
       -- While the drop-down is shown its special workspace has focus, so anything started then
       -- (launcher, a link from the terminal, ...) would open there and hide/show with it. Move such
       -- windows to the monitor's regular workspace, focus them and hide the drop-down.
-      -- Except pinentry (linux-passkey confirm for sudo, gpg signing): a short-lived dialog
-      -- asked for from the terminal itself, so it stays on top of it.
+      -- Except pinentry and the linux-passkey dialog (confirm for sudo, gpg signing): a
+      -- short-lived dialog asked for from the terminal itself, so it stays on top of it.
       local function evict_from_dropterm(w)
         if not w or w.class == "dropterm" then return end
-        if w.class and w.class:find("pinentry") then return end
+        if w.class and (w.class:find("pinentry") or w.class == "io.github.koxu1996.LinuxPasskey.Dialog") then return end
         local ws = w.workspace
         if not (ws and ws.special and ws.name == "special:dropterm") then return end
         local regular = w.monitor and w.monitor.active_workspace or hl.get_active_workspace()
