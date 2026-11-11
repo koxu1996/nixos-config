@@ -25,6 +25,8 @@ in
     user = "andrew";
     backend = "sep";
     uv = "fprintd";
+    # The bar answers approvals itself (PasskeyAgent.qml); the GTK dialog when it isn't running.
+    agents = [ pkgs.quickshell ];
   };
   my.touchid.xartWrites = true;
 

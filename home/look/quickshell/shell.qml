@@ -113,7 +113,8 @@ ShellRoot {
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: 2
 
-                    // Only while a fingerprint check waits for a finger (sudo, passkeys).
+                    // Only while a fingerprint check waits for a finger (sudo, passkeys), or a
+                    // passkey request waits for an answer (PasskeyPopup under it).
                     FingerprintChip {}
                     Media { compact: true } // cover + equaliser
                     SystemStats {}
