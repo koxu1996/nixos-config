@@ -5,6 +5,15 @@ let
   # (native messaging host), as a built-in authenticator instead of a USB key.
   passkey = linux-passkey.packages.${pkgs.stdenv.hostPlatform.system};
   passkeyHost = "io.github.koxu1996.linux_passkey.json";
+
+  # Claude Code ahead of nixos-unstable: the release manifest from nixpkgs master
+  # (claude-code-manifest.json). Ignored once nixpkgs has that version or newer, so
+  # delete the file then.
+  claudeManifest = lib.importJSON ./claude-code-manifest.json;
+  claude-code =
+    if lib.versionOlder pkgs.claude-code.version claudeManifest.version
+    then pkgs.claude-code.override { manifest = claudeManifest; }
+    else pkgs.claude-code;
 in
 {
   home.username = "andrew";
