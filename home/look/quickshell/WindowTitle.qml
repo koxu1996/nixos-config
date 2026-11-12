@@ -37,7 +37,7 @@ Item {
     readonly property bool hasWindows: (workspace?.toplevels.values.length ?? 0) > 0
     readonly property bool shown: hasWindows && cleanTitle !== ""
 
-    readonly property var appSuffixes: [" - Google Chrome", " - Visual Studio Code", " - KeePassXC"]
+    readonly property var appSuffixes: [" - Google Chrome", " - Visual Studio Code"]
 
     function stripSuffix(title) {
         let t = title ?? "";

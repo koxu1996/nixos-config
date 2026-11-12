@@ -78,7 +78,6 @@ Singleton {
         const c = (cls ?? "").toLowerCase();
         if (c === "google-chrome" || c.startsWith("google-chrome-")) return "globe";
         if (c === "code" || c === "code-url-handler") return "code";
-        if (c === "org.keepassxc.keepassxc") return "lock";
         return "";
     }
 }

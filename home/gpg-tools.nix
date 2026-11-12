@@ -7,7 +7,7 @@
 #       into a RAM-only (tmpfs) GnuPG home under $XDG_RUNTIME_DIR, and arm a
 #       one-shot systemd timer that wipes it after N minutes (default 15).
 #       Re-running resets the clock; logout/reboot wipes it too. You paste the
-#       key by hand (e.g. copied out of KeePassXC) — nothing plaintext ever
+#       key by hand (e.g. copied out of the KeePass database) — nothing plaintext ever
 #       touches persistent disk.
 #   tgpg <args...>
 #       Plain `gpg` pinned to that RAM keyring, e.g.

@@ -1,6 +1,6 @@
 # gpg-tools — KeePass-backed, RAM-only GPG keys
 
-Use GPG keys that live (encrypted) inside KeePassXC, loaded into a **RAM-only**
+Use GPG keys that live (encrypted) inside the KeePass database, loaded into a **RAM-only**
 keyring on demand and auto-wiped after 15 min. The key never touches persistent
 disk. Commands are defined in `gpg-tools.nix`: `gpg-load` and `tgpg`.
 
@@ -21,7 +21,8 @@ gpgconf --kill gpg-agent 2>/dev/null; unset GNUPGHOME; rm -rf "$work"
 ```
 
 Copy the printed `-----BEGIN PGP PRIVATE KEY BLOCK----- … END` block into a
-KeePassXC entry's **Notes** field (easy to copy back from the GUI later).
+KeePass entry's **Notes** field (KeePassDX on the phone, or any KeePass app
+opened with the key file).
 
 ## b) Load a key (paste from KeePass)
 
@@ -29,7 +30,7 @@ KeePassXC entry's **Notes** field (easy to copy back from the GUI later).
 gpg-load            # or: gpg-load 30   (minutes until auto-wipe, default 15)
 ```
 
-Unlock KeePassXC, copy the key out of the entry's Notes, paste it at the prompt,
+Open the entry in pkee (Enter shows its notes), select the key and copy it, paste it at the prompt,
 then press **Ctrl-D**. It is imported into the RAM keyring and auto-wipes after
 the timeout (re-run to reset the clock; logout/reboot also wipes it).
 

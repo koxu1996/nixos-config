@@ -35,7 +35,7 @@
         #".local/share/sddm"
         #".local/share/zoxide"
         "Downloads"
-        "Sync" # Syncthing-shared folder (KeePassXC database lives here).
+        "Sync" # Syncthing-shared folder (the KeePass database, opened with pkee, lives here).
         # https://discourse.nixos.org/t/slow-application-startup/29857/3
         ".cache"
         { directory = ".ssh"; mode = "0700"; }

@@ -31,7 +31,6 @@ in
     gh # GitHub CLI.
     localsend # AirDrop-like sharing with phones and other computers on the LAN (port 53317; the firewall is off).
     pwvucontrol
-    keepassxc
     xeyes
     cool-retro-term # CRT-style terminal emulator.
     libnotify
@@ -259,8 +258,7 @@ in
 
   # GPG + agent so the signing key's passphrase can be entered and cached.
   # Without a pinentry, both `gpg --import` and commit signing fail with
-  # "No pinentry". pinentry-qt is a GUI popup that also works inside lazygit
-  # (Qt is already in the closure via KeePassXC).
+  # "No pinentry". pinentry-qt is a GUI popup that also works inside lazygit.
   programs.gpg.enable = true;
   services.gpg-agent = {
     enable = true;
