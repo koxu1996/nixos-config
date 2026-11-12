@@ -213,11 +213,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793696356,
-        "narHash": "sha256-UzhVCKELwQ0VGqEddIj2RxL4kYQm+5iqOLZnCDY5xEM=",
+        "lastModified": 1794482685,
+        "narHash": "sha256-+nBWulr1E2pAOG0XZrVoATytxHGjpQN//8UQ86b6yao=",
         "owner": "koxu1996",
         "repo": "pkee",
-        "rev": "47584388457e52106d39ff6fdf3f244320c52b14",
+        "rev": "d271de4e96551074cdc2627d1a5750494520be97",
         "type": "github"
       },
       "original": {

@@ -24,15 +24,16 @@ Copy the printed `-----BEGIN PGP PRIVATE KEY BLOCK----- … END` block into a
 KeePass entry's **Notes** field (KeePassDX on the phone, or any KeePass app
 opened with the key file).
 
-## b) Load a key (paste from KeePass)
+## b) Load a key (from KeePass)
 
 ```bash
-gpg-load            # or: gpg-load 30   (minutes until auto-wipe, default 15)
+pkee get <entry> --field notes --print | gpg-load      # or: … | gpg-load 30
 ```
 
-Open the entry in pkee (Enter shows its notes), select the key and copy it, paste it at the prompt,
-then press **Ctrl-D**. It is imported into the RAM keyring and auto-wipes after
-the timeout (re-run to reset the clock; logout/reboot also wipes it).
+pkee unlocks with the fingerprint if needed and hands the entry's Notes straight
+to `gpg-load` (no clipboard). `gpg-load` alone prompts for a pasted key instead
+(end with **Ctrl-D**). The key goes into the RAM keyring and auto-wipes after
+the timeout, default 15 min (re-run to reset the clock; logout/reboot also wipes it).
 
 Check remaining time:
 

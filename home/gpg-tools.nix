@@ -6,9 +6,10 @@
 #       Prompt to paste an armored, passphrase-LESS GPG private key, import it
 #       into a RAM-only (tmpfs) GnuPG home under $XDG_RUNTIME_DIR, and arm a
 #       one-shot systemd timer that wipes it after N minutes (default 15).
-#       Re-running resets the clock; logout/reboot wipes it too. You paste the
-#       key by hand (e.g. copied out of the KeePass database) — nothing plaintext ever
-#       touches persistent disk.
+#       Re-running resets the clock; logout/reboot wipes it too. The key comes
+#       on stdin: pasted, or piped from the KeePass database with
+#       `pkee get <entry> --field notes --print | gpg-load` — nothing plaintext
+#       ever touches persistent disk.
 #   tgpg <args...>
 #       Plain `gpg` pinned to that RAM keyring, e.g.
 #         tgpg -d secret.gpg   tgpg -e -r me file   tgpg -c file
@@ -25,7 +26,8 @@ let
           "" \
           "Usage: gpg-load [minutes]   (auto-wipe after N minutes, default 15)" \
           "" \
-          "Paste an armored, passphrase-less private key when prompted (end with Ctrl-D)." \
+          "Paste an armored, passphrase-less private key when prompted (end with Ctrl-D)," \
+          "or pipe it in:  pkee get <entry> --field notes --print | gpg-load" \
           "Then use it with:  tgpg -d file.gpg  /  tgpg -e -r me file"
         exit 0
       fi
@@ -38,7 +40,7 @@ let
       tmp="$(mktemp -p "''${XDG_RUNTIME_DIR}" key.XXXXXX.asc)"
       trap 'shred -u "$tmp" 2>/dev/null || rm -f "$tmp"' EXIT
 
-      echo "Paste the armored GPG private key (no passphrase), then press Ctrl-D:" >&2
+      [[ -t 0 ]] && echo "Paste the armored GPG private key (no passphrase), then press Ctrl-D:" >&2
       cat > "$tmp"
 
       gpg --batch --import "$tmp"
