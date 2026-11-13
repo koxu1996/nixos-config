@@ -37,14 +37,12 @@ Rectangle {
 
     property real wheelAccum: 0
 
-    // Follow the springing pill as well, so it never pokes past the glass.
+    // Follow the springing pill as well, so it never pokes past the strip's edge.
     implicitWidth: Math.max(strip.implicitWidth + padding * 2,
                             pill.visible ? pill.x + pill.width + padding : 0)
     implicitHeight: slotHeight + padding * 2
-    radius: Theme.radius
-    color: Theme.raised
-    border.width: Theme.borderWidth
-    border.color: Theme.border
+    // No box: the slots sit straight on the wallpaper, like the bar's other chips.
+    color: "transparent"
 
     // ---- Helpers ----------------------------------------------------------
     function workspaceById(id) {
