@@ -116,6 +116,81 @@ Singleton {
             }
         }
     }
+    // ---- Fullscreen ---------------------------------------------------------------------
+    // Screens (monitor names) showing a fullscreen window, on their regular workspace or a
+    // shown special one (the drop-down terminal lives on special:dropterm, so the regular
+    // workspace's hasFullscreen misses it). The dock hides on those. Both ways at once:
+    // Hyprland's events update what is known (which workspaces hold a fullscreen window,
+    // which are shown where) and decide before anything is asked; the check (hyprctl)
+    // then confirms it. Hyprland has at most one fullscreen window per workspace, so a
+    // window leaving fullscreen clears its workspace.
+    property var fullscreenScreens: []
+    property var fullscreenWorkspaces: []   // workspace names holding a fullscreen window
+    property var shownRegular: ({})         // monitor -> its regular workspace's name
+    property var shownSpecial: ({})         // monitor -> its shown special workspace ("" none)
+    readonly property var fullscreenEvents: [
+        "fullscreen", "activespecialv2", "workspacev2", "focusedmon",
+        "openwindow", "closewindow", "movewindowv2", "changefloatingmode",
+    ]
+    function decide(monitor) {
+        const ws = fullscreenWorkspaces;
+        const hide = ws.includes(shownRegular[monitor]) || (!!shownSpecial[monitor] && ws.includes(shownSpecial[monitor]));
+        const others = fullscreenScreens.filter(n => n !== monitor);
+        fullscreenScreens = hide ? others.concat([monitor]) : others;
+    }
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (!root.fullscreenEvents.includes(event.name)) return;
+            const mon = Hyprland.focusedMonitor?.name ?? "";
+            const f = event.data.split(",");
+            if (event.name === "fullscreen") {
+                // The active window: on the shown special workspace if there is one.
+                const ws = root.shownSpecial[mon] || root.shownRegular[mon];
+                const rest = root.fullscreenWorkspaces.filter(n => n !== ws);
+                root.fullscreenWorkspaces = event.data === "1" ? rest.concat([ws]) : rest;
+                root.decide(mon);
+            } else if (event.name === "activespecialv2") {   // id,name,monitor; name "" closed
+                root.shownSpecial = Object.assign({}, root.shownSpecial, { [f[2]]: f[1] });
+                root.decide(f[2]);
+            } else if (event.name === "workspacev2") {       // id,name, on the focused monitor
+                root.shownRegular = Object.assign({}, root.shownRegular, { [mon]: f[1] });
+                root.decide(mon);
+            }
+            root.checkFullscreen();
+        }
+    }
+    property bool fullscreenAgain: false
+    function checkFullscreen() {
+        if (fullscreenCheck.running) fullscreenAgain = true;
+        else fullscreenCheck.running = true;
+    }
+    Process {
+        id: fullscreenCheck
+        running: true
+        onRunningChanged: if (!running && root.fullscreenAgain) { root.fullscreenAgain = false; running = true; }
+        command: ["sh", "-c", `
+            jq -nc --argjson m "$(hyprctl monitors -j)" --argjson c "$(hyprctl clients -j)" '
+              [$c[] | select(.fullscreen != 0 and .mapped and (.hidden | not))] as $full
+              | { workspaces: [$full[].workspace.name] | unique,
+                  regular: [$m[] | { key: .name, value: .activeWorkspace.name }] | from_entries,
+                  special: [$m[] | { key: .name, value: .specialWorkspace.name }] | from_entries,
+                  screens: [$m[] as $mon | select(any($full[]; .monitor == $mon.id
+                      and (.workspace.id == $mon.activeWorkspace.id or .workspace.name == $mon.specialWorkspace.name)))
+                    | $mon.name] }'`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const r = JSON.parse(text);
+                    root.fullscreenWorkspaces = r.workspaces;
+                    root.shownRegular = r.regular;
+                    root.shownSpecial = r.special;
+                    root.fullscreenScreens = r.screens;
+                } catch (e) {}
+            }
+        }
+    }
+
     // The agent whose window has focus ("" for any other window): ringed in the dock.
     property string activeKey: ""
     Component.onCompleted: checkActive()

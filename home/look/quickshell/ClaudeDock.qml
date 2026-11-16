@@ -32,10 +32,14 @@ PanelWindow {
     readonly property int clusterGap: 6     // added between clusters, on top of the dot gap
 
     anchors { top: true; bottom: true; right: true }
-    // Not over a fullscreen window (a video, a game); the bar goes black there too.
-    readonly property var monitor: Hyprland.monitorFor(screen)
-    visible: !(monitor?.activeWorkspace?.hasFullscreen ?? false)
-    onVisibleChanged: if (!visible) close()
+    // Not over a fullscreen window (a video, a game, the drop-down terminal fullscreen):
+    // the content and the input region empty, the window itself stays mapped (unmapped,
+    // it lost its height, and every dot slid back into place when it returned).
+    readonly property bool hidden: store.fullscreenScreens.includes(screen?.name ?? "")
+    onHiddenChanged: if (hidden) close()
+    // Movement animates only once the window has its size, not on the first layout.
+    property bool settled: false
+    Timer { interval: 250; running: true; onTriggered: dock.settled = true }
     implicitWidth: bandWidth + cardGap + cardWidth + shadowPad
     color: "transparent"
     exclusionMode: ExclusionMode.Ignore
@@ -221,7 +225,7 @@ PanelWindow {
     readonly property real bumpWidth: bandWidth
     // Body (between the fillets): the dots.
     property real bodyHeight: layout.height + pad * 2
-    Behavior on bodyHeight { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+    Behavior on bodyHeight { enabled: dock.settled; NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
     readonly property real bodyTop: Math.round((height - bodyHeight) / 2)
     readonly property real dotsTop: bodyTop + pad + (bodyHeight - pad * 2 - layout.height) / 2
     readonly property real dotX: width - bandWidth / 2 - dot / 2
@@ -266,6 +270,7 @@ PanelWindow {
     MouseArea {
         id: pointerArea
         anchors.fill: parent
+        visible: !dock.hidden
         hoverEnabled: true
         acceptedButtons: Qt.NoButton
         onPositionChanged: mouse => dock.trackPointer(Qt.point(mouse.x, mouse.y))
@@ -275,7 +280,7 @@ PanelWindow {
             id: hit
             x: dock.width - dock.bumpWidth
             y: dock.bodyTop - dock.r
-            width: dock.bumpWidth
+            width: dock.hidden ? 0 : dock.bumpWidth
             height: dock.bodyHeight + dock.r * 2
         }
 
@@ -337,7 +342,7 @@ PanelWindow {
                 width: dock.dot
                 height: dock.dot
                 opacity: dock.flyoutOpen && dock.openId !== key ? 0.4 : 1
-                Behavior on y { enabled: dotItem.placed; NumberAnimation { duration: 200; easing.type: Easing.InOutCubic } }
+                Behavior on y { enabled: dotItem.placed && dock.settled; NumberAnimation { duration: 200; easing.type: Easing.InOutCubic } }
                 Behavior on opacity { NumberAnimation { duration: 160 } }
                 Component.onCompleted: Qt.callLater(() => placed = true)
 
@@ -414,7 +419,7 @@ PanelWindow {
             x: dock.dotX
             y: dock.dotsTop + dock.layout.plus
             opacity: dock.flyoutOpen && !dock.isNew ? 0.4 : 1
-            Behavior on y { NumberAnimation { duration: 200; easing.type: Easing.InOutCubic } }
+            Behavior on y { enabled: dock.settled; NumberAnimation { duration: 200; easing.type: Easing.InOutCubic } }
             Behavior on opacity { NumberAnimation { duration: 160 } }
             width: dock.dot
             height: dock.dot
