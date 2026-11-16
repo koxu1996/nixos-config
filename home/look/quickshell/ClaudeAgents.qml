@@ -1,29 +1,20 @@
-// Claude dock prototype: a bump on the right screen edge with one dot per coding agent that
-// Herdr sees, amber when it waits for you. Run beside the bar:
-//
-//   quickshell -p ~/nixos/home/look/quickshell/dev/claude-dock
-//
-// CLAUDE_DOCK_HERDR_SOCKET points it at another Herdr session's socket (default: the
-// default session, ~/.config/herdr/herdr.sock).
-//
-// "Next waiting" is a Hyprland global shortcut (no key bound yet):
-//   hyprctl dispatch 'hl.dsp.global("claude-dock:next-waiting")'
+pragma Singleton
+// ClaudeAgents.qml: the coding agents that Herdr sees, on this machine and the others, for
+// the Claude dock (ClaudeDock.qml). One HerdrMachine per machine: this one's default
+// session socket, the others' sockets forwarded over SSH (home/look/claude-dock.nix).
+// Holds the agents as a ListModel and does what the dock asks: read an agent's screen,
+// reply, open its terminal, start a new session.
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-ShellRoot {
+Singleton {
     id: root
 
-    // Edits reload the prototype; say so only when a reload fails.
-    Connections {
-        target: Quickshell
-        function onReloadCompleted() { Quickshell.inhibitReloadPopup(); }
-    }
-
     // ---- Machines -----------------------------------------------------------------------
-    // Short names per hostname; this machine's cluster comes first.
+    // Short names per hostname (the same list as home/look/claude-dock.nix); this machine's
+    // cluster comes first.
     readonly property var labels: ({ nixAir: "AIR", nixPC: "PC", nixvps: "VPS", nuc: "NUC" })
     FileView { id: hostnameFile; path: "/etc/hostname"; blockLoading: true }
     readonly property string hostname: hostnameFile.text().trim()
@@ -37,7 +28,7 @@ ShellRoot {
         onAgentsChanged: root.sync()
     }
     // Other machines: their Herdr socket forwarded over SSH to
-    // $XDG_RUNTIME_DIR/herdr-<LABEL>.sock (ssh -L, one user service each).
+    // $XDG_RUNTIME_DIR/herdr-<LABEL>.sock (herdr-forward-<LABEL>, claude-dock.nix).
     readonly property var remoteHosts: Object.keys(labels).filter(h => h !== hostname)
     Variants {
         id: remotes
@@ -57,19 +48,81 @@ ShellRoot {
     // herdrStatus (working, blocked, done, idle, unknown), lastLine, since (ms, last status
     // change), pane, machine (index into `machines`).
     ListModel { id: agents }
+    readonly property ListModel model: agents
 
     // Bumped on every change, so layouts that read the model re-evaluate.
     property int revision: 0
     property real now: Date.now()
 
-    // Yours: it asks something (blocked) or finished and you haven't looked (done).
-    function statusOf(herdrStatus) {
-        return herdrStatus === "working" ? "working"
-            : herdrStatus === "blocked" || herdrStatus === "done" ? "yours" : "idle";
+    // Yours: it asks something (blocked), or it finished and you haven't looked. Herdr's own
+    // "done" misses most finishes: one in the pane focused in its window counts as seen
+    // even when no one looks at that window (it reports idle). So the dock keeps what you
+    // saw: the agent's completion_seq when you last clicked its dot or focused its window.
+    function statusOf(a, key) {
+        if (a.agent_status === "working") return "working";
+        if (a.agent_status === "blocked" || a.agent_status === "done") return "yours";
+        return (a.completion_seq ?? 0) > (seenSeq[key] ?? 0) ? "yours" : "idle";
     }
+
+    // key -> completion_seq seen; kept across bar restarts (pane ids are never reused).
+    property var seenSeq: ({})
+    FileView {
+        id: seenFile
+        path: Quickshell.statePath("claude-dock-seen.json")
+        blockLoading: true
+        printErrors: false
+        Component.onCompleted: { try { root.seenSeq = JSON.parse(text() || "{}"); } catch (e) {} }
+    }
+
+    function markSeen(key) {
+        const a = agentAt(key);
+        if (!a || (seenSeq[key] ?? 0) >= a.completion) return;
+        // Prune agents that are gone, but only on machines that answer: one that is off
+        // (asleep, unreachable) keeps its agents' entries for when it comes back.
+        const live = {};
+        for (let i = 0; i < agents.count; i++) live[agents.get(i).key] = true;
+        const offline = machines.filter(m => !m.online).map(m => m.label + ":");
+        const next = {};
+        for (const k of Object.keys(seenSeq))
+            if (live[k] || offline.some(p => k.startsWith(p))) next[k] = seenSeq[k];
+        next[key] = a.completion;
+        seenSeq = next;
+        seenFile.setText(JSON.stringify(next));
+        sync();
+    }
+
+    // Its window focused (the one a dot click opens, "herdr <LABEL> <pane>"): seen. Checked
+    // on every focus change, and when an agent finishes (you may be looking at it).
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) { if (event.name === "activewindowv2") root.checkActive(); }
+    }
+    // One check at a time; a focus change during one runs another after it, so the ring
+    // always ends on the window focused last.
+    property bool activeAgain: false
+    function checkActive() {
+        if (activeAttach.running) activeAgain = true;
+        else activeAttach.running = true;
+    }
+    Process {
+        id: activeAttach
+        onRunningChanged: if (!running && root.activeAgain) { root.activeAgain = false; running = true; }
+        command: ["sh", "-c", "hyprctl activewindow -j | jq -r 'select(.class == \"herdr-attach\") | .initialTitle'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const m = text.trim().match(/^herdr (\S+) (\S+)$/);
+                root.activeKey = m ? `${m[1]}:${m[2]}` : "";
+                if (m) root.markSeen(root.activeKey);
+            }
+        }
+    }
+    // The agent whose window has focus ("" for any other window): ringed in the dock.
+    property string activeKey: ""
+    Component.onCompleted: checkActive()
 
     function sync() {
         const seen = {};
+        let finished = false;
         machines.forEach((m, mi) => {
             for (const a of m.agents) {
                 if (!a.agent) continue; // a pane without an agent in it
@@ -80,7 +133,8 @@ ShellRoot {
                     name: a.name || (a.cwd ?? "").split("/").pop() || a.display_agent || a.agent,
                     host: m.label,
                     herdrStatus: a.agent_status,
-                    status: statusOf(a.agent_status),
+                    status: statusOf(a, key),
+                    completion: a.completion_seq ?? 0,
                     title: a.terminal_title_stripped ?? "",
                     folder: root.homeRelative(a.cwd ?? ""),
                     kind: a.agent ?? "",
@@ -93,6 +147,7 @@ ShellRoot {
                 } else {
                     const old = agents.get(i);
                     if (old.status !== row.status) agents.setProperty(i, "since", Date.now());
+                    if (row.completion > old.completion) finished = true;
                     for (const k of Object.keys(row))
                         if (old[k] !== row[k]) agents.setProperty(i, k, row[k]);
                 }
@@ -101,6 +156,7 @@ ShellRoot {
         for (let i = agents.count - 1; i >= 0; i--)
             if (!seen[agents.get(i).key]) agents.remove(i);
         revision++;
+        if (finished) checkActive();
     }
 
     function indexOf(key) {
@@ -131,10 +187,19 @@ ShellRoot {
     // From the agent's screen (Claude Code): its last "● …" block (a message, or the tool
     // call it is running, with its description), and the running turn's time and tokens
     // ("✻ Sautéing… (6m 56s · ↓ 9.9k tokens)" -> "6m 56s · 9.9k tokens").
+    // The visible screen only: a longer read makes Herdr scroll the agent's history, which
+    // takes a while, and Herdr refuses an attach while a read runs.
+    property var reading: ({})     // key -> true while its read runs
+    property string flyAfterRead: "" // a click that came during that read
     function readLast(key) {
         const a = agentAt(key);
-        if (!a) return;
-        machines[a.machine].request("agent.read", { target: a.pane, source: "recent_unwrapped", lines: 80 }, r => {
+        if (!a || reading[key]) return;
+        reading = Object.assign({}, reading, { [key]: true });
+        machines[a.machine].request("agent.read", { target: a.pane, source: "visible" }, r => {
+            const left = Object.assign({}, reading);
+            delete left[key];
+            reading = left;
+            if (flyAfterRead === key) { flyAfterRead = ""; root.fly(key); }
             const text = r?.read?.text ?? "";
             const lines = text.split("\n");
             let start = -1;
@@ -163,7 +228,15 @@ ShellRoot {
 
     function reply(key, text) {
         const a = agentAt(key);
-        if (a && text.trim()) machines[a.machine].request("agent.prompt", { target: a.pane, text: text });
+        if (!a || !text.trim()) return;
+        machines[a.machine].request("agent.prompt", { target: a.pane, text: text }, (r, error) => {
+            if (!r) notify(`Reply to ${a.title || a.name} not sent`, error);
+        });
+    }
+
+    // Failures the dock can't show itself: a notification (the bar shows it).
+    function notify(summary, body) {
+        Quickshell.execDetached(["notify-send", "--app-name=Claude dock", summary, body || "Herdr did not answer."]);
     }
 
     // Fly to the session: Herdr focuses the pane (and marks it seen), then a window with just
@@ -172,7 +245,10 @@ ShellRoot {
     // open elsewhere. Closing the window (Super+Q) only detaches: the agent keeps running.
     function fly(key) {
         const a = agentAt(key);
-        if (a) flyTo(a.machine, a.pane);
+        if (!a) return;
+        if (reading[key]) { flyAfterRead = key; return; }
+        markSeen(key);
+        flyTo(a.machine, a.pane);
     }
     function flyTo(machine, pane) {
         const m = machines[machine];
@@ -209,11 +285,12 @@ ShellRoot {
             : folder.startsWith("~/") ? home + folder.slice(1) : folder;
         const base = cwd.split("/").pop().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^[^a-z]+/, "") || "claude";
         const name = `${base.slice(0, 26)}-${Math.random().toString(36).slice(2, 6)}`;
-        m.request("workspace.create", { cwd: cwd, focus: false }, r => {
+        m.request("workspace.create", { cwd: cwd, focus: false }, (r, error) => {
             const pane = r?.root_pane?.pane_id;
-            if (!pane) { console.warn("claude-dock: workspace.create failed on", m.label); return; }
-            m.request("agent.start", { name: name, kind: "claude", pane_id: pane, timeout_ms: 60000 }, s => {
-                if (!s) console.warn("claude-dock: agent.start failed on", m.label, pane);
+            if (!pane) { notify(`No new session on ${m.label}`, error); return; }
+            m.request("agent.start", { name: name, kind: "claude", pane_id: pane, timeout_ms: 60000 }, (s, startError) => {
+                // Opened even if the start didn't confirm: the terminal shows what happened.
+                if (!s) notify(`Claude may not have started on ${m.label}`, startError);
                 root.flyTo(machine, pane);
             });
         });
@@ -231,35 +308,10 @@ ShellRoot {
             fi
             cmd=(herdr agent attach "$DOCK_PANE" --takeover)
             [ -n "$DOCK_SSH" ] && cmd=(ssh -t "$DOCK_SSH" "\${cmd[@]}")
-            setsid -f alacritty --class herdr-attach --title "$DOCK_TITLE" -e "\${cmd[@]}" \
+            # An attach failing within 3 s is retried (Herdr refuses one while it reads the
+            # terminal); one that still fails keeps its window, with Herdr's message, until Enter.
+            keep='for i in 1 2 3 4; do t=$(date +%s); "$@" && exit 0; s=$?; [ $(( $(date +%s) - t )) -ge 3 ] && break; sleep 1; done; printf "\\n[attach exited with %s; Enter closes]" "$s"; read -r _'
+            setsid -f alacritty --class herdr-attach --title "$DOCK_TITLE" -e sh -c "$keep" sh "\${cmd[@]}" \
                 >/dev/null 2>&1 </dev/null`]
-    }
-
-    // ---- Next waiting -----------------------------------------------------------------
-    // Opens the flyout for the longest-waiting agent on the focused screen; again: the next.
-    signal hotkey(string key, string screenName)
-    property string hotkeyId: ""
-
-    GlobalShortcut {
-        appid: "claude-dock"
-        name: "next-waiting"
-        description: "Claude dock: reply to the next waiting session"
-        onPressed: {
-            const list = root.waiting();
-            if (!list.length) return;
-            const at = list.findIndex(a => a.key === root.hotkeyId);
-            root.hotkeyId = list[(at + 1) % list.length].key;
-            root.hotkey(root.hotkeyId, Hyprland.focusedMonitor?.name ?? "");
-        }
-    }
-
-    Variants {
-        model: Quickshell.screens
-        ClaudeDock {
-            required property var modelData
-            screen: modelData
-            store: root
-            model: agents
-        }
     }
 }

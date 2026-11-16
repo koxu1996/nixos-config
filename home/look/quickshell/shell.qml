@@ -1,6 +1,6 @@
 // Quickshell bar for Hyprland (the whole top bar; no waybar under Hyprland).
 // Left: system menu (snowflake), workspace selector. Centre: kept free for the notch.
-// Right end: Touch ID (only while a fingerprint check waits), now playing, CPU/memory stats, speaker volume, Glow, Syncthing, Tailscale, Wi-Fi + battery (where the host has them, Host.qml), AI agent usage, tools, clock, notifications. Toasts: top-right below the bar.
+// Right end: Touch ID (only while a fingerprint check waits), now playing, CPU/memory stats, speaker volume, Glow, Syncthing, Tailscale, Wi-Fi + battery (where the host has them, Host.qml), AI agent usage, tools, clock, notifications. Toasts: top-right below the bar. Right edge: the Claude dock (Herdr agents).
 // One set per screen. Started by the quickshell user service (hyprland-session.target).
 import QtQuick
 import Quickshell
@@ -13,6 +13,15 @@ ShellRoot {
 
     // App launcher (Super+D): one window, opened on the focused screen.
     Launcher {}
+
+    // Claude dock: Herdr's coding agents on the right screen edge (ClaudeAgents).
+    Variants {
+        model: Quickshell.screens
+        ClaudeDock {
+            required property var modelData
+            screen: modelData
+        }
+    }
 
     Variants {
         model: Quickshell.screens

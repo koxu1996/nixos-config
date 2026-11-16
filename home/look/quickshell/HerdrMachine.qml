@@ -15,7 +15,8 @@ Scope {
     property var agents: []             // AgentInfo objects from the last agent.list
 
     // ---- Requests -----------------------------------------------------------------------
-    // One connection per request; `done(result)` gets `.result`, or null on an error.
+    // One connection per request; `done(result, error)` gets `.result`, or null and Herdr's
+    // error message (empty when the server didn't answer).
     function request(method, params, done) {
         const s = requestSocket.createObject(m, {
             path: m.socketPath,
@@ -32,10 +33,10 @@ Scope {
             property string payload
             property var done
             property bool answered: false
-            function finish(result) {
+            function finish(result, error) {
                 if (answered) return;
                 answered = true;
-                done(result);
+                done(result, error ?? "");
                 Qt.callLater(() => rs.destroy());
             }
             onConnectedChanged: {
@@ -45,9 +46,9 @@ Scope {
             onError: finish(null)
             parser: SplitParser {
                 onRead: line => {
-                    let r = null;
-                    try { r = JSON.parse(line).result ?? null; } catch (e) {}
-                    rs.finish(r);
+                    let msg = {};
+                    try { msg = JSON.parse(line); } catch (e) {}
+                    rs.finish(msg.result ?? null, msg.error?.message ?? "");
                 }
             }
         }
@@ -55,7 +56,7 @@ Scope {
 
     function refresh() {
         request("agent.list", {}, r => {
-            if (!r) return;
+            if (!r || !m.online) return;   // a late answer from a server that went away
             m.agents = r.agents ?? [];
             const panes = m.agents.map(a => a.pane_id).sort().join(" ");
             if (panes !== m.watched) m.resubscribe();
