@@ -13,11 +13,11 @@
         "noir": "noir"
       },
       "locked": {
-        "lastModified": 1794847065,
-        "narHash": "sha256-nnCrdgzKyUKqYuwt3qAronD/s22W4VY7FTZj8hwqrP8=",
+        "lastModified": 1794864582,
+        "narHash": "sha256-sxVS0IryLwzoXWcRlLwFpDDsdmlzw0EGTTAjMd15+lk=",
         "ref": "refs/heads/master",
-        "rev": "c2f5ecfb6af576c204793b0b2a425d440bcfe520",
-        "revCount": 69,
+        "rev": "bf93d8f1b59759ddba9728e5943e341791ac54f9",
+        "revCount": 74,
         "type": "git",
         "url": "ssh://andrew@nixvps/home/andrew/git/aztec-nahui.git"
       },
