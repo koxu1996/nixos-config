@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791915156,
-        "narHash": "sha256-SD0xm7Q9QuCkZhRyayPqoLJNbwyDmT51cUw7DSYzCZU=",
+        "lastModified": 1794833143,
+        "narHash": "sha256-86U/8ZEywmDrfeTHq1zI/d4xG4uaVtvSoj1JcqlYZmU=",
         "ref": "refs/heads/master",
-        "rev": "81240789b0f4291c5b12ef487bd143ebeb6d62b7",
-        "revCount": 119,
+        "rev": "6f2572c1520cb45f9ddab0283b2793520616d588",
+        "revCount": 120,
         "type": "git",
         "url": "ssh://git@github.com/koxu1996/clutch"
       },

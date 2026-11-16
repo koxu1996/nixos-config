@@ -487,6 +487,7 @@ in
         { "g", "dismiss", "Reset HUD" },
         { "a", "toggle", "Show or hide HUD" },
         { "semicolon", "quit", "Quit HUD" },
+        { "t", "transcribe", "Transcribe audio" },
         { "c", "copy", "Copy answer" },
         { "e", "scrollUp", "Scroll answer up" },
         { "u", "scrollDown", "Scroll answer down" },
