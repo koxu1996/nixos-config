@@ -12,7 +12,10 @@
 { pkgs, ... }:
 
 {
-  imports = [ ./hardware-configuration.nix ];
+  imports = [
+    ./hardware-configuration.nix
+    ./aztec-prover.nix # The Aztec prover stack as services (~/aztec-nahui/NIXOS.md).
+  ];
 
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;

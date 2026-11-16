@@ -1,5 +1,150 @@
 {
   "nodes": {
+    "aztec-nahui": {
+      "inputs": {
+        "aztec-packages": "aztec-packages",
+        "bb-httplib": "bb-httplib",
+        "bb-libdeflate": "bb-libdeflate",
+        "bb-lmdb": "bb-lmdb",
+        "bb-msgpack": "bb-msgpack",
+        "bb-nlohmann-json": "bb-nlohmann-json",
+        "bb-tracy": "bb-tracy",
+        "nixpkgs": "nixpkgs",
+        "noir": "noir"
+      },
+      "locked": {
+        "lastModified": 1794845952,
+        "narHash": "sha256-wz+bA9LTE8iQ1DJX3DeWsiTNCxGq7Upv2cIWsGEn5mI=",
+        "ref": "refs/heads/master",
+        "rev": "ad9e31f2d811ce9ebd52ee5c0b83a30f787404e1",
+        "revCount": 66,
+        "type": "git",
+        "url": "ssh://andrew@nixvps/home/andrew/git/aztec-nahui.git"
+      },
+      "original": {
+        "type": "git",
+        "url": "ssh://andrew@nixvps/home/andrew/git/aztec-nahui.git"
+      }
+    },
+    "aztec-packages": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1792512675,
+        "narHash": "sha256-gmahFNAQp0UMP1bgw/6WEmtkw7/hbBUQUZWTbJGLzek=",
+        "owner": "AztecProtocol",
+        "repo": "aztec-packages",
+        "rev": "0219f11d8133970df3974fe5ae65e006bf8c193a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AztecProtocol",
+        "ref": "v6.0.0",
+        "repo": "aztec-packages",
+        "type": "github"
+      }
+    },
+    "bb-httplib": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1707189163,
+        "narHash": "sha256-+YAjmsZvBkOk5bsjE07weTNUmevHd1ZXP0bv5QbkZMs=",
+        "owner": "yhirose",
+        "repo": "cpp-httplib",
+        "rev": "5c00bbf36ba8ff47b4fb97712fc38cb2884e5b98",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yhirose",
+        "ref": "v0.15.3",
+        "repo": "cpp-httplib",
+        "type": "github"
+      }
+    },
+    "bb-libdeflate": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1746990157,
+        "narHash": "sha256-IaXXm9VrZ0Pgb3yTh1fPKkifJDvCxvCfTH08Sdho0Ko=",
+        "owner": "ebiggers",
+        "repo": "libdeflate",
+        "rev": "96836d7d9d10e3e0d53e6edb54eb908514e336c4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ebiggers",
+        "ref": "v1.24",
+        "repo": "libdeflate",
+        "type": "github"
+      }
+    },
+    "bb-lmdb": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1717445686,
+        "narHash": "sha256-OylpYMNhxKIb8v43B6LjGmEYpj4BXj79lecDvx1zKeA=",
+        "owner": "LMDB",
+        "repo": "lmdb",
+        "rev": "ddd0a773e2f44d38e4e31ec9ed81af81f4e4ccbb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LMDB",
+        "repo": "lmdb",
+        "rev": "ddd0a773e2f44d38e4e31ec9ed81af81f4e4ccbb",
+        "type": "github"
+      }
+    },
+    "bb-msgpack": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767973786,
+        "narHash": "sha256-IEzjI4mdihcZ3JxLrXWd0yx6XFILFaYhAoLLBzmS4lY=",
+        "owner": "AztecProtocol",
+        "repo": "msgpack-c",
+        "rev": "c0334576ed657fb3b3c49e8e61402989fb84146d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "AztecProtocol",
+        "repo": "msgpack-c",
+        "rev": "c0334576ed657fb3b3c49e8e61402989fb84146d",
+        "type": "github"
+      }
+    },
+    "bb-nlohmann-json": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1701207391,
+        "narHash": "sha256-7F0Jon+1oWL7uqet5i1IgHX0fUw/+z0QwEcA3zs5xHg=",
+        "owner": "nlohmann",
+        "repo": "json",
+        "rev": "9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nlohmann",
+        "repo": "json",
+        "rev": "9cca280a4d0ccf0c08f47a99aa71d1b0e52f8d03",
+        "type": "github"
+      }
+    },
+    "bb-tracy": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1724350045,
+        "narHash": "sha256-HofqYJT1srDJ6Y1f18h7xtAbI/Gvvz0t9f0wBNnOZK8=",
+        "owner": "wolfpld",
+        "repo": "tracy",
+        "rev": "5d542dc09f3d9378d005092a4ad446bd405f819a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "wolfpld",
+        "repo": "tracy",
+        "rev": "5d542dc09f3d9378d005092a4ad446bd405f819a",
+        "type": "github"
+      }
+    },
     "clutch": {
       "inputs": {
         "nixpkgs": [
@@ -99,7 +244,7 @@
     "impermanence": {
       "inputs": {
         "home-manager": "home-manager_2",
-        "nixpkgs": "nixpkgs"
+        "nixpkgs": "nixpkgs_2"
       },
       "locked": {
         "lastModified": 1792739756,
@@ -159,6 +304,22 @@
     },
     "nixpkgs": {
       "locked": {
+        "lastModified": 1794192123,
+        "narHash": "sha256-SvB8u5qaJAOwZZyZciqTVOg/rBoUs2w0sFTU6ED51AQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "177d0540942fb205af6993b1d5fa0b57799e09f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
         "lastModified": 1768564909,
         "narHash": "sha256-Kell/SpJYVkHWMvnhqJz/8DqQg2b6PguxVWOuadbHCc=",
         "owner": "nixos",
@@ -173,7 +334,7 @@
         "type": "github"
       }
     },
-    "nixpkgs_2": {
+    "nixpkgs_3": {
       "locked": {
         "lastModified": 1792773339,
         "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
@@ -186,6 +347,23 @@
         "owner": "NixOS",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "noir": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1789765379,
+        "narHash": "sha256-nlEVeKlxxXy3vL7JWxZnmKeItCUHIVaJGqnHwKauRlU=",
+        "owner": "noir-lang",
+        "repo": "noir",
+        "rev": "5a7ee9bf5ed8973076df7bb0d2b723024db09ae7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "noir-lang",
+        "repo": "noir",
+        "rev": "5a7ee9bf5ed8973076df7bb0d2b723024db09ae7",
         "type": "github"
       }
     },
@@ -228,13 +406,14 @@
     },
     "root": {
       "inputs": {
+        "aztec-nahui": "aztec-nahui",
         "clutch": "clutch",
         "disko": "disko",
         "home-manager": "home-manager",
         "impermanence": "impermanence",
         "linux-passkey": "linux-passkey",
         "nixos-apple-silicon": "nixos-apple-silicon",
-        "nixpkgs": "nixpkgs_2",
+        "nixpkgs": "nixpkgs_3",
         "pkee": "pkee",
         "sops-nix": "sops-nix",
         "tbsm": "tbsm"

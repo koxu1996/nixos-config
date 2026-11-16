@@ -30,6 +30,10 @@
     # pkee — fingerprint-unlocked KeePass launcher (home/pkee.nix).
     pkee.url = "github:koxu1996/pkee";
     pkee.inputs.nixpkgs.follows = "nixpkgs";
+    # aztec-nahui — the Aztec prover stack on nixvps (hosts/nixvps/aztec-prover.nix), from
+    # its repository there. No nixpkgs.follows: its provers and patches are pinned to its
+    # own nixpkgs, and following this one would rebuild them.
+    aztec-nahui.url = "git+ssh://andrew@nixvps/home/andrew/git/aztec-nahui.git";
     # Apple Silicon (Asahi) kernel, firmware and boot support for nixAir.
     nixos-apple-silicon.url = "github:nix-community/nixos-apple-silicon";
     nixos-apple-silicon.inputs.nixpkgs.follows = "nixpkgs";
@@ -130,6 +134,7 @@
     # nixvps: VPS with the RKE2 cluster and cocoon. Deployed remotely
     # (hosts/nixvps/default.nix).
     nixosConfigurations.nixvps = nixpkgs.lib.nixosSystem {
+      specialArgs = { inherit (inputs) aztec-nahui; };
       modules = [ ./hosts/nixvps ];
     };
 
