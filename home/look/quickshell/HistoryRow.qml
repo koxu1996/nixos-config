@@ -55,6 +55,7 @@ Rectangle {
             textFormat: Text.StyledText
             text: (row.entry?.body ?? "").replace(/\n/g, " ")
             color: Theme.textSecondary
+            linkColor: Theme.accent // as on the cards; Qt's default is a dark blue
             font.family: Theme.sansFont
             font.pixelSize: Theme.fontSize
         }
