@@ -105,8 +105,9 @@ let
           # /persist) opens its file per operation instead of holding it read-write for
           # the driver's lifetime, which kept /persist from unmounting at poweroff.
           # Upstreamed (rewritten for integration/aurora's newer store.rs):
-          # https://github.com/aurora-silicon/linux/pull/583 - drop this patch once the
-          # pinned rev includes it.
+          # https://github.com/aurora-silicon/linux/pull/583, merged 2026-11-09 into
+          # integration/aurora (Linux 7.3) as 9505fe7. feat/sep (this pin) won't get it:
+          # drop this patch when the pin moves to integration/aurora.
           name = "apple-sep-store-per-op-open";
           patch = ./apple-sep-store-per-op-open.patch;
         }
