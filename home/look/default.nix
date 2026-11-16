@@ -6,6 +6,7 @@
 {
   imports = [
     ./quickshell.nix
+    ./claude-dock.nix # Claude dock: Herdr sockets of the other machines, over SSH.
     ./terminal.nix
   ];
 
