@@ -3,9 +3,34 @@
 # run kept it (~/aztec-nahui/.aztec-prover), so nothing resyncs. Secrets come from
 # ~/.config/aztec-prover/secrets.env (mode 600, KEY=value; never in the store):
 # ETHEREUM_HOSTS, SERVE_WORKER_TOKEN, NTFY_URL. Steps and checks: ~/aztec-nahui/NIXOS.md.
-{ aztec-nahui, ... }:
+{ aztec-nahui, pkgs, ... }:
 let
   state = "/home/andrew/aztec-nahui/.aztec-prover";
+
+  # `nixvps-update [--restart]`, on nixvps: switch to this repository's nixvps config as
+  # pushed to GitHub, with aztec-nahui taken from ~/aztec-nahui's committed master (not the
+  # working tree, nor the lock here), so prover changes deploy from nixvps without this
+  # repository. Evaluates and builds as the caller; only the activation uses sudo (as root,
+  # git would refuse a repository owned by andrew). --restart then restarts the units a
+  # switch leaves running (aztec-prover-restart waits until that costs no time).
+  nixvps-update = pkgs.writeShellApplication {
+    name = "nixvps-update";
+    text = ''
+      restart=0
+      for arg in "$@"; do
+        case "$arg" in
+          --restart) restart=1 ;;
+          *) echo "usage: nixvps-update [--restart]" >&2; exit 2 ;;
+        esac
+      done
+      nixos-rebuild switch --sudo --refresh \
+        --flake github:koxu1996/nixos-config#nixvps \
+        --override-input aztec-nahui "git+file:///home/andrew/aztec-nahui?ref=refs/heads/master"
+      if [ "$restart" = 1 ]; then
+        sudo aztec-prover-restart node serve submit worker-gateway aztec-l1-reth aztec-l1-lighthouse
+      fi
+    '';
+  };
 in
 {
   imports = [ aztec-nahui.nixosModules.default aztec-nahui.nixosModules.l1 ];
@@ -48,6 +73,8 @@ in
       credentialsFile = "/home/andrew/.config/gcloud/aztec-prover.json";
     };
   };
+
+  environment.systemPackages = [ nixvps-update ];
 
   # The GCP workers reach the service through this port.
   networking.firewall.allowedTCPPorts = [ 8443 ];
