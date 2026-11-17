@@ -62,7 +62,14 @@ in
       PROVER_NODE_SPECULATE = "1";
       PROVER_PREPARED_DIR = "/state/prepared";
       SERVE_CALIBRATION = "/state/bundles/calibration-ifma.jsonl";
-      SERVE_MEMORY_GB = "40";
+      # Cap local proving so an epoch's bb-avm burst can't starve the node and
+      # L1 clients: the box has 16 cores and 62 GiB with no swap. SERVE_CORES
+      # defaults to nproc*9/8 (18 here), which overcommits; 12 leaves ~4 cores
+      # for node/reth/lighthouse. 40 GiB let ~5 bb-avm (~8 GiB each) run at once
+      # and hit memory pressure; 28 caps that to ~3 and keeps headroom. The GCP
+      # workers take the overflow.
+      SERVE_CORES = "12";
+      SERVE_MEMORY_GB = "28";
       SERVE_WORKER_LISTEN = "127.0.0.1:8470";
       WORKER_GATEWAY_IP = "152.53.157.65";
       GCP_PROJECT = "aztec-prover-514814";
