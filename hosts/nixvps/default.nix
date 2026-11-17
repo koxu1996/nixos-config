@@ -49,6 +49,8 @@
     ];
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOBNgSP/ZOH+K/xITHoFBxXcf2ykz60GEztt/YXsP6tH andrzej1_1@o2.pl"
+      # The phone (Moshi app), for nixvps only.
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAII5ZvDEr1h7ndLIxxIyHs699JPy3XVbyS06C0OJZ92On moshi"
     ];
   };
   security.sudo.wheelNeedsPassword = false;
