@@ -73,6 +73,10 @@
     settings.PermitRootLogin = "no";
   };
 
+  # mosh (e.g. from the Moshi app on the phone): logs in over SSH, then talks UDP; this also
+  # opens UDP 60000-61000.
+  programs.mosh.enable = true;
+
   networking.firewall.enable = true;
 
   system.stateVersion = "26.05";
